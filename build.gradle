@@ -1,0 +1,279 @@
+plugins {
+    id 'com.android.library' version '8.1.0' apply false
+}
+
+def baseProjects    = [project(':base')]
+
+//def legacyProjects = [project(':legacy')]
+def desktopProjects = [project(':desktop')]
+
+def androidProjects = [project(':android')]
+
+subprojects {
+    apply plugin: 'signing'
+    apply plugin: 'maven-publish'
+
+    ext {
+        libraryName = 'Unrefined Media Layer'
+        libraryGroupName = 'unrefined'
+        libraryPublishGroupName = 'com.tianscar.uxgl'
+        libraryDescription = 'Simple, lightweight, cross-platform game library which provides some common features for game development.'
+        libraryUrl = 'https://github.com/Tianscar/uxgl'
+
+        libraryVersionCode = 40
+        libraryVersionName = '0.4.0-SNAPSHOT'
+        libraryVersionCodeName = 'Claw Hammer'
+
+        libraryLicenseName = 'The Apache License, Version 2.0'
+        libraryLicenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+        libraryScmConnection = 'scm:git:git@github.com/Tianscar/uxgl.git'
+        libraryScmDeveloperConnection = libraryScmConnection
+        libraryScmUrl = libraryUrl
+        libraryDevelopersName = 'UXGL Contributors'
+        libraryDeveloperId = 'Tianscar'
+        libraryDeveloperName = 'Karstian Lee'
+        libraryDeveloperEmail = 'tianscar@protonmail.com'
+
+        libraryAndroidCompileSdk = 33
+        libraryAndroidMinSdk = 19
+        libraryAndroidTargetSdk = 33
+
+        libraryBaseSourceCompatibility = JavaVersion.VERSION_1_8
+        libraryBaseTargetCompatibility = JavaVersion.VERSION_1_8
+
+        libraryAndroidSourceCompatibility = JavaVersion.VERSION_1_8
+        libraryAndroidTargetCompatibility = JavaVersion.VERSION_1_8
+
+        //libraryLegacySourceCompatibility = JavaVersion.VERSION_1_8
+        //libraryLegacyTargetCompatibility = JavaVersion.VERSION_1_8
+
+        libraryDesktopSourceCompatibility = JavaVersion.VERSION_21
+        libraryDesktopTargetCompatibility = JavaVersion.VERSION_21
+    }
+
+    group libraryGroupName
+    version libraryVersionCode
+}
+
+configure (baseProjects) {
+    apply plugin: 'java-library'
+
+    sourceCompatibility = libraryBaseSourceCompatibility
+    targetCompatibility = libraryBaseTargetCompatibility
+}
+
+/*
+configure (legacyProjects) {
+    apply plugin: 'java-library'
+
+    sourceCompatibility = libraryLegacySourceCompatibility
+    targetCompatibility = libraryLegacyTargetCompatibility
+}
+ */
+
+configure (desktopProjects) {
+    apply plugin: 'java-library'
+
+    sourceCompatibility = libraryDesktopSourceCompatibility
+    targetCompatibility = libraryDesktopTargetCompatibility
+
+    compileJava {
+        options.compilerArgs += ['--enable-preview']
+    }
+    tasks.withType(JavaCompile).configureEach {
+        options.compilerArgs += ['--enable-preview']
+    }
+    tasks.withType(Test).configureEach {
+        jvmArgs += '--enable-preview'
+        jvmArgs += '--enable-native-access=ALL-UNNAMED'
+    }
+    tasks.withType(JavaExec).configureEach {
+        jvmArgs += '--enable-preview'
+        jvmArgs += '--enable-native-access=ALL-UNNAMED'
+    }
+}
+
+configure (baseProjects/* + legacyProjects*/ + desktopProjects) {
+
+    [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+    dependencies {
+        testImplementation platform('org.junit:junit-bom:5.9.1')
+        testImplementation 'org.junit.jupiter:junit-jupiter'
+    }
+
+    test {
+        useJUnitPlatform()
+    }
+
+    java {
+        withJavadocJar()
+        withSourcesJar()
+    }
+
+    jar {
+        manifest {
+            attributes 'UXGL-Specification-Vendor': libraryDeveloperName
+            attributes 'UXGL-Specification-Title': libraryName
+            attributes 'UXGL-Specification-Version': libraryVersionCodeName
+            attributes 'UXGL-Implementation-Vendor': libraryDevelopersName
+            attributes 'UXGL-Implementation-Version': libraryVersionName
+        }
+    }
+
+    javadoc {
+        if (JavaVersion.current().isJava9Compatible()) {
+            options.addBooleanOption('html5', true)
+        }
+    }
+
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                groupId = libraryGroupName
+                artifactId = "${rootProject.name}-${project.name}"
+                version = libraryVersionName
+                from components.java
+                pom {
+                    name = libraryPublishGroupName
+                    description = libraryDescription
+                    url = libraryUrl
+                    licenses {
+                        license {
+                            name = libraryLicenseName
+                            url = libraryLicenseUrl
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = libraryDeveloperId
+                            name = libraryDeveloperName
+                            email = libraryDeveloperEmail
+                        }
+                    }
+                    scm {
+                        connection = libraryScmConnection
+                        developerConnection = libraryScmDeveloperConnection
+                        url = libraryScmUrl
+                    }
+                }
+            }
+        }
+        repositories {
+            maven {
+                name = "OSSRH"
+                if (project.version.toString().endsWith("-SNAPSHOT")) {
+                    url = "https://s01.oss.sonatype.org/content/repositories/snapshots"
+                } else {
+                    url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+                }
+                credentials {
+                    username = findProperty("ossrhUsername") ?: System.getenv("OSSRH_USERNAME")
+                    password = findProperty("ossrhPassword") ?: System.getenv("OSSRH_PASSWORD")
+                }
+            }
+        }
+    }
+
+    signing {
+        sign(publishing.publications.mavenJava)
+    }
+
+}
+
+configure (androidProjects) {
+    apply plugin: 'com.android.library'
+
+    android {
+        namespace libraryGroupName + '.' + project.name.replaceAll('-', '.')
+        compileSdk libraryAndroidCompileSdk
+
+        defaultConfig {
+            minSdk libraryAndroidMinSdk
+            targetSdk libraryAndroidTargetSdk
+
+            testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+            consumerProguardFiles "consumer-rules.pro"
+        }
+        buildTypes {
+            release {
+                minifyEnabled false
+                proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            }
+        }
+        compileOptions {
+            sourceCompatibility libraryAndroidSourceCompatibility
+            targetCompatibility libraryAndroidTargetCompatibility
+        }
+    }
+
+    dependencies {
+        testImplementation 'junit:junit:4.13.2'
+        androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+        androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    }
+
+    android {
+        publishing {
+            singleVariant('release') {
+                withSourcesJar()
+                withJavadocJar()
+            }
+        }
+    }
+    publishing {
+
+        publications {
+            release(MavenPublication) {
+                groupId = libraryGroupName
+                artifactId = "${rootProject.name}-${project.name}"
+                version = libraryVersionName
+                afterEvaluate {
+                    from components.release
+                }
+                pom {
+                    name = libraryPublishGroupName
+                    description = libraryDescription
+                    url = libraryUrl
+                    licenses {
+                        license {
+                            name = libraryLicenseName
+                            url = libraryLicenseUrl
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = libraryDeveloperId
+                            name = libraryDeveloperName
+                            email = libraryDeveloperEmail
+                        }
+                    }
+                    scm {
+                        connection = libraryScmConnection
+                        developerConnection = libraryScmDeveloperConnection
+                        url = libraryScmUrl
+                    }
+                }
+            }
+        }
+        repositories {
+            maven {
+                name = "OSSRH"
+                if (project.version.toString().endsWith("-SNAPSHOT")) {
+                    url = "https://s01.oss.sonatype.org/content/repositories/snapshots"
+                } else {
+                    url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+                }
+                credentials {
+                    username = findProperty("ossrhUsername") ?: System.getenv("OSSRH_USERNAME")
+                    password = findProperty("ossrhPassword") ?: System.getenv("OSSRH_PASSWORD")
+                }
+            }
+        }
+    }
+
+    signing {
+        sign(publishing.publications.release)
+    }
+
+}

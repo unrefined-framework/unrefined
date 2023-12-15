@@ -1,0 +1,10 @@
+dependencies {
+    implementation project(':base')
+    api project(':base')
+}
+
+jar {
+    manifest {
+        attributes 'UXGL-Implementation-Title': 'Java Standard Edition Desktop'
+    }
+}

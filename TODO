@@ -1,0 +1,86 @@
+--------------------------------
+System Integrations
+--------------------------------
+Clipboard
+Drag and Drop
+Open File
+Trash File
+Browse URI
+Mailto URI
+Application Menu
+Print Document
+System Tray
+System Notifications
+File Chooser Dialog
+Folder Chooser Dialog
+Font Chooser Dialog
+Color Picker Dialog
+Message Box Dialog
+Question Box Dialog
+Input Box Dialog
+Password Box Dialog
+System Preferences [Windows Registry, macOS/iOS NSUserDefaults, UNIX INI configuration file]
+Joystick [Windows DirectInput/XInput, macOS/iOS Game Controller Framework, Linux/FreeBSD <linux/joystick.h>, UNIX SDL_Joystick]
+JavaScript Engine [macOS/iOS JavaScriptCore (JIT disabled), other QuickJS]
+--------------------------------
+
+--------------------------------
+Networking
+--------------------------------
+TCP/UDP/SSL Socket
+HTTP/HTTPS
+WebSocket
+Networking [Single-instance factory]
+--------------------------------
+
+--------------------------------
+Console/Terminal
+--------------------------------
+ANSI Escape Code [Windows require extra work, other platforms natively supported]
+REPL Console
+Curses
+--------------------------------
+
+--------------------------------
+Data Serialization/Deserialization
+--------------------------------
+JSON [Desktop modified org.json, Android/RoboVM SDK JSON API, TeaVM HTML5 JSON API]
+XML DOM SAX XPath [Desktop javax.xml, Android/RoboVM SDK XML API, TeaVM HTML5 XML API]
+INI
+Properties
+Binary [Bit-based I/O as enhancement required]
+--------------------------------
+
+--------------------------------
+Embedded Native Widgets
+--------------------------------
+Video Player [Windows Media Player Control, macOS/iOS AVPlayer, UNIX GStreamer, Android VideoView]
+WebView [Windows WebView2, macOS/iOS WKWebView, UNIX WebKitGTK, Android WebView]
+--------------------------------
+
+--------------------------------
+Music/Sound Effects
+--------------------------------
+Music [Long, streaming-playing music]
+Sound [Short, memory-buffered sound effects]
+AudioTrack [Directly read pcm from microphone or write pcm to speaker]
+Sampled [Single-instance factory, create audio instances, decoder/encoder for several audio formats]
+--------------------------------
+
+--------------------------------
+3D Support
+--------------------------------
+OpenGL ES 3.1 [ANGLE, OpenGL 4.3]
+OpenAL 1.1 [OpenAL 1.1, OpenAL Soft]
+WebGPU
+--------------------------------
+
+--------------------------------
+Backends
+--------------------------------
+Android SDK API 19
+TeaVM HTML 5
+IKVM.NET WinUI 3
+RoboVM iOS 9
+Java SE 8
+--------------------------------

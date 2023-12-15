@@ -1,0 +1,4 @@
+dependencies {
+    implementation project(':base')
+    api project(':base')
+}
