@@ -15,7 +15,7 @@ import unrefined.runtime.DesktopRuntime;
 import java.awt.EventQueue;
 
 /**
- * After create and add, then you can draw content to the canvas.
+ * After create and add, then you can draw content to the canvas, and it will show to user.
  * Let's fill the canvas with "plain black".
  */
 public class DrawOnCanvas {

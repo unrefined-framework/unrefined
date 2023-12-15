@@ -13,7 +13,7 @@ import unrefined.util.UnexpectedError;
 import java.awt.EventQueue;
 
 /**
- * The main feature of UXGL is creating "canvas" and draw on it. Before do any drawing, you need to create a canvas container.
+ * One of the main features of UXGL is creating "canvas" and draw on it. Before doing any drawing, you need to create a container to show the "canvas".
  * Let's create and change its cursor to system "wait" cursor.
  */
 public class CreateContainer {

@@ -17,7 +17,7 @@ public class UseAsUtilityToolkit {
         Base64 base64 = Base64.getBase64();     // Get the platform-dependent base64 coder
 
         byte[] base64Encoded = base64.encode("Hello UXGL".getBytes(Charsets.UTF_8)); // Encode to base64
-        byte[] base64Decoded = base64.decode(base64Encoded);                        // Decode from base64
+        byte[] base64Decoded = base64.decode(base64Encoded);                         // Decode from base64
 
         // stdout: yyyy-MM-dd HH:mm:ss:SSS pid@hostname I/Hello World: Hello UXGL
         logger.info("Hello World", new String(base64Decoded, Charsets.UTF_8));
