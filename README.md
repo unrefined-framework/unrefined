@@ -1,8 +1,8 @@
 # Unrefined Cross-platform Game Library
-Short name: UXGL  
-Version name: 0.4.0  
-Version code: 40  
-Version codename: Claw Hammer
+Short Name: UXGL  
+Version Name: 0.4.0  
+Version Code: 40  
+Version Codename: Claw Hammer
 
 Simple, lightweight, cross-platform game library which provides some common features for game development.  
 No runtime dependencies except the Java Runtime Environment.
