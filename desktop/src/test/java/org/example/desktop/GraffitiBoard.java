@@ -94,7 +94,6 @@ public class GraffitiBoard {
                     }
                 });
 
-                container.setBackgroundColor(Color.BLUE); // Set the background color
                 container.addContext(canvas);
             }
 
