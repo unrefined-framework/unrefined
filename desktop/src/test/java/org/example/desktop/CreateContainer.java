@@ -14,14 +14,14 @@ import java.awt.EventQueue;
 
 /**
  * One of the main features of UXGL is creating "canvas" and draw on it. Before doing any drawing, you need to create a container to show the "canvas".
- * Let's create and change its cursor to system "wait" cursor.
+ * Let's create and change its cursor to the system "wait" cursor.
  */
 public class CreateContainer {
 
     public static void main(String[] args) {
         DesktopRuntime.setup(args);             // Initialize the UXGL runtime environment
 
-        // Initialize the UXGL Container (on desktop it's a window)
+        // Initialize the UXGL container (on desktop it's a window)
         DesktopApplication application = new DesktopApplication(new ContainerAdapter() { // The lifecycle listener, it's fully platform-independent
 
             private Cursor wait;
@@ -34,7 +34,7 @@ public class CreateContainer {
 
                 Drawing drawing = Drawing.getDrawing();         // Get the platform-dependent 2D factory instance
                 try {
-                    wait = drawing.getCursor(Cursor.Type.WAIT); // Get system "wait" cursor
+                    wait = drawing.getCursor(Cursor.Type.WAIT); // Get the system "wait" cursor
                 } catch (CursorNotFoundException e) {
                     throw new UnexpectedError(e);               // Unexpected
                 }

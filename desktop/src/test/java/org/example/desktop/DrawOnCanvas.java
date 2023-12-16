@@ -23,7 +23,7 @@ public class DrawOnCanvas {
     public static void main(String[] args) {
         DesktopRuntime.setup(args);             // Initialize the UXGL runtime environment
 
-        // Initialize the UXGL Container (on desktop it's a window)
+        // Initialize the UXGL container (on desktop it's a window)
         DesktopApplication application = new DesktopApplication(new ContainerAdapter() { // The lifecycle listener, it's fully platform-independent
 
             private Context canvas;
