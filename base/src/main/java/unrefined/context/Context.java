@@ -10,11 +10,15 @@ import java.util.Objects;
 public abstract class Context {
 
     private final Container container;
-    private final ContextListener contextListener;
+    private volatile ContextListener contextListener;
+
+    public Context(Container container) {
+        this(container, null);
+    }
 
     public Context(Container container, ContextListener contextListener) {
         this.container = Objects.requireNonNull(container);
-        this.contextListener = Objects.requireNonNull(contextListener);
+        this.contextListener = contextListener;
     }
 
     public Container getContainer() {
@@ -23,6 +27,10 @@ public abstract class Context {
 
     public ContextListener getContextListener() {
         return contextListener;
+    }
+
+    public void setContextListener(ContextListener contextListener) {
+        this.contextListener = contextListener;
     }
 
     public abstract void setX(int x);

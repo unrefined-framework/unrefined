@@ -231,22 +231,22 @@ public final class Text {
         private Alignment() {
             throw new NotInstantiableError(Alignment.class);
         }
-        public static final int LEFT  = 0;
-        public static final int CENTER = 1;
-        public static final int RIGHT  = 2;
+        public static final int START  = 0;
+        public static final int MIDDLE = 1;
+        public static final int END    = 2;
 
         public static int checkValid(int alignment) {
-            if (alignment < LEFT || alignment > RIGHT) throw new IllegalArgumentException("Illegal text alignment: " + alignment);
+            if (alignment < START || alignment > END) throw new IllegalArgumentException("Illegal text alignment: " + alignment);
             else return alignment;
         }
         public static boolean isValid(int align) {
-            return align >= LEFT && align <= RIGHT;
+            return align >= START && align <= END;
         }
         public static String toString(int alignment) {
             switch (alignment) {
-                case LEFT: return "LEFT";
-                case CENTER: return "CENTER";
-                case RIGHT: return "RIGHT";
+                case START: return "START";
+                case MIDDLE: return "MIDDLE";
+                case END: return "END";
                 default: throw new IllegalArgumentException("Illegal text alignment: " + alignment);
             }
         }

@@ -32,3 +32,6 @@ include ':android'
 // html5
 //include ':teavm'  //TODO
 
+// game
+include ':game2d'
+

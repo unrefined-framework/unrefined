@@ -55,10 +55,10 @@ public abstract class Transform implements Portable, Disposable, Copyable, Swapp
         preTranslate(dx, dy);
     }
     
-    public void rTransform(float sx, float kx, float dx, float ky, float sy, float dy) {
-        rScale(sx, sy);
-        rSkew(kx, ky);
-        rTranslate(dx, dy);
+    public void transform(float sx, float kx, float dx, float ky, float sy, float dy) {
+        scale(sx, sy);
+        skew(kx, ky);
+        translate(dx, dy);
     }
     
     public void postTransform(float sx, float kx, float dx, float ky, float sy, float dy) {
@@ -76,7 +76,7 @@ public abstract class Transform implements Portable, Disposable, Copyable, Swapp
     }
     
     public void rValues(float... values) {
-        rTransform(values[SCALE_X], values[SKEW_X], values[TRANSLATE_X], values[SKEW_Y], values[SCALE_Y], values[TRANSLATE_Y]);
+        transform(values[SCALE_X], values[SKEW_X], values[TRANSLATE_X], values[SKEW_Y], values[SCALE_Y], values[TRANSLATE_Y]);
     }
     
     public void postValues(float... values) {
@@ -91,27 +91,27 @@ public abstract class Transform implements Portable, Disposable, Copyable, Swapp
 
     public abstract void setScale(float sx, float sy);
     public abstract void preScale(float sx, float sy);
-    public abstract void rScale(float sx, float sy);
+    public abstract void scale(float sx, float sy);
     public abstract void postScale(float sx, float sy);
     
     public abstract void setSkew(float kx, float ky);
     public abstract void preSkew(float kx, float ky);
-    public abstract void rSkew(float kx, float ky);
+    public abstract void skew(float kx, float ky);
     public abstract void postSkew(float kx, float ky);
 
     public abstract void setTranslate(float dx, float dy);
     public abstract void preTranslate(float dx, float dy);
-    public abstract void rTranslate(float dx, float dy);
+    public abstract void translate(float dx, float dy);
     public abstract void postTranslate(float dx, float dy);
 
-    public abstract void setRotate(float degrees, float px, float py);
-    public abstract void setRotate(float degrees);
-    public abstract void preRotate(float degrees, float px, float py);
-    public abstract void preRotate(float degrees);
-    public abstract void rRotate(float degrees, float px, float py);
-    public abstract void rRotate(float degrees);
-    public abstract void postRotate(float degrees, float px, float py);
-    public abstract void postRotate(float degrees);
+    public abstract void setRotate(float radians, float px, float py);
+    public abstract void setRotate(float radians);
+    public abstract void preRotate(float radians, float px, float py);
+    public abstract void preRotate(float radians);
+    public abstract void rotate(float radians, float px, float py);
+    public abstract void rotate(float radians);
+    public abstract void postRotate(float radians, float px, float py);
+    public abstract void postRotate(float radians);
 
     public abstract void getValues(float[] values, int offset);
     public void getValues(float[] values) {
@@ -128,6 +128,41 @@ public abstract class Transform implements Portable, Disposable, Copyable, Swapp
     public abstract void getTranslate(float[] translate, int offset);
     public void getTranslate(float[] translate) {
         getTranslate(translate, 0);
+    }
+
+    public abstract void transformPoints(float[] src, int srcOffset, float[] dst, int dstOffset, int pointCount);
+    public void transformPoints(float[] src, float[] dst) {
+        if (src.length != dst.length || src.length % 2 != 0) throw new IndexOutOfBoundsException("Array length mismatch");
+        else transformPoints(src, 0, dst, 0, src.length / 2);
+    }
+    public abstract void transformPoints(PointF[] src, int srcOffset, float[] dst, int dstOffset, int pointCount);
+    public void transformPoints(PointF[] src, float[] dst) {
+        if (src.length * 2 != dst.length) throw new IndexOutOfBoundsException("Array length mismatch");
+        else transformPoints(src, 0, dst, 0, src.length);
+    }
+    public abstract void transformPoints(float[] src, int srcOffset, PointF[] dst, int dstOffset, int pointCount);
+    public void transformPoints(float[] src, PointF[] dst) {
+        if (src.length != dst.length * 2) throw new IndexOutOfBoundsException("Array length mismatch");
+        else transformPoints(src, 0, dst, 0, dst.length);
+    }
+    public abstract void transformPoints(PointF[] src, int srcOffset, PointF[] dst, int dstOffset, int pointCount);
+    public void transformPoints(PointF[] src, PointF[] dst, int pointCount) {
+        transformPoints(src, 0, dst, 0, pointCount);
+    }
+    public void transformPoints(PointF[] src, PointF[] dst) {
+        if (src.length != dst.length) throw new IndexOutOfBoundsException("Array length mismatch");
+        else transformPoints(src, 0, dst, 0, src.length);
+    }
+    public abstract void transformPoint(float x, float y, float[] dst, int dstOffset);
+    public void transformPoint(float x, float y, float[] dst) {
+        transformPoint(x, y, dst, 0);
+    }
+    public abstract void transformPoint(float x, float y, PointF dst);
+    public void transformPoint(PointF src, PointF dst) {
+        transformPoint(src.getX(), src.getY(), dst);
+    }
+    public void transformPoint(PointF point) {
+        transformPoint(point, point);
     }
 
     @Override

@@ -2,7 +2,7 @@ plugins {
     id 'com.android.library' version '8.1.0' apply false
 }
 
-def baseProjects    = [project(':base')]
+def baseProjects    = [project(':base'), project(':game2d')]
 
 //def legacyProjects = [project(':legacy')]
 def desktopProjects = [project(':desktop')]
@@ -17,7 +17,7 @@ subprojects {
         libraryName = 'Unrefined Media Layer'
         libraryGroupName = 'unrefined'
         libraryPublishGroupName = 'com.tianscar.uxgl'
-        libraryDescription = 'Simple, lightweight, cross-platform game library which provides some common features for game development.'
+        libraryDescription = 'Simple, lightweight, cross-platform graphics library which also provides some common features for game development.'
         libraryUrl = 'https://github.com/Tianscar/uxgl'
 
         libraryVersionCode = 40

@@ -43,11 +43,6 @@ public class RectangleF implements Portable, Copyable, Swappable, Resettable {
         position.setY(y);
     }
 
-    public void setPosition(PointF position) {
-        this.x = position.getX();
-        this.y = position.getY();
-    }
-
     public void setSize(float width, float height) {
         this.width = width;
         this.height = height;
@@ -55,11 +50,6 @@ public class RectangleF implements Portable, Copyable, Swappable, Resettable {
 
     public void getSize(DimensionF size) {
         size.setDimension(width, height);
-    }
-
-    public void setSize(DimensionF size) {
-        this.width = size.getWidth();
-        this.height = size.getHeight();
     }
 
     public void setRectangle(float x, float y, float width, float height) {

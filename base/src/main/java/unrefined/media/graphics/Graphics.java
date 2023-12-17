@@ -497,7 +497,7 @@ public abstract class Graphics implements Disposable, Resettable {
                     null, Style.FILL,
                     16, Stroke.Join.MITER, Stroke.Cap.BUTT, 10, null, 0,
                     true, false, false,
-                    null, 12, Text.Direction.AUTO, Text.Alignment.LEFT, true, false, false,
+                    null, 12, Text.Direction.AUTO, Text.Alignment.START, true, false, false,
                     1, 1, 0, 0);
         }
 
@@ -507,7 +507,7 @@ public abstract class Graphics implements Disposable, Resettable {
                     getBrush() == null && getStyle() == Style.FILL &&
                     getStrokeWidth() == 16 && getStrokeJoin() == Stroke.Join.MITER && getStrokeCap() == Stroke.Cap.BUTT && getStrokeMiterLimit() == 10 && getStrokeDash() == null && getStrokeDashPhase() == 0 &&
                     isAntiAlias() && !isImageSmoothing() && !isDither() &&
-                    getFont() == null && getTextSize() == 12 && getTextDirection() == Text.Direction.AUTO && getTextAlignment() == Text.Alignment.LEFT && isSubpixelText() && !isUnderlineText() && !isStrikeThroughText() &&
+                    getFont() == null && getTextSize() == 12 && getTextDirection() == Text.Direction.AUTO && getTextAlignment() == Text.Alignment.START && isSubpixelText() && !isUnderlineText() && !isStrikeThroughText() &&
                     getTextScaleX() == 1 && getTextScaleY() == 1 && getTextSkewX() == 0 && getTextSkewY() == 0;
         }
 
@@ -854,7 +854,7 @@ public abstract class Graphics implements Disposable, Resettable {
                 null, Style.FILL,
                 16, Stroke.Join.MITER, Stroke.Cap.BUTT, 10, null, 0,
                 true, false, false,
-                null, 12, Text.Direction.AUTO, Text.Alignment.LEFT, true, false, false,
+                null, 12, Text.Direction.AUTO, Text.Alignment.START, true, false, false,
                 1, 1, 0, 0);
     }
 
@@ -864,7 +864,7 @@ public abstract class Graphics implements Disposable, Resettable {
                 getBrush() == null && getStyle() == Style.FILL &&
                 getStrokeWidth() == 16 && getStrokeJoin() == Stroke.Join.MITER && getStrokeCap() == Stroke.Cap.BUTT && getStrokeMiterLimit() == 10 && getStrokeDash() == null && getStrokeDashPhase() == 0 &&
                 isAntiAlias() && !isImageSmoothing() && !isDither() &&
-                getFont() == null && getTextSize() == 12 && getTextDirection() == Text.Direction.AUTO && getTextAlignment() == Text.Alignment.LEFT && isSubpixelText() && !isUnderlineText() && !isStrikeThroughText() &&
+                getFont() == null && getTextSize() == 12 && getTextDirection() == Text.Direction.AUTO && getTextAlignment() == Text.Alignment.START && isSubpixelText() && !isUnderlineText() && !isStrikeThroughText() &&
                 getTextScaleX() == 1 && getTextScaleY() == 1 && getTextSkewX() == 0 && getTextSkewY() == 0;
     }
 

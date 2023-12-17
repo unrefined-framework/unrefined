@@ -1,6 +1,7 @@
 dependencies {
     implementation project(':base')
     api project(':base')
+    testImplementation project(':game2d')
 }
 
 jar {

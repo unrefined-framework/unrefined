@@ -42,11 +42,6 @@ public class Rectangle implements Portable, Copyable, Swappable, Resettable {
         position.setPoint(x, y);
     }
 
-    public void setPosition(Point position) {
-        this.x = position.getX();
-        this.y = position.getY();
-    }
-
     public void setSize(int width, int height) {
         this.width = width;
         this.height = height;
@@ -54,11 +49,6 @@ public class Rectangle implements Portable, Copyable, Swappable, Resettable {
 
     public void getSize(Dimension size) {
         size.setDimension(width, height);
-    }
-
-    public void setSize(Dimension size) {
-        this.width = size.getWidth();
-        this.height = size.getHeight();
     }
 
     public void setRectangle(int x, int y, int width, int height) {
@@ -105,6 +95,14 @@ public class Rectangle implements Portable, Copyable, Swappable, Resettable {
 
     public void setHeight(int height) {
         this.height = height;
+    }
+
+    public boolean contains(int x, int y) {
+        return x >= this.x && x < this.x + this.width && y >= this.y && y < this.y + this.height;
+    }
+
+    public boolean contains(float x, float y) {
+        return x >= this.x && x < this.x + this.width && y >= this.y && y < this.y + this.height;
     }
 
     @Override

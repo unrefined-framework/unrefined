@@ -2,6 +2,7 @@ package unrefined.runtime;
 
 import unrefined.io.PortableInput;
 import unrefined.io.PortableOutput;
+import unrefined.media.graphics.PointF;
 import unrefined.media.graphics.Transform;
 import unrefined.util.AlreadyDisposedException;
 
@@ -70,7 +71,7 @@ public class DesktopTransform extends Transform {
     }
 
     @Override
-    public void rSkew(float kx, float ky) {
+    public void skew(float kx, float ky) {
         if (isDisposed()) throw new AlreadyDisposedException();
         transform.shear(kx, ky);
     }
@@ -117,7 +118,7 @@ public class DesktopTransform extends Transform {
     }
 
     @Override
-    public void rTranslate(float dx, float dy) {
+    public void translate(float dx, float dy) {
         if (isDisposed()) throw new AlreadyDisposedException();
         transform.translate(dx, dy);
     }
@@ -171,7 +172,7 @@ public class DesktopTransform extends Transform {
     }
 
     @Override
-    public void rScale(float sx, float sy) {
+    public void scale(float sx, float sy) {
         if (isDisposed()) throw new AlreadyDisposedException();
         transform.scale(sx, sy);
     }
@@ -183,51 +184,51 @@ public class DesktopTransform extends Transform {
     }
 
     @Override
-    public void setRotate(float degrees, float px, float py) {
+    public void setRotate(float radians, float px, float py) {
         if (isDisposed()) throw new AlreadyDisposedException();
-        transform.setToRotation(degrees, px, py);
+        transform.setToRotation(radians, px, py);
     }
 
     @Override
-    public void setRotate(float degrees) {
+    public void setRotate(float radians) {
         if (isDisposed()) throw new AlreadyDisposedException();
-        transform.setToRotation(degrees);
+        transform.setToRotation(radians);
     }
 
     @Override
-    public void preRotate(float degrees, float px, float py) {
+    public void preRotate(float radians, float px, float py) {
         if (isDisposed()) throw new AlreadyDisposedException();
-        transform.preConcatenate(AffineTransform.getRotateInstance(degrees, px, py));
+        transform.preConcatenate(AffineTransform.getRotateInstance(radians, px, py));
     }
 
     @Override
-    public void preRotate(float degrees) {
+    public void preRotate(float radians) {
         if (isDisposed()) throw new AlreadyDisposedException();
-        transform.preConcatenate(AffineTransform.getRotateInstance(degrees));
+        transform.preConcatenate(AffineTransform.getRotateInstance(radians));
     }
 
     @Override
-    public void rRotate(float degrees, float px, float py) {
+    public void rotate(float radians, float px, float py) {
         if (isDisposed()) throw new AlreadyDisposedException();
-        transform.rotate(degrees, px, py);
+        transform.rotate(radians, px, py);
     }
 
     @Override
-    public void rRotate(float degrees) {
+    public void rotate(float radians) {
         if (isDisposed()) throw new AlreadyDisposedException();
-        transform.rotate(degrees);
+        transform.rotate(radians);
     }
 
     @Override
-    public void postRotate(float degrees, float px, float py) {
+    public void postRotate(float radians, float px, float py) {
         if (isDisposed()) throw new AlreadyDisposedException();
-        transform.concatenate(AffineTransform.getRotateInstance(degrees, px, py));
+        transform.concatenate(AffineTransform.getRotateInstance(radians, px, py));
     }
 
     @Override
-    public void postRotate(float degrees) {
+    public void postRotate(float radians) {
         if (isDisposed()) throw new AlreadyDisposedException();
-        transform.concatenate(AffineTransform.getRotateInstance(degrees));
+        transform.concatenate(AffineTransform.getRotateInstance(radians));
     }
 
     @Override
@@ -260,6 +261,78 @@ public class DesktopTransform extends Transform {
         if (isDisposed()) throw new AlreadyDisposedException();
         translate[offset] = (float) transform.getTranslateX();
         translate[offset + 1] = (float) transform.getTranslateY();
+    }
+
+    @Override
+    public void transformPoints(float[] src, int srcOffset, float[] dst, int dstOffset, int pointCount) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        transform.transform(src, srcOffset, dst, dstOffset, pointCount);
+    }
+
+    @Override
+    public void transformPoints(PointF[] src, int srcOffset, float[] dst, int dstOffset, int pointCount) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        float[] srcArray = new float[pointCount * 2];
+        for (int i = 0; i < pointCount; i ++) {
+            srcArray[i * 2] = src[i + srcOffset].getX();
+            srcArray[i * 2 + 1] = src[i + srcOffset].getY();
+        }
+        transform.transform(srcArray, srcOffset, dst, dstOffset, pointCount);
+    }
+
+    @Override
+    public void transformPoints(float[] src, int srcOffset, PointF[] dst, int dstOffset, int pointCount) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        float[] dstArray = new float[pointCount * 2];
+        transform.transform(src, srcOffset, dstArray, dstOffset, pointCount);
+        for (int i = 0; i < pointCount; i ++) {
+            dst[i + dstOffset].setPoint(dstArray[i * 2], dstArray[i * 2 + 1]);
+        }
+    }
+
+    @Override
+    public void transformPoints(PointF[] src, int srcOffset, PointF[] dst, int dstOffset, int pointCount) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        float[] srcArray = new float[pointCount * 2];
+        for (int i = 0; i < pointCount; i ++) {
+            srcArray[i * 2] = src[i + srcOffset].getX();
+            srcArray[i * 2 + 1] = src[i + srcOffset].getY();
+        }
+        float[] dstArray = new float[pointCount * 2];
+        transform.transform(srcArray, srcOffset, dstArray, dstOffset, pointCount);
+        for (int i = 0; i < pointCount; i ++) {
+            dst[i + dstOffset].setPoint(dstArray[i * 2], dstArray[i * 2 + 1]);
+        }
+    }
+
+    @Override
+    public void transformPoint(float x, float y, float[] dst, int dstOffset) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        transform.transform(new float[] { x, y }, 0, dst, dstOffset, 1);
+    }
+
+    @Override
+    public void transformPoint(float x, float y, PointF dst) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        float[] dstArray = new float[2];
+        transform.transform(new float[] { x, y }, 0, dstArray, 0, 1);
+        dst.setPoint(dstArray[0], dstArray[1]);
+    }
+
+    @Override
+    public void transformPoint(PointF src, PointF dst) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        float[] dstArray = new float[2];
+        transform.transform(new float[] { src.getX(), src.getY() }, 0, dstArray, 0, 1);
+        dst.setPoint(dstArray[0], dstArray[1]);
+    }
+
+    @Override
+    public void transformPoint(PointF point) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        float[] array = new float[] { point.getX(), point.getY() };
+        transform.transform(array, 0, array, 0, 1);
+        point.setPoint(array[0], array[1]);
     }
 
     @Override

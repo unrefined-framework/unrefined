@@ -61,13 +61,13 @@ public class DesktopGraphics extends Graphics {
     void setGraphics2D(Graphics2D graphics2D) {
         this.graphics2D = graphics2D;
         this.background = (Graphics2D) graphics2D.create();
-        this.background.setComposite(AlphaComposite.Dst);
+        this.background.setComposite(AlphaComposite.Src);
     }
 
     public DesktopGraphics(Graphics2D graphics2D, int width, int height) {
         this.graphics2D = Objects.requireNonNull(graphics2D);
         this.background = (Graphics2D) graphics2D.create();
-        this.background.setComposite(AlphaComposite.Dst);
+        this.background.setComposite(AlphaComposite.Src);
         this.width = width;
         this.height = height;
         info = new Info();
@@ -241,7 +241,7 @@ public class DesktopGraphics extends Graphics {
         TextLayout textLayout;
         if (text instanceof String string) {
             if (start == 0 && end == string.length() && graphics2D.getFont().hasLayoutAttributes() && getStyle() == Style.FILL &&
-                    textAlignment == Text.Alignment.LEFT) {
+                    textAlignment == Text.Alignment.START) {
                 graphics2D.drawString(string, x, y);
                 return;
             }
@@ -254,8 +254,8 @@ public class DesktopGraphics extends Graphics {
                     graphics2D.getFontRenderContext());
         float advance = textLayout.getAdvance();
         switch (textAlignment) {
-            case Text.Alignment.RIGHT -> x -= advance;
-            case Text.Alignment.CENTER -> x -= advance / 2;
+            case Text.Alignment.END -> x -= advance;
+            case Text.Alignment.MIDDLE -> x -= advance / 2;
         }
         if (getStyle() == Style.STROKE) graphics2D.draw(textLayout.getOutline(AffineTransform.getTranslateInstance(x, y)));
         else textLayout.draw(graphics2D, x, y);
@@ -268,7 +268,7 @@ public class DesktopGraphics extends Graphics {
                 new AttributedCharSequence(text.subSequence(start, end), graphics2D.getFont().getAttributes()).getIterator(),
                 graphics2D.getFontRenderContext());
         int textAlignment = getTextAlignment();
-        if (getStyle() == Style.STROKE && textAlignment == Text.Alignment.LEFT)
+        if (getStyle() == Style.STROKE && textAlignment == Text.Alignment.START)
             graphics2D.draw(textLayout.getOutline(((DesktopTransform) transform).getAffineTransform()));
         else {
             AffineTransform affineTransform = graphics2D.getTransform();
@@ -277,8 +277,8 @@ public class DesktopGraphics extends Graphics {
                 float x = 0;
                 float advance = textLayout.getAdvance();
                 switch (textAlignment) {
-                    case Text.Alignment.RIGHT -> x -= advance;
-                    case Text.Alignment.CENTER -> x -= advance / 2;
+                    case Text.Alignment.END -> x -= advance;
+                    case Text.Alignment.MIDDLE -> x -= advance / 2;
                 }
                 textLayout.draw(graphics2D, x, 0);
             }

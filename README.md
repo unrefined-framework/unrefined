@@ -1,10 +1,10 @@
-# Unrefined Cross-platform Game Library
+# Unrefined Cross-platform Graphics Library
 Short Name: UXGL  
 Version Name: 0.4.0  
 Version Code: 40  
 Version Codename: Claw Hammer
 
-Simple, lightweight, cross-platform game library which provides some common features for game development.  
+Simple, lightweight, cross-platform graphics library which also provides some common features for game development.  
 No runtime dependencies except the Java Runtime Environment.
 
 This library contains:  
@@ -18,6 +18,7 @@ This library contains:
 [Serialization/Deserialization API](/base/src/main/java/unrefined/io/Portable.java)  
 [Logger API](/base/src/main/java/unrefined/app/Logger.java)  
 [MVVM Data Binding API](/base/src/main/java/unrefined/beans)  
+[Scene-based 2D Sprite API](/game2d/src/main/java/unrefinedx/game2d)  
 ...and more
 
 It is also designed to work properly in "headless mode".

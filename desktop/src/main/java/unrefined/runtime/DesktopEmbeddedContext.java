@@ -29,6 +29,10 @@ public abstract class DesktopEmbeddedContext extends Context implements KeyListe
 
     private final Component component;
 
+    public DesktopEmbeddedContext(Container container, Component component) {
+        this(container, null, component);
+    }
+
     public DesktopEmbeddedContext(Container container, ContextListener contextListener, Component component) {
         super(container, contextListener);
         this.component = Objects.requireNonNull(component);
@@ -179,12 +183,14 @@ public abstract class DesktopEmbeddedContext extends Context implements KeyListe
 
     @Override
     public void keyTyped(KeyEvent e) {
-        if (getContextListener().onKeyTyped(this, e.getKeyChar())) e.consume();
+        ContextListener listener = getContextListener();
+        if (listener != null && listener.onKeyTyped(this, e.getKeyChar())) e.consume();
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if (getContextListener().onKeyDown(this,
+        ContextListener listener = getContextListener();
+        if (listener != null && listener.onKeyDown(this,
                 KeyUtils.parseKey(e),
                 KeyUtils.parseCode(e),
                 e.getKeyLocation() - 1,
@@ -193,7 +199,8 @@ public abstract class DesktopEmbeddedContext extends Context implements KeyListe
 
     @Override
     public void keyReleased(KeyEvent e) {
-        if (getContextListener().onKeyUp(this,
+        ContextListener listener = getContextListener();
+        if (listener != null && listener.onKeyUp(this,
                 KeyUtils.parseKey(e),
                 KeyUtils.parseCode(e),
                 e.getKeyLocation() - 1,
@@ -205,14 +212,16 @@ public abstract class DesktopEmbeddedContext extends Context implements KeyListe
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (getContextListener().onPointerDown(this, e.getX(), e.getY(),
+        ContextListener listener = getContextListener();
+        if (listener != null && listener.onPointerDown(this, e.getX(), e.getY(),
                 Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6),
                 e.getClickCount(), e.getButton() - 1)) e.consume();
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        if (getContextListener().onPointerUp(this, e.getX(), e.getY(),
+        ContextListener listener = getContextListener();
+        if (listener != null && listener.onPointerUp(this, e.getX(), e.getY(),
                 Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6),
                 e.getClickCount(), e.getButton() - 1)) e.consume();
     }
@@ -221,27 +230,31 @@ public abstract class DesktopEmbeddedContext extends Context implements KeyListe
     public void mouseEntered(MouseEvent e) {
         if (!GraphicsEnvironment.isHeadless() && cursor instanceof AnimatedCursor)
             EventQueue.invokeLater(() -> CursorUtils.registerAnimated(component, (AnimatedCursor) cursor));
-        if (getContextListener().onMouseEnter(this, e.getX(), e.getY(),
+        ContextListener listener = getContextListener();
+        if (listener != null && listener.onMouseEnter(this, e.getX(), e.getY(),
                 Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6))) e.consume();
     }
 
     @Override
     public void mouseExited(MouseEvent e) {
         if (!GraphicsEnvironment.isHeadless()) EventQueue.invokeLater(() -> CursorUtils.unregisterAnimated(component));
-        if (getContextListener().onMouseExit(this, e.getX(), e.getY(),
+        ContextListener listener = getContextListener();
+        if (listener != null && listener.onMouseExit(this, e.getX(), e.getY(),
                 Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6))) e.consume();
     }
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        if (getContextListener().onPointerDrag(this, e.getX(), e.getY(),
+        ContextListener listener = getContextListener();
+        if (listener != null && listener.onPointerDrag(this, e.getX(), e.getY(),
                 Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6),
                 e.getClickCount())) e.consume();
     }
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        if (getContextListener().onMouseMove(this, e.getX(), e.getY(),
+        ContextListener listener = getContextListener();
+        if (listener != null && listener.onMouseMove(this, e.getX(), e.getY(),
                 Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6))) e.consume();
     }
 
@@ -262,7 +275,8 @@ public abstract class DesktopEmbeddedContext extends Context implements KeyListe
             amountX = 0;
             amountY = amount;
         }
-        if (getContextListener().onScroll(this, amountX, amountY,
+        ContextListener listener = getContextListener();
+        if (listener != null && listener.onScroll(this, amountX, amountY,
                 scrollType == MouseWheelEvent.WHEEL_BLOCK_SCROLL ? 2 : 0)) e.consume();
     }
 

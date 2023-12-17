@@ -17,19 +17,22 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class Container implements Runnable {
 
-    private final ContainerListener containerListener;
+    private volatile ContainerListener containerListener;
     private final Environment local;
     private final Environment properties;
 
     public Container(ContainerListener containerListener) {
-        this.containerListener = Objects.requireNonNull(containerListener);
+        this.containerListener = containerListener;
         local = new Environment(new ConcurrentHashMap<>(), "LOCAL ENVIRONMENT " + Integer.toHexString(hashCode()));
         properties = new Environment(new ConcurrentHashMap<>(), "LOCAL PROPERTIES " + Integer.toHexString(hashCode()));
+    }
+
+    public Container() {
+        this(null);
     }
 
     public abstract void invokeLater(Runnable runnable);
@@ -199,6 +202,10 @@ public abstract class Container implements Runnable {
         return containerListener;
     }
 
+    public void setContainerListener(ContainerListener containerListener) {
+        this.containerListener = containerListener;
+    }
+
     public abstract void setX(int x);
     public abstract void setY(int y);
     public void setPosition(int x, int y) {
@@ -322,6 +329,9 @@ public abstract class Container implements Runnable {
     public abstract int getInputMethodHeight();
 
     public abstract Context createContext(ContextListener contextListener);
+    public Context createContext() {
+        return createContext(null);
+    }
 
     public abstract int getScreenWidth();
     public abstract int getScreenHeight();
