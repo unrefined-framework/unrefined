@@ -30,6 +30,7 @@ import java.awt.Shape;
 import java.awt.font.GlyphVector;
 import java.awt.font.LineMetrics;
 import java.awt.font.TextAttribute;
+import java.awt.font.TextHitInfo;
 import java.awt.font.TextLayout;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Arc2D;
@@ -348,6 +349,32 @@ public class DesktopGraphics extends Graphics {
     }
 
     @Override
+    public float measureText(CharSequence text, int start, int end) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        FontMetrics fontMetrics = graphics2D.getFontMetrics();
+        Rectangle2D bounds2D;
+        if (text instanceof String string) {
+            bounds2D = fontMetrics.getStringBounds(string, start, end, graphics2D);
+        }
+        else if (text instanceof PhantomString string) {
+            bounds2D = fontMetrics.getStringBounds(string.array(), start, end, graphics2D);
+        }
+        else {
+            AttributedCharacterIterator iterator = new AttributedCharSequence(text).getIterator();
+            bounds2D = fontMetrics.getStringBounds(iterator, start, end, graphics2D);
+        }
+        return (float) bounds2D.getWidth();
+    }
+
+    @Override
+    public float measureText(char[] text, int offset, int length) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        FontMetrics fontMetrics = graphics2D.getFontMetrics();
+        Rectangle2D bounds2D = fontMetrics.getStringBounds(text, offset, length, graphics2D);
+        return (float) bounds2D.getWidth();
+    }
+
+    @Override
     public void measureText(CharSequence text, int start, int end, Text.Metrics metrics, RectangleF bounds) {
         if (isDisposed()) throw new AlreadyDisposedException();
         FontMetrics fontMetrics = graphics2D.getFontMetrics();
@@ -366,9 +393,47 @@ public class DesktopGraphics extends Graphics {
             lineMetrics = fontMetrics.getLineMetrics(iterator, start, end, graphics2D);
             bounds2D = fontMetrics.getStringBounds(iterator, start, end, graphics2D);
         }
+        if (metrics != null) metrics.setMetrics(lineMetrics.getBaselineOffsets()[lineMetrics.getBaselineIndex()],
+                lineMetrics.getAscent(), lineMetrics.getDescent(), lineMetrics.getLeading(),
+                fontMetrics.getMaxAscent(), fontMetrics.getMaxDescent(), fontMetrics.getMaxAdvance());
+        if (bounds != null) AWTUtils.floatRectangle(bounds2D, bounds);
+    }
+
+    @Override
+    public void measureText(CharSequence text, int start, int end, Text.Metrics metrics) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        FontMetrics fontMetrics = graphics2D.getFontMetrics();
+        LineMetrics lineMetrics;
+        if (text instanceof String string) {
+            lineMetrics = fontMetrics.getLineMetrics(string, start, end, graphics2D);
+        }
+        else if (text instanceof PhantomString string) {
+            lineMetrics = fontMetrics.getLineMetrics(string.array(), start, end, graphics2D);
+        }
+        else {
+            AttributedCharacterIterator iterator = new AttributedCharSequence(text).getIterator();
+            lineMetrics = fontMetrics.getLineMetrics(iterator, start, end, graphics2D);
+        }
         metrics.setMetrics(lineMetrics.getBaselineOffsets()[lineMetrics.getBaselineIndex()],
                 lineMetrics.getAscent(), lineMetrics.getDescent(), lineMetrics.getLeading(),
                 fontMetrics.getMaxAscent(), fontMetrics.getMaxDescent(), fontMetrics.getMaxAdvance());
+    }
+
+    @Override
+    public void measureText(CharSequence text, int start, int end, RectangleF bounds) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        FontMetrics fontMetrics = graphics2D.getFontMetrics();
+        Rectangle2D bounds2D;
+        if (text instanceof String string) {
+            bounds2D = fontMetrics.getStringBounds(string, start, end, graphics2D);
+        }
+        else if (text instanceof PhantomString string) {
+            bounds2D = fontMetrics.getStringBounds(string.array(), start, end, graphics2D);
+        }
+        else {
+            AttributedCharacterIterator iterator = new AttributedCharSequence(text).getIterator();
+            bounds2D = fontMetrics.getStringBounds(iterator, start, end, graphics2D);
+        }
         AWTUtils.floatRectangle(bounds2D, bounds);
     }
 
@@ -378,10 +443,48 @@ public class DesktopGraphics extends Graphics {
         FontMetrics fontMetrics = graphics2D.getFontMetrics();
         LineMetrics lineMetrics = fontMetrics.getLineMetrics(text, offset, length, graphics2D);
         Rectangle2D bounds2D = fontMetrics.getStringBounds(text, offset, length, graphics2D);
+        if (metrics != null) metrics.setMetrics(lineMetrics.getBaselineOffsets()[lineMetrics.getBaselineIndex()],
+                lineMetrics.getAscent(), lineMetrics.getDescent(), lineMetrics.getLeading(),
+                fontMetrics.getMaxAscent(), fontMetrics.getMaxDescent(), fontMetrics.getMaxAdvance());
+        if (bounds != null) AWTUtils.floatRectangle(bounds2D, bounds);
+    }
+
+    @Override
+    public void measureText(char[] text, int offset, int length, Text.Metrics metrics) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        FontMetrics fontMetrics = graphics2D.getFontMetrics();
+        LineMetrics lineMetrics = fontMetrics.getLineMetrics(text, offset, length, graphics2D);
         metrics.setMetrics(lineMetrics.getBaselineOffsets()[lineMetrics.getBaselineIndex()],
                 lineMetrics.getAscent(), lineMetrics.getDescent(), lineMetrics.getLeading(),
                 fontMetrics.getMaxAscent(), fontMetrics.getMaxDescent(), fontMetrics.getMaxAdvance());
+    }
+
+    @Override
+    public void measureText(char[] text, int offset, int length, RectangleF bounds) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        FontMetrics fontMetrics = graphics2D.getFontMetrics();
+        Rectangle2D bounds2D = fontMetrics.getStringBounds(text, offset, length, graphics2D);
         AWTUtils.floatRectangle(bounds2D, bounds);
+    }
+
+    @Override
+    public void hitText(CharSequence text, int start, int end, float xOffset, Text.HitInfo hitInfo) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        TextLayout textLayout = new TextLayout(
+                new AttributedCharSequence(text.subSequence(start, end), graphics2D.getFont().getAttributes()).getIterator(),
+                graphics2D.getFontRenderContext());
+        TextHitInfo textHitInfo = textLayout.hitTestChar(xOffset, 0);
+        int insertionIndex = textHitInfo.getInsertionIndex();
+        Rectangle2D bounds = textLayout.getBounds();
+        boolean outBounds = xOffset < bounds.getX() || xOffset >= bounds.getWidth();
+        int charIndex = outBounds ? -1 : textHitInfo.getCharIndex();
+        boolean leadingEdge = textHitInfo.isLeadingEdge() || outBounds;
+        hitInfo.setHitInfo(charIndex, insertionIndex, leadingEdge);
+    }
+
+    @Override
+    public void hitText(char[] text, int offset, int length, float xOffset, Text.HitInfo hitInfo) {
+        hitText(new PhantomString(text, offset, length), xOffset, hitInfo);
     }
 
     @Override

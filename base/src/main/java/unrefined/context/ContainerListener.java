@@ -17,9 +17,12 @@ public interface ContainerListener {
     void onKeyUp(Container container, String key, String code, int location, int modifiers);
     void onKeyTyped(Container container, char key, boolean repeat);
 
+    void onPointerClick(Container container, float xOffset, float yOffset, int modifiers, int id, int button);
     void onPointerDown(Container container, float xOffset, float yOffset, int modifiers, int id, int button);
     void onPointerUp(Container container, float xOffset, float yOffset, int modifiers, int id, int button);
     void onPointerDrag(Container container, float xOffset, float yOffset, int modifiers, int id);
+
+    void onTouchLongPress(Container container, float xOffset, float yOffset, int modifiers, int button);
 
     void onMouseMove(Container container, float xOffset, float yOffset, int modifiers);
     void onMouseEnter(Container container, float xOffset, float yOffset, int modifiers);

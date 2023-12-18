@@ -203,6 +203,137 @@ public final class Text {
 
     }
 
+    public static class HitInfo implements Copyable, Swappable, Resettable {
+
+        private int index;
+        private int insertion;
+        private boolean leadingEdge = true;
+
+        public HitInfo(int index, int insertion, boolean leadingEdge) {
+            this.index = index;
+            this.insertion = insertion;
+            this.leadingEdge = leadingEdge;
+        }
+
+        public HitInfo(HitInfo info) {
+            setHitInfo(info.getIndex(), info.getInsertion(), info.isLeadingEdge());
+        }
+
+        public HitInfo() {
+        }
+
+        public void setHitInfo(int index, int insertion, boolean edge) {
+            this.index = index;
+            this.insertion = insertion;
+            this.leadingEdge = edge;
+        }
+
+        public void setHitInfo(HitInfo info) {
+            setHitInfo(info.getIndex(), info.getInsertion(), info.isLeadingEdge());
+        }
+
+        public int getIndex() {
+            return index;
+        }
+
+        public void setIndex(int index) {
+            this.index = index;
+        }
+
+        public int getInsertion() {
+            return insertion;
+        }
+
+        public void setInsertion(int insertion) {
+            this.insertion = insertion;
+        }
+
+        public boolean isLeadingEdge() {
+            return leadingEdge;
+        }
+
+        public void setLeadingEdge(boolean leadingEdge) {
+            this.leadingEdge = leadingEdge;
+        }
+
+        @Override
+        public void to(Object dst) {
+            ((HitInfo) dst).setHitInfo(this);
+        }
+
+        @Override
+        public void from(Object src) {
+            setHitInfo((HitInfo) src);
+        }
+
+        @Override
+        public void swap(Object o) {
+            HitInfo that = (HitInfo) o;
+            int index = that.index;
+            int insertion = that.insertion;
+            boolean leadingEdge = that.leadingEdge;
+            that.setHitInfo(this);
+            setHitInfo(index, insertion, leadingEdge);
+        }
+
+        @Override
+        public HitInfo clone() {
+            try {
+                return (HitInfo) super.clone();
+            }
+            catch (CloneNotSupportedException e) {
+                return copy();
+            }
+        }
+
+        @Override
+        public HitInfo copy() {
+            return new HitInfo(this);
+        }
+
+        @Override
+        public void reset() {
+            index = insertion = 0;
+            leadingEdge = true;
+        }
+
+        @Override
+        public boolean isIdentity() {
+            return index == 0 && insertion == 0 && leadingEdge;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            HitInfo hitInfo = (HitInfo) o;
+
+            if (index != hitInfo.index) return false;
+            if (insertion != hitInfo.insertion) return false;
+            return leadingEdge == hitInfo.leadingEdge;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = index;
+            result = 31 * result + insertion;
+            result = 31 * result + (leadingEdge ? 1 : 0);
+            return result;
+        }
+
+        @Override
+        public String toString() {
+            return getClass().getName()
+                    + '{' +
+                    "index=" + index +
+                    ", insertion=" + insertion +
+                    ", leadingEdge=" + leadingEdge +
+                    '}';
+        }
+
+    }
+
     public static final class Direction {
         private Direction() {
             throw new NotInstantiableError(Direction.class);

@@ -121,6 +121,10 @@ public class DesktopApplication extends unrefined.context.Container implements
 
     @Override
     public void run() {
+        if (!GraphicsEnvironment.isHeadless()) {
+            ContainerListener listener = getContainerListener();
+            if (listener != null) listener.onCreate(this);
+        }
         container.setVisible(true);
     }
 
@@ -727,8 +731,6 @@ public class DesktopApplication extends unrefined.context.Container implements
 
     @Override
     public void windowOpened(WindowEvent e) {
-        ContainerListener listener = getContainerListener();
-        if (listener != null) listener.onCreate(this);
     }
 
     @Override
@@ -740,7 +742,7 @@ public class DesktopApplication extends unrefined.context.Container implements
     @Override
     public void windowClosed(WindowEvent e) {
         ContainerListener listener = getContainerListener();
-        if (listener != null) listener.onDispose(DesktopApplication.this);
+        if (listener != null) listener.onDispose(this);
     }
 
     @Override

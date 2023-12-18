@@ -8,7 +8,6 @@ import unrefined.media.graphics.Graphics;
 import unrefined.media.graphics.Path;
 import unrefined.media.graphics.Rectangle;
 import unrefined.media.graphics.Transform;
-import unrefined.util.UnexpectedError;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +24,6 @@ public class Scene implements ContextListener {
     private volatile Camera camera;
     private volatile boolean enter = false;
     private volatile boolean down = false;
-    private volatile Bitmap buffer;
 
     private volatile Rectangle bounds;
     private volatile float[] point;
@@ -56,9 +54,6 @@ public class Scene implements ContextListener {
 
     public void setCamera(Camera camera) {
         this.camera = camera;
-        if (buffer != null && (buffer.getWidth() < camera.getWidth() || buffer.getHeight() < camera.getHeight())) buffer.dispose();
-        if (buffer == null || buffer.isDisposed())
-            buffer = Drawing.getDrawing().createBitmap(camera.getWidth(), camera.getHeight(), Bitmap.Type.RGBA_8888);
     }
 
     @Override
@@ -73,11 +68,16 @@ public class Scene implements ContextListener {
 
     @Override
     public void onDispose(Context context) {
-        if (buffer != null) buffer.dispose();
         invert.dispose();
+        invert = null;
         area.dispose();
+        area = null;
         clip.dispose();
+        clip = null;
         transform.dispose();
+        transform = null;
+        bounds = null;
+        point = null;
     }
 
     @Override
@@ -122,7 +122,9 @@ public class Scene implements ContextListener {
             area.reset();
             camera.getBounds(bounds);
             area.addRectangle(bounds.getX(), bounds.getY(), bounds.getWidth(), bounds.getHeight());
-            Graphics canvas = buffer.getGraphics();
+            Stage stage = (Stage) context.getContainer().getContainerListener();
+            Bitmap frameBuffer = stage.adjustFrameBuffer(camera);
+            Graphics canvas = frameBuffer.getGraphics();
             canvas.clearColor();
             canvas.setClip(area);
             for (Sprite sprite : sprites) {
@@ -136,7 +138,7 @@ public class Scene implements ContextListener {
                 graphics.setTransform(transform);
                 graphics.setClip(clip);
             }
-            graphics.drawBitmap(buffer);
+            graphics.drawBitmap(frameBuffer);
         }
     }
 
@@ -173,12 +175,38 @@ public class Scene implements ContextListener {
     }
 
     @Override
+    public boolean onPointerClick(Context context, float xOffset, float yOffset, int modifiers, int id, int button) {
+        if (camera == null || !enter) return false;
+        boolean transform = viewport != null;
+        if (transform) {
+            invert.from(this.transform);
+            if (!invert.invert()) return false;
+        }
+        for (Sprite sprite : sprites) {
+            if (sprite != null) {
+                float x, y;
+                if (transform) {
+                    invert.transformPoint(xOffset - sprite.getX(), yOffset - sprite.getY(), point);
+                    x = point[0];
+                    y = point[1];
+                }
+                else {
+                    x = xOffset - sprite.getX();
+                    y = yOffset - sprite.getY();
+                }
+                if (sprite.onPointerClick(this, x, y, modifiers, id, button)) return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
     public boolean onPointerDown(Context context, float xOffset, float yOffset, int modifiers, int id, int button) {
         if (camera == null || !enter) return false;
         boolean transform = viewport != null;
         if (transform) {
             invert.from(this.transform);
-            if (!invert.invert()) throw new UnexpectedError("Failed to invert the viewport transform: " + this.transform);
+            if (!invert.invert()) return false;
         }
         for (Sprite sprite : sprites) {
             if (sprite != null) {
@@ -205,7 +233,7 @@ public class Scene implements ContextListener {
         boolean transform = viewport != null;
         if (transform) {
             invert.from(this.transform);
-            if (!invert.invert()) throw new UnexpectedError("Failed to invert the viewport transform: " + this.transform);
+            if (!invert.invert()) return false;
         }
         for (Sprite sprite : sprites) {
             if (sprite != null) {
@@ -251,13 +279,18 @@ public class Scene implements ContextListener {
     }
 
     @Override
+    public boolean onTouchLongPress(Context context, float xOffset, float yOffset, int modifiers, int button) {
+        return false;
+    }
+
+    @Override
     public boolean onMouseMove(Context context, float xOffset, float yOffset, int modifiers) {
         if (camera == null) return false;
         camera.getBounds(bounds);
         boolean transform = viewport != null;
         if (transform) {
             invert.from(this.transform);
-            if (!invert.invert()) throw new UnexpectedError("Failed to invert the viewport transform: " + this.transform);
+            if (!invert.invert()) return false;
         }
         for (Sprite sprite : sprites) {
             if (sprite != null) {
@@ -295,7 +328,7 @@ public class Scene implements ContextListener {
         boolean transform = viewport != null;
         if (transform) {
             invert.from(this.transform);
-            if (!invert.invert()) throw new UnexpectedError("Failed to invert the viewport transform: " + this.transform);
+            if (!invert.invert()) return false;
         }
         for (Sprite sprite : sprites) {
             if (sprite != null) {
@@ -323,7 +356,7 @@ public class Scene implements ContextListener {
         boolean transform = viewport != null;
         if (transform) {
             invert.from(this.transform);
-            if (!invert.invert()) throw new UnexpectedError("Failed to invert the viewport transform: " + this.transform);
+            if (!invert.invert()) return false;
         }
         for (Sprite sprite : sprites) {
             if (sprite != null) {

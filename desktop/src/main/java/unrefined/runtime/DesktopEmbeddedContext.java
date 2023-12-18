@@ -208,7 +208,12 @@ public abstract class DesktopEmbeddedContext extends Context implements KeyListe
     }
 
     @Override
-    public void mouseClicked(MouseEvent e) {}
+    public void mouseClicked(MouseEvent e) {
+        ContextListener listener = getContextListener();
+        if (listener != null && listener.onPointerClick(this, e.getX(), e.getY(),
+                Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6),
+                e.getClickCount(), e.getButton() - 1)) e.consume();
+    }
 
     @Override
     public void mousePressed(MouseEvent e) {

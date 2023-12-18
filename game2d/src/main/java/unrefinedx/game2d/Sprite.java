@@ -23,7 +23,6 @@ public abstract class Sprite {
         this.y = y;
     }
 
-    public abstract void onAnimate(Scene scene);
     public abstract void onPaint(Scene scene, Graphics graphics, boolean snapshot);
 
     public boolean onKeyDown(Scene scene, String key, String code, int location, int modifiers) {
@@ -37,6 +36,10 @@ public abstract class Sprite {
     public boolean onKeyTyped(Scene scene, char key) {
         return false;
     }
+
+    public boolean onPointerClick(Scene scene, float xOffset, float yOffset, int modifiers, int id, int button) {
+        return false;
+    }
     
     public boolean onPointerDown(Scene scene, float xOffset, float yOffset, int modifiers, int id, int button) {
         return false;
@@ -47,6 +50,10 @@ public abstract class Sprite {
     }
     
     public boolean onPointerDrag(Scene scene, float xOffset, float yOffset, int modifiers, int id) {
+        return false;
+    }
+
+    public boolean onTouchLongPress(Scene scene, float xOffset, float yOffset, int modifiers) {
         return false;
     }
     

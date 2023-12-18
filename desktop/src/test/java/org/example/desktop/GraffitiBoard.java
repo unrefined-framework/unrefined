@@ -54,6 +54,7 @@ public class GraffitiBoard {
                     @Override
                     public void onResize(Context context, int width, int height) {
                         if (buffer == null || width > buffer.getWidth() || height > buffer.getHeight()) { // Refresh the buffer
+                            if (width < 1 || height < 1) return;
                             Bitmap extended = drawing.createBitmap(width, height, Bitmap.Type.RGBA_8888);
                             if (buffer != null) {
                                 extended.getGraphics().drawBitmap(buffer);
@@ -64,6 +65,7 @@ public class GraffitiBoard {
                     }
                     @Override
                     public void onPaint(Context context, Graphics graphics, boolean snapshot) {
+                        if (buffer == null) return;
                         graphics.drawBitmap(buffer, 0, 0);
                         graphics.setBrush(black);                 // Use the "plain black" brush
                         graphics.setStyle(Graphics.Style.STROKE); // Set the style to STROKE

@@ -20,9 +20,12 @@ public interface ContextListener {
     boolean onKeyUp(Context context, String key, String code, int location, int modifiers);
     boolean onKeyTyped(Context context, char key);
 
+    boolean onPointerClick(Context context, float xOffset, float yOffset, int modifiers, int id, int button);
     boolean onPointerDown(Context context, float xOffset, float yOffset, int modifiers, int id, int button);
     boolean onPointerUp(Context context, float xOffset, float yOffset, int modifiers, int id, int button);
     boolean onPointerDrag(Context context, float xOffset, float yOffset, int modifiers, int id);
+
+    boolean onTouchLongPress(Context context, float xOffset, float yOffset, int modifiers, int button);
 
     boolean onMouseMove(Context context, float xOffset, float yOffset, int modifiers);
     boolean onMouseEnter(Context context, float xOffset, float yOffset, int modifiers);

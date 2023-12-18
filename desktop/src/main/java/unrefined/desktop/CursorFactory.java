@@ -7,6 +7,7 @@ import unrefined.util.NotInstantiableError;
 
 import java.awt.AWTException;
 import java.awt.Cursor;
+import java.awt.HeadlessException;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Toolkit;
@@ -15,9 +16,19 @@ import static unrefined.media.graphics.Cursor.Type.*;
 
 public final class CursorFactory {
 
-    public static final Cursor NONE_CURSOR = Toolkit.getDefaultToolkit().createCustomCursor(
-            Toolkit.getDefaultToolkit().getImage(CursorFactory.class.getResource("")),
-            new Point(0, 0), "UXGL None Cursor");
+    public static final Cursor NONE_CURSOR;
+    static {
+        Cursor cursor;
+        try {
+            cursor = Toolkit.getDefaultToolkit().createCustomCursor(
+                    Toolkit.getDefaultToolkit().getImage(CursorFactory.class.getResource("")),
+                    new Point(0, 0), "UXGL None Cursor");
+        }
+        catch (HeadlessException e) {
+            cursor = null;
+        }
+        NONE_CURSOR = cursor;
+    }
 
     private CursorFactory() {
         throw new NotInstantiableError(CursorFactory.class);

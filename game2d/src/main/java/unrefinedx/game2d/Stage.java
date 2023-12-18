@@ -3,6 +3,8 @@ package unrefinedx.game2d;
 import unrefined.context.Container;
 import unrefined.context.ContainerListener;
 import unrefined.context.Context;
+import unrefined.media.graphics.Bitmap;
+import unrefined.media.graphics.Drawing;
 import unrefined.media.graphics.Insets;
 
 import java.util.concurrent.Executors;
@@ -12,7 +14,21 @@ public class Stage implements ContainerListener {
 
     private volatile Context context;
     private volatile Scene scene;
-    private final Insets insets = new Insets();
+    private volatile Insets insets;
+    private volatile Bitmap frameBuffer;
+
+    public Bitmap adjustFrameBuffer(Camera camera) {
+        if (frameBuffer != null && (frameBuffer.getWidth() < camera.getWidth() || frameBuffer.getHeight() < camera.getHeight())) frameBuffer.dispose();
+        if (frameBuffer == null || frameBuffer.isDisposed())
+            frameBuffer = Drawing.getDrawing().createBitmap(camera.getWidth(), camera.getHeight(), Bitmap.Type.RGBA_8888);
+        return frameBuffer;
+    }
+
+    public Bitmap trimFrameBuffer(Camera camera) {
+        if (frameBuffer != null && (frameBuffer.getWidth() != camera.getWidth() || frameBuffer.getHeight() != camera.getHeight())) frameBuffer.dispose();
+        if (frameBuffer == null || frameBuffer.isDisposed()) frameBuffer = Drawing.getDrawing().createBitmap(camera.getWidth(), camera.getHeight(), Bitmap.Type.RGBA_8888);
+        return frameBuffer;
+    }
 
     public Stage() {
     }
@@ -31,6 +47,7 @@ public class Stage implements ContainerListener {
 
     @Override
     public void onCreate(Container container) {
+        insets = new Insets();
         context = container.createContext();
         container.addContext(context);
         if (scene != null && context.getContextListener() != scene) context.setContextListener(scene);
@@ -38,7 +55,8 @@ public class Stage implements ContainerListener {
 
     @Override
     public void onDispose(Container container) {
-
+        insets = null;
+        if (frameBuffer != null) frameBuffer.dispose();
     }
 
     @Override
@@ -49,14 +67,7 @@ public class Stage implements ContainerListener {
             thread.setName("UXGL Game2D Main Loop Thread");
             return thread;
         }).scheduleAtFixedRate(() -> {
-            if (scene != null) {
-                for (Sprite sprite : scene.sprites()) {
-                    if (sprite != null) {
-                        sprite.onAnimate(scene);
-                    }
-                }
-                container.requestPaint();
-            }
+            if (scene != null) container.requestPaint();
         }, 0, 1000_000_000L / 60, TimeUnit.NANOSECONDS);
     }
 
@@ -115,6 +126,11 @@ public class Stage implements ContainerListener {
     }
 
     @Override
+    public void onPointerClick(Container container, float xOffset, float yOffset, int modifiers, int id, int button) {
+
+    }
+
+    @Override
     public void onPointerDown(Container container, float xOffset, float yOffset, int modifiers, int id, int button) {
 
     }
@@ -126,6 +142,11 @@ public class Stage implements ContainerListener {
 
     @Override
     public void onPointerDrag(Container container, float xOffset, float yOffset, int modifiers, int id) {
+
+    }
+
+    @Override
+    public void onTouchLongPress(Container container, float xOffset, float yOffset, int modifiers, int button) {
 
     }
 

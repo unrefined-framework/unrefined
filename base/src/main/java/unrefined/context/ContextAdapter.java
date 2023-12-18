@@ -71,6 +71,11 @@ public abstract class ContextAdapter implements ContextListener {
     }
 
     @Override
+    public boolean onPointerClick(Context context, float xOffset, float yOffset, int modifiers, int id, int button) {
+        return false;
+    }
+
+    @Override
     public boolean onPointerDown(Context context, float xOffset, float yOffset, int modifiers, int id, int button) {
         return false;
     }
@@ -82,6 +87,11 @@ public abstract class ContextAdapter implements ContextListener {
 
     @Override
     public boolean onPointerDrag(Context context, float xOffset, float yOffset, int modifiers, int id) {
+        return false;
+    }
+
+    @Override
+    public boolean onTouchLongPress(Context context, float xOffset, float yOffset, int modifiers, int button) {
         return false;
     }
 

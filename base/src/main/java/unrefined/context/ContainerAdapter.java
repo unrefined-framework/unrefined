@@ -68,6 +68,11 @@ public abstract class ContainerAdapter implements ContainerListener {
     }
 
     @Override
+    public void onPointerClick(Container container, float xOffset, float yOffset, int modifiers, int id, int button) {
+
+    }
+
+    @Override
     public void onPointerDown(Container container, float xOffset, float yOffset, int modifiers, int id, int button) {
 
     }
@@ -84,6 +89,11 @@ public abstract class ContainerAdapter implements ContainerListener {
 
     @Override
     public void onMouseMove(Container container, float xOffset, float yOffset, int modifiers) {
+
+    }
+
+    @Override
+    public void onTouchLongPress(Container container, float xOffset, float yOffset, int modifiers, int button) {
 
     }
 

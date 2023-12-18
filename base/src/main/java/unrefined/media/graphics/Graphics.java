@@ -681,6 +681,15 @@ public abstract class Graphics implements Disposable, Resettable {
     }
     public abstract void drawTextOnPath(char[] text, int offset, int length, Path path, float startOffset, Transform transform);
 
+    public abstract float measureText(CharSequence text, int start, int end);
+    public float measureText(CharSequence text) {
+        return measureText(text, 0, text.length());
+    }
+    public abstract float measureText(char[] text, int offset, int length);
+    public float measureText(char[] text) {
+        return measureText(text, 0, text.length);
+    }
+
     public abstract void measureText(CharSequence text, int start, int end, Text.Metrics metrics, RectangleF bounds);
     public void measureText(CharSequence text, Text.Metrics metrics, RectangleF bounds) {
         measureText(text, 0, text.length(), metrics, bounds);
@@ -688,6 +697,41 @@ public abstract class Graphics implements Disposable, Resettable {
     public abstract void measureText(char[] text, int offset, int length, Text.Metrics metrics, RectangleF bounds);
     public void measureText(char[] text, Text.Metrics metrics, RectangleF bounds) {
         measureText(text, 0, text.length, metrics, bounds);
+    }
+
+    public void measureText(CharSequence text, int start, int end, Text.Metrics metrics) {
+        measureText(text, start, end, metrics, null);
+    }
+    public void measureText(CharSequence text, Text.Metrics metrics) {
+        measureText(text, 0, text.length(), metrics);
+    }
+    public void measureText(char[] text, int offset, int length, RectangleF bounds) {
+        measureText(text, offset, length, null, bounds);
+    }
+    public void measureText(char[] text, RectangleF bounds) {
+        measureText(text, 0, text.length, null, bounds);
+    }
+
+    public void measureText(CharSequence text, int start, int end, RectangleF bounds) {
+        measureText(text, start, end, null, bounds);
+    }
+    public void measureText(CharSequence text, RectangleF bounds) {
+        measureText(text, 0, text.length(), null, bounds);
+    }
+    public void measureText(char[] text, int offset, int length, Text.Metrics metrics) {
+        measureText(text, offset, length, metrics, null);
+    }
+    public void measureText(char[] text, Text.Metrics metrics) {
+        measureText(text, 0, text.length, metrics);
+    }
+
+    public abstract void hitText(CharSequence text, int start, int end, float xOffset, Text.HitInfo hitInfo);
+    public void hitText(CharSequence text, float xOffset, Text.HitInfo hitInfo) {
+        hitText(text, 0, text.length(), xOffset, hitInfo);
+    }
+    public abstract void hitText(char[] text, int offset, int length, float xOffset, Text.HitInfo hitInfo);
+    public void hitText(char[] text, float xOffset, Text.HitInfo hitInfo) {
+        hitText(text, 0, text.length, xOffset, hitInfo);
     }
 
     public abstract void getInfo(Info info);
