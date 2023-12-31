@@ -18,7 +18,7 @@ This library contains:
 [Serialization/Deserialization API](/base/src/main/java/unrefined/io/Portable.java)  
 [Logger API](/base/src/main/java/unrefined/app/Logger.java)  
 [MVVM Data Binding API](/base/src/main/java/unrefined/beans)  
-[Foreign Function Invocation API](/base/src/main/java/unrefined/util/foreign)
+[Foreign Function Interface API](/base/src/main/java/unrefined/util/foreign)
 ...and more
 
 It is also designed to work properly in "headless mode".
