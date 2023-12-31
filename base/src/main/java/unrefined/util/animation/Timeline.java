@@ -2,14 +2,14 @@ package unrefined.util.animation;
 
 import unrefined.util.NotInstantiableError;
 import unrefined.util.event.EventSlot;
-import unrefined.util.function.Slot;
-import unrefined.util.signal.Signal;
+import unrefined.util.signal.SignalSlot;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static unrefined.util.animation.Timeline.Mode.*;
+import static unrefined.util.animation.Timeline.Mode.PARALLEL;
+import static unrefined.util.animation.Timeline.Mode.SEQUENCE;
 
 /**
  * A Timeline can be used to create complex animations made of sequences and
@@ -92,8 +92,8 @@ public final class Timeline extends Animation {
 			this.timeline = timeline;
 			timeline.setup(mode);
 		}
-		public Editor onStateChanged(Slot<Signal<EventSlot<StateChangedEvent>>> consumer) {
-			consumer.accept(timeline.onStateChanged());
+		public Editor onStateChange(SignalSlot<EventSlot<StateChangeEvent>> consumer) {
+			consumer.accept(timeline.onStateChange());
 			return this;
 		}
 		/**

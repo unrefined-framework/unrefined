@@ -15,12 +15,15 @@
  */
 package unrefined.util;
 
+import java.util.Iterator;
+import java.util.RandomAccess;
+
 /**
  * CircularShortArray is a circular short array data structure that provides O(1) random read, O(1)
  * prepend and O(1) append. The CircularShortArray automatically grows its capacity when number of
  * added shorts is over its capacity.
  */
-public class CircularShortArray {
+public class CircularShortArray implements Cloneable, Iterable<Short>, RandomAccess {
 
     private short[] elements;
     private int head;
@@ -75,6 +78,22 @@ public class CircularShortArray {
 
         capacityBitmask = arrayCapacity - 1;
         elements = new short[arrayCapacity];
+    }
+
+    @Override
+    public CircularShortArray clone() {
+        CircularShortArray clone;
+        try {
+            clone = (CircularShortArray) super.clone();
+        }
+        catch (CloneNotSupportedException e) {
+            clone = new CircularShortArray();
+            clone.head = head;
+            clone.tail = tail;
+            clone.capacityBitmask = capacityBitmask;
+        }
+        clone.elements = elements.clone();
+        return clone;
     }
 
     /**
@@ -254,6 +273,22 @@ public class CircularShortArray {
         }
         buffer.append(']');
         return buffer.toString();
+    }
+
+    @Override
+    public Iterator<Short> iterator() {
+        return new Iterator<Short>() {
+            private int index = -1;
+            @Override
+            public boolean hasNext() {
+                return index + 1 < size();
+            }
+            @Override
+            public Short next() {
+                index ++;
+                return get(index);
+            }
+        };
     }
 
 }

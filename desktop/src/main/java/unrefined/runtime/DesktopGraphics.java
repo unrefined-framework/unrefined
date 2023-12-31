@@ -1,12 +1,11 @@
 package unrefined.runtime;
 
+import unrefined.desktop.AWTSupport;
 import unrefined.desktop.AttributedCharSequence;
 import unrefined.desktop.CharArrayIterator;
-import unrefined.desktop.FontFactory;
+import unrefined.desktop.FontSupport;
+import unrefined.desktop.TextHints;
 import unrefined.desktop.TextPathLayout;
-import unrefined.internal.AWTUtils;
-import unrefined.internal.FontUtils;
-import unrefined.internal.TextUtils;
 import unrefined.media.graphics.Bitmap;
 import unrefined.media.graphics.Brush;
 import unrefined.media.graphics.Composite;
@@ -43,6 +42,7 @@ import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.text.AttributedCharacterIterator;
 import java.text.AttributedString;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -129,8 +129,8 @@ public class DesktopGraphics extends Graphics {
     public void drawShape(Shape shape) {
         if (isDisposed()) throw new AlreadyDisposedException();
         switch (info.getStyle()) {
-            case Style.STROKE -> graphics2D.draw(shape);
-            case Style.FILL -> graphics2D.fill(shape);
+            case Style.STROKE: graphics2D.draw(shape); break;
+            case Style.FILL: graphics2D.fill(shape); break;
         }
     }
 
@@ -240,7 +240,8 @@ public class DesktopGraphics extends Graphics {
         if (isDisposed()) throw new AlreadyDisposedException();
         int textAlignment = getTextAlignment();
         TextLayout textLayout;
-        if (text instanceof String string) {
+        if (text instanceof String) {
+            String string = (String) text;
             if (start == 0 && end == string.length() && graphics2D.getFont().hasLayoutAttributes() && getStyle() == Style.FILL &&
                     textAlignment == Text.Alignment.START) {
                 graphics2D.drawString(string, x, y);
@@ -255,8 +256,8 @@ public class DesktopGraphics extends Graphics {
                     graphics2D.getFontRenderContext());
         float advance = textLayout.getAdvance();
         switch (textAlignment) {
-            case Text.Alignment.END -> x -= advance;
-            case Text.Alignment.MIDDLE -> x -= advance / 2;
+            case Text.Alignment.END: x -= advance; break;
+            case Text.Alignment.MIDDLE: x -= advance / 2; break;
         }
         if (getStyle() == Style.STROKE) graphics2D.draw(textLayout.getOutline(AffineTransform.getTranslateInstance(x, y)));
         else textLayout.draw(graphics2D, x, y);
@@ -278,8 +279,8 @@ public class DesktopGraphics extends Graphics {
                 float x = 0;
                 float advance = textLayout.getAdvance();
                 switch (textAlignment) {
-                    case Text.Alignment.END -> x -= advance;
-                    case Text.Alignment.MIDDLE -> x -= advance / 2;
+                    case Text.Alignment.END: x -= advance; break;
+                    case Text.Alignment.MIDDLE: x -= advance / 2; break;
                 }
                 textLayout.draw(graphics2D, x, 0);
             }
@@ -301,7 +302,7 @@ public class DesktopGraphics extends Graphics {
 
     @Override
     public void drawTextOnPath(CharSequence text, int start, int end, Path path, float startOffset, int x, int y) {
-        drawTextOnPath(TextUtils.toCharArray(text, start, end), path, startOffset, x, y);
+        drawTextOnPath(Text.toCharArray(text, start, end), path, startOffset, x, y);
     }
 
     @Override
@@ -313,7 +314,7 @@ public class DesktopGraphics extends Graphics {
                 .createGlyphVector(graphics2D.getFontRenderContext(), new CharArrayIterator(text, offset, length));
         else glyphVector = graphics2D.getFont()
                 .layoutGlyphVector(graphics2D.getFontRenderContext(), text, offset, offset + length,
-                        toFontFlag(info.getTextDirection()));
+                        FontSupport.toFontFlag(info.getTextDirection()));
         Shape textOnPath = TextPathLayout.layoutGlyphVector(glyphVector, ((DesktopPath) path).getPath2D(),
                 info.getTextAlignment(), startOffset, (float) glyphVector.getVisualBounds().getWidth(), TextPathLayout.ADJUST_SPACING);
         drawShape(AffineTransform.getTranslateInstance(x, y).createTransformedShape(textOnPath));
@@ -321,15 +322,7 @@ public class DesktopGraphics extends Graphics {
 
     @Override
     public void drawTextOnPath(CharSequence text, int start, int end, Path path, float startOffset, Transform transform) {
-        drawTextOnPath(TextUtils.toCharArray(text, start, end), path, startOffset, transform);
-    }
-
-    private static int toFontFlag(int direction) {
-        return switch (direction) {
-            case Text.Direction.LTR -> java.awt.Font.LAYOUT_LEFT_TO_RIGHT;
-            case Text.Direction.RTL -> java.awt.Font.LAYOUT_RIGHT_TO_LEFT;
-            default -> throw new IllegalArgumentException("Illegal text direction: " + direction);
-        };
+        drawTextOnPath(Text.toCharArray(text, start, end), path, startOffset, transform);
     }
 
     @Override
@@ -341,7 +334,7 @@ public class DesktopGraphics extends Graphics {
                 .createGlyphVector(graphics2D.getFontRenderContext(), new CharArrayIterator(text, offset, length));
         else glyphVector = graphics2D.getFont()
                 .layoutGlyphVector(graphics2D.getFontRenderContext(), text, offset, offset + length,
-                        toFontFlag(info.getTextDirection()));
+                        FontSupport.toFontFlag(info.getTextDirection()));
         Shape textOnPath = TextPathLayout.layoutGlyphVector(glyphVector, ((DesktopPath) path).getPath2D(),
                 info.getTextAlignment(), startOffset, (float) glyphVector.getVisualBounds().getWidth(), TextPathLayout.ADJUST_SPACING);
         if (transform == null) drawShape(textOnPath);
@@ -353,10 +346,12 @@ public class DesktopGraphics extends Graphics {
         if (isDisposed()) throw new AlreadyDisposedException();
         FontMetrics fontMetrics = graphics2D.getFontMetrics();
         Rectangle2D bounds2D;
-        if (text instanceof String string) {
+        if (text instanceof String) {
+            String string = (String) text;
             bounds2D = fontMetrics.getStringBounds(string, start, end, graphics2D);
         }
-        else if (text instanceof PhantomString string) {
+        else if (text instanceof PhantomString) {
+            PhantomString string = (PhantomString) text;
             bounds2D = fontMetrics.getStringBounds(string.array(), start, end, graphics2D);
         }
         else {
@@ -380,11 +375,13 @@ public class DesktopGraphics extends Graphics {
         FontMetrics fontMetrics = graphics2D.getFontMetrics();
         LineMetrics lineMetrics;
         Rectangle2D bounds2D;
-        if (text instanceof String string) {
+        if (text instanceof String) {
+            String string = (String) text;
             lineMetrics = fontMetrics.getLineMetrics(string, start, end, graphics2D);
             bounds2D = fontMetrics.getStringBounds(string, start, end, graphics2D);
         }
-        else if (text instanceof PhantomString string) {
+        else if (text instanceof PhantomString) {
+            PhantomString string = (PhantomString) text;
             lineMetrics = fontMetrics.getLineMetrics(string.array(), start, end, graphics2D);
             bounds2D = fontMetrics.getStringBounds(string.array(), start, end, graphics2D);
         }
@@ -396,7 +393,7 @@ public class DesktopGraphics extends Graphics {
         if (metrics != null) metrics.setMetrics(lineMetrics.getBaselineOffsets()[lineMetrics.getBaselineIndex()],
                 lineMetrics.getAscent(), lineMetrics.getDescent(), lineMetrics.getLeading(),
                 fontMetrics.getMaxAscent(), fontMetrics.getMaxDescent(), fontMetrics.getMaxAdvance());
-        if (bounds != null) AWTUtils.floatRectangle(bounds2D, bounds);
+        if (bounds != null) AWTSupport.floatRectangle(bounds2D, bounds);
     }
 
     @Override
@@ -404,10 +401,12 @@ public class DesktopGraphics extends Graphics {
         if (isDisposed()) throw new AlreadyDisposedException();
         FontMetrics fontMetrics = graphics2D.getFontMetrics();
         LineMetrics lineMetrics;
-        if (text instanceof String string) {
+        if (text instanceof String) {
+            String string = (String) text;
             lineMetrics = fontMetrics.getLineMetrics(string, start, end, graphics2D);
         }
-        else if (text instanceof PhantomString string) {
+        else if (text instanceof PhantomString) {
+            PhantomString string = (PhantomString) text;
             lineMetrics = fontMetrics.getLineMetrics(string.array(), start, end, graphics2D);
         }
         else {
@@ -424,17 +423,19 @@ public class DesktopGraphics extends Graphics {
         if (isDisposed()) throw new AlreadyDisposedException();
         FontMetrics fontMetrics = graphics2D.getFontMetrics();
         Rectangle2D bounds2D;
-        if (text instanceof String string) {
+        if (text instanceof String) {
+            String string = (String) text;
             bounds2D = fontMetrics.getStringBounds(string, start, end, graphics2D);
         }
-        else if (text instanceof PhantomString string) {
+        else if (text instanceof PhantomString) {
+            PhantomString string = (PhantomString) text;
             bounds2D = fontMetrics.getStringBounds(string.array(), start, end, graphics2D);
         }
         else {
             AttributedCharacterIterator iterator = new AttributedCharSequence(text).getIterator();
             bounds2D = fontMetrics.getStringBounds(iterator, start, end, graphics2D);
         }
-        AWTUtils.floatRectangle(bounds2D, bounds);
+        AWTSupport.floatRectangle(bounds2D, bounds);
     }
 
     @Override
@@ -446,7 +447,7 @@ public class DesktopGraphics extends Graphics {
         if (metrics != null) metrics.setMetrics(lineMetrics.getBaselineOffsets()[lineMetrics.getBaselineIndex()],
                 lineMetrics.getAscent(), lineMetrics.getDescent(), lineMetrics.getLeading(),
                 fontMetrics.getMaxAscent(), fontMetrics.getMaxDescent(), fontMetrics.getMaxAdvance());
-        if (bounds != null) AWTUtils.floatRectangle(bounds2D, bounds);
+        if (bounds != null) AWTSupport.floatRectangle(bounds2D, bounds);
     }
 
     @Override
@@ -464,7 +465,7 @@ public class DesktopGraphics extends Graphics {
         if (isDisposed()) throw new AlreadyDisposedException();
         FontMetrics fontMetrics = graphics2D.getFontMetrics();
         Rectangle2D bounds2D = fontMetrics.getStringBounds(text, offset, length, graphics2D);
-        AWTUtils.floatRectangle(bounds2D, bounds);
+        AWTSupport.floatRectangle(bounds2D, bounds);
     }
 
     @Override
@@ -516,7 +517,7 @@ public class DesktopGraphics extends Graphics {
     public void setTransform(Transform transform) {
         if (isDisposed()) throw new AlreadyDisposedException();
         info.setTransform(transform);
-        graphics2D.setTransform(transform == null ? AWTUtils.getDefaultTransform(graphics2D) : ((DesktopTransform) transform).getAffineTransform());
+        graphics2D.setTransform(transform == null ? AWTSupport.getDefaultTransform(graphics2D) : ((DesktopTransform) transform).getAffineTransform());
     }
 
     @Override
@@ -656,7 +657,7 @@ public class DesktopGraphics extends Graphics {
         info.setAntiAlias(antiAlias);
         graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, antiAlias ? RenderingHints.VALUE_ANTIALIAS_ON : RenderingHints.VALUE_ANTIALIAS_OFF);
         graphics2D.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
-                antiAlias ? FontUtils.VALUE_TEXT_ANTIALIAS_SYSTEM_ON : RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
+                antiAlias ? TextHints.VALUE_TEXT_ANTIALIAS_SYSTEM_ON : RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
     }
 
     @Override
@@ -696,7 +697,7 @@ public class DesktopGraphics extends Graphics {
     public void setFont(Font font) {
         if (isDisposed()) throw new AlreadyDisposedException();
         info.setFont(font);
-        graphics2D.setFont((font == null ? FontFactory.getDefaultFont() : ((DesktopFont) font).getFont()).deriveFont(graphics2D.getFont().getAttributes()));
+        graphics2D.setFont((font == null ? FontSupport.getDefaultFont() : ((DesktopFont) font).getFont()).deriveFont(graphics2D.getFont().getAttributes()));
     }
 
     @Override
@@ -723,7 +724,7 @@ public class DesktopGraphics extends Graphics {
         if (isDisposed()) throw new AlreadyDisposedException();
         info.setTextDirection(direction);
         Map<TextAttribute, Object> attributes = new HashMap<>(1);
-        attributes.put(TextAttribute.RUN_DIRECTION, FontUtils.toRunDirection(direction));
+        attributes.put(TextAttribute.RUN_DIRECTION, TextHints.toRunDirection(direction));
         graphics2D.setFont(graphics2D.getFont().deriveFont(attributes));
     }
 
@@ -763,7 +764,7 @@ public class DesktopGraphics extends Graphics {
     public void setUnderlineText(boolean underlineText) {
         if (isDisposed()) throw new AlreadyDisposedException();
         info.setUnderlineText(underlineText);
-        graphics2D.setFont(graphics2D.getFont().deriveFont(Map.of(TextAttribute.UNDERLINE, FontUtils.UNDERLINE_OFF)));
+        graphics2D.setFont(graphics2D.getFont().deriveFont(Collections.singletonMap(TextAttribute.UNDERLINE, TextHints.UNDERLINE_OFF)));
     }
 
     @Override
@@ -776,7 +777,7 @@ public class DesktopGraphics extends Graphics {
     public void setStrikeThroughText(boolean strikeThroughText) {
         if (isDisposed()) throw new AlreadyDisposedException();
         info.setStrikeThroughText(strikeThroughText);
-        graphics2D.setFont(graphics2D.getFont().deriveFont(Map.of(TextAttribute.STRIKETHROUGH, FontUtils.STRIKETHROUGH_OFF)));
+        graphics2D.setFont(graphics2D.getFont().deriveFont(Collections.singletonMap(TextAttribute.STRIKETHROUGH, TextHints.STRIKETHROUGH_OFF)));
     }
 
     @Override

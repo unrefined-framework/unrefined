@@ -16,7 +16,8 @@
 
 package unrefined.util;
 
-import unrefined.internal.ArrayUtils;
+import java.util.Iterator;
+import java.util.RandomAccess;
 
 /**
  * SparseBooleanArrays map integers to booleans.
@@ -40,7 +41,7 @@ import unrefined.internal.ArrayUtils;
  * keys in ascending order, or the values corresponding to the keys in ascending
  * order in the case of <code>valueAt(int)</code>.</p>
  */
-public class SparseBooleanArray implements Cloneable {
+public class SparseBooleanArray implements Cloneable, Iterable<Boolean>, RandomAccess {
 
     private int[] keys;
     private boolean[] values;
@@ -65,7 +66,7 @@ public class SparseBooleanArray implements Cloneable {
             keys = EmptyArray.INT;
             values = EmptyArray.BOOLEAN;
         } else {
-            initialCapacity = ArrayUtils.sparseIntArraySize(initialCapacity);
+            initialCapacity = FastArray.sparseIntArraySize(initialCapacity);
             keys = new int[initialCapacity];
             values = new boolean[initialCapacity];
         }
@@ -98,7 +99,7 @@ public class SparseBooleanArray implements Cloneable {
      * if no such mapping has been made.
      */
     public boolean get(int key, boolean valueIfKeyNotFound) {
-        int i = ArrayUtils.binarySearchUnchecked(keys, 0, size, key);
+        int i = FastArray.binarySearchUnchecked(keys, 0, size, key);
 
         if (i < 0) {
             return valueIfKeyNotFound;
@@ -111,7 +112,7 @@ public class SparseBooleanArray implements Cloneable {
      * Removes the mapping from the specified key, if there was any.
      */
     public void remove(int key) {
-        int i = ArrayUtils.binarySearchUnchecked(keys, 0, size, key);
+        int i = FastArray.binarySearchUnchecked(keys, 0, size, key);
 
         if (i >= 0) {
             System.arraycopy(keys, i + 1, keys, i, size - (i + 1));
@@ -137,7 +138,7 @@ public class SparseBooleanArray implements Cloneable {
      * was one.
      */
     public void put(int key, boolean value) {
-        int i = ArrayUtils.binarySearchUnchecked(keys, 0, size, key);
+        int i = FastArray.binarySearchUnchecked(keys, 0, size, key);
 
         if (i >= 0) {
             values[i] = value;
@@ -145,7 +146,7 @@ public class SparseBooleanArray implements Cloneable {
             i = ~i;
 
             if (size >= keys.length) {
-                int n = ArrayUtils.sparseIntArraySize(size + 1);
+                int n = FastArray.sparseIntArraySize(size + 1);
 
                 int[] nkeys = new int[n];
                 boolean[] nvalues = new boolean[n];
@@ -244,7 +245,7 @@ public class SparseBooleanArray implements Cloneable {
      * key is not mapped.
      */
     public int indexOfKey(int key) {
-        return ArrayUtils.binarySearchUnchecked(keys, 0, size, key);
+        return FastArray.binarySearchUnchecked(keys, 0, size, key);
     }
 
     /**
@@ -282,7 +283,7 @@ public class SparseBooleanArray implements Cloneable {
 
         int pos = size;
         if (pos >= keys.length) {
-            int n =  ArrayUtils.sparseIntArraySize(pos + 1);
+            int n =  FastArray.sparseIntArraySize(pos + 1);
 
             int[] nkeys = new int[n];
             boolean[] nvalues = new boolean[n];
@@ -350,6 +351,22 @@ public class SparseBooleanArray implements Cloneable {
         }
         buffer.append('}');
         return buffer.toString();
+    }
+
+    @Override
+    public Iterator<Boolean> iterator() {
+        return new Iterator<Boolean>() {
+            private int index = -1;
+            @Override
+            public boolean hasNext() {
+                return index + 1 < size();
+            }
+            @Override
+            public Boolean next() {
+                index ++;
+                return get(index);
+            }
+        };
     }
 
 }

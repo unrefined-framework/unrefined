@@ -5,8 +5,7 @@ import unrefined.util.animation.ease.Quad;
 import unrefined.util.animation.interpolate.CatmullRom;
 import unrefined.util.animation.interpolate.Interpolation;
 import unrefined.util.event.EventSlot;
-import unrefined.util.function.Slot;
-import unrefined.util.signal.Signal;
+import unrefined.util.signal.SignalSlot;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -123,8 +122,8 @@ public final class Tween extends Animation {
 		private Editor(Tween tween) {
 			this.tween = tween;
 		}
-		public Editor onStateChanged(Slot<Signal<EventSlot<StateChangedEvent>>> consumer) {
-			consumer.accept(tween.onStateChanged());
+		public Editor onStateChange(SignalSlot<EventSlot<StateChangeEvent>> consumer) {
+			consumer.accept(tween.onStateChange());
 			return this;
 		}
 		/**
@@ -442,10 +441,10 @@ public final class Tween extends Animation {
 		 *
 		 * @return The generated Tween.
 		 */
-		public Editor call(Slot<Signal<EventSlot<StateChangedEvent>>> consumer) {
+		public Editor call(SignalSlot<EventSlot<StateChangeEvent>> consumer) {
 			tween.setup(null, -1, 0);
-			onStateChanged(consumer);
-			tween.setStateChangedTriggers(Flag.START);
+			onStateChange(consumer);
+			tween.setStateChangeTriggers(Flag.START);
 			return this;
 		}
 		/**
@@ -542,7 +541,7 @@ public final class Tween extends Animation {
 	private void setup(Object target, int tweenType, float duration) {
 		if (duration < 0) throw new IllegalArgumentException("Duration can't be negative");
 
-		onStateChanged().clear();
+		onStateChange().clear();
 		this.target = target;
 		this.targetClass = target != null ? findTargetClass() : null;
 		this.type = tweenType;

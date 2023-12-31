@@ -41,7 +41,7 @@ public class GraffitiBoard {
 
                 insets = new Insets();
 
-                Drawing drawing = Drawing.getDrawing();   // Get the platform-dependent 2D factory instance
+                Drawing drawing = Drawing.getInstance();  // Get the platform-dependent 2D factory instance
                 black = drawing.createBrush(Color.BLACK); // Create the "plain black" brush
 
                 path = drawing.createPath();              // Create the path
@@ -125,9 +125,7 @@ public class GraffitiBoard {
                 // The container is disposed
                 // You can free resources here
 
-                black.dispose();
                 buffer.dispose();
-                path.dispose();
             }
 
             @Override

@@ -1,8 +1,8 @@
 package unrefined.internal.bitmap;
 
-import unrefined.desktop.BitmapImageFactory;
+import unrefined.desktop.BitmapSupport;
 import unrefined.desktop.IIOBitmapHandler;
-import unrefined.internal.IOUtils;
+import unrefined.math.FastMath;
 import unrefined.media.graphics.Bitmap;
 import unrefined.runtime.DesktopBitmap;
 
@@ -11,14 +11,14 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
-import javax.imageio.plugins.tiff.TIFFDirectory;
-import javax.imageio.plugins.tiff.TIFFField;
-import javax.imageio.plugins.tiff.TIFFTag;
+import javax.imageio.metadata.IIOMetadata;
+import javax.imageio.metadata.IIOMetadataNode;
 import javax.imageio.stream.ImageInputStream;
 import javax.imageio.stream.ImageOutputStream;
 import java.awt.image.BufferedImage;
 import java.io.EOFException;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Set;
@@ -27,17 +27,15 @@ public class TIFFBitmapHandler extends IIOBitmapHandler {
 
     public static final TIFFBitmapHandler INSTANCE = new TIFFBitmapHandler();
 
-    private static final int NUMBER_X_RESOLUTION = 282;
-    private static final TIFFTag TAG_X_RESOLUTION = new TIFFTag("TIFFRationals", NUMBER_X_RESOLUTION, 1 << TIFFTag.TIFF_RATIONAL, 1);
-    private static final int NUMBER_Y_RESOLUTION = 283;
-    private static final TIFFTag TAG_Y_RESOLUTION = new TIFFTag("TIFFRationals", NUMBER_Y_RESOLUTION, 1 << TIFFTag.TIFF_RATIONAL, 1);
-    private static final int NUMBER_X_POSITION = 286;
-    private static final TIFFTag TAG_X_POSITION = new TIFFTag("TIFFRationals", NUMBER_X_POSITION, 1 << TIFFTag.TIFF_RATIONAL, 1);
-    private static final int NUMBER_Y_POSITION = 287;
-    private static final TIFFTag TAG_Y_POSITION = new TIFFTag("TIFFRationals", NUMBER_Y_POSITION, 1 << TIFFTag.TIFF_RATIONAL, 1);
+    private static final String NATIVE_FORMAT_NAME = "com_sun_media_imageio_plugins_tiff_image_1.0";
 
-    private static final Set<String> READER_FORMAT_NAMES = Set.of( "tiff" );
-    private static final Set<String> WRITER_FORMAT_NAMES = Set.of( "tiff" );
+    private static final int TAG_X_RESOLUTION = 282;
+    private static final int TAG_Y_RESOLUTION = 283;
+    private static final int TAG_X_POSITION = 286;
+    private static final int TAG_Y_POSITION = 287;
+
+    private static final Set<String> READER_FORMAT_NAMES = Collections.singleton( "tiff" );
+    private static final Set<String> WRITER_FORMAT_NAMES = Collections.singleton( "tiff" );
 
     private static boolean isTIFF(ImageInputStream input) throws IOException {
         byte[] b = new byte[4];
@@ -62,6 +60,28 @@ public class TIFFBitmapHandler extends IIOBitmapHandler {
                         b[2] == (byte) 0x00 &&
                         b[3] == (byte) 0x2a
         ));
+    }
+
+    private static IIOMetadataNode generateMetadata(Bitmap.Frame frame) {
+        IIOMetadataNode root = new IIOMetadataNode(NATIVE_FORMAT_NAME);
+        IIOMetadataNode ifd = new IIOMetadataNode("TIFFIFD");
+        ifd.appendChild(generateTIFFRational(TAG_X_RESOLUTION, 96, 1));
+        ifd.appendChild(generateTIFFRational(TAG_Y_RESOLUTION, 96, 1));
+        ifd.appendChild(generateTIFFRational(TAG_X_POSITION, frame.getHotSpotX(), 96));
+        ifd.appendChild(generateTIFFRational(TAG_Y_POSITION, frame.getHotSpotY(), 96));
+        root.appendChild(ifd);
+        return root;
+    }
+
+    private static IIOMetadataNode generateTIFFRational(int number, long fraction, long denominator) {
+        IIOMetadataNode field = new IIOMetadataNode("TIFFField");
+        field.setAttribute("number", Integer.toString(number));
+        IIOMetadataNode type = new IIOMetadataNode("TIFFRationals");
+        IIOMetadataNode value = new IIOMetadataNode("TIFFRational");
+        value.setAttribute("value", fraction + "/" + denominator);
+        type.appendChild(value);
+        field.appendChild(type);
+        return field;
     }
 
     private static ImageReader getTIFFImageReader() {
@@ -104,21 +124,53 @@ public class TIFFBitmapHandler extends IIOBitmapHandler {
         reader.setInput(input);
         try {
             Bitmap.Frame[] frames = new Bitmap.Frame[reader.getNumImages(true)];
+            IIOMetadataNode ifd;
+            IIOMetadataNode node;
+            String[] tmp;
+            long xrf, xrd, xpf, xpd, yrf, yrd, ypf, ypd;
+            xrf = xrd = xpf = xpd = yrf = yrd = ypf = ypd = 1;
             for (int i = 0; i < frames.length; i ++) {
-                TIFFDirectory tiffDirectory = TIFFDirectory.createFromMetadata(reader.getImageMetadata(i));
-                double resolutionX = tiffDirectory.getTIFFField(NUMBER_X_RESOLUTION).getAsDouble(0);
-                double resolutionY = tiffDirectory.getTIFFField(NUMBER_Y_RESOLUTION).getAsDouble(0);
-                double positionX = tiffDirectory.getTIFFField(NUMBER_X_POSITION).getAsDouble(0);
-                double positionY = tiffDirectory.getTIFFField(NUMBER_Y_POSITION).getAsDouble(0);
-                frames[i] = new Bitmap.Frame(new DesktopBitmap(BitmapImageFactory.getImage(reader.read(i), type, true)),
-                        (int) (positionX * resolutionX), (int) (positionY * resolutionY),
-                        0, Bitmap.DisposalMode.NONE, Bitmap.BlendMode.SOURCE);
+                ifd = (IIOMetadataNode) reader.getImageMetadata(i).getAsTree(NATIVE_FORMAT_NAME).getFirstChild();
+                node = (IIOMetadataNode) ifd.getFirstChild();
+                while (node != null) {
+                    if ("TIFFField".equals(node.getNodeName())) {
+                        switch (Integer.parseInt(node.getAttribute("number"))) {
+                            case TAG_X_RESOLUTION:
+                                tmp = ((IIOMetadataNode) node.getFirstChild().getFirstChild()).getAttribute("value").split("/");
+                                xrf = Long.parseLong(tmp[0]);
+                                xrd = Long.parseLong(tmp[1]);
+                                break;
+                            case TAG_Y_RESOLUTION:
+                                tmp = ((IIOMetadataNode) node.getFirstChild().getFirstChild()).getAttribute("value").split("/");
+                                yrf = Long.parseLong(tmp[0]);
+                                yrd = Long.parseLong(tmp[1]);
+                                break;
+                            case TAG_X_POSITION:
+                                tmp = ((IIOMetadataNode) node.getFirstChild().getFirstChild()).getAttribute("value").split("/");
+                                xpf = Long.parseLong(tmp[0]);
+                                xpd = Long.parseLong(tmp[1]);
+                                break;
+                            case TAG_Y_POSITION:
+                                tmp = ((IIOMetadataNode) node.getFirstChild().getFirstChild()).getAttribute("value").split("/");
+                                ypf = Long.parseLong(tmp[0]);
+                                ypd = Long.parseLong(tmp[1]);
+                                break;
+                        }
+                    }
+                    node = (IIOMetadataNode) node.getNextSibling();
+                }
+                frames[i] = new Bitmap.Frame(new DesktopBitmap(BitmapSupport.getImage(reader.read(i), type, true)),
+                        (int) (xpf * xrf / xpd / xrd), (int) (ypf * yrf / ypd / yrd), 0, Bitmap.DisposalMode.NONE, Bitmap.BlendMode.SOURCE);
             }
             return new Bitmap.MultiFrame(frames);
         }
         finally {
             reader.dispose();
-            IOUtils.closeQuietly(input);
+            try {
+                input.close();
+            }
+            catch (IOException ignored) {
+            }
         }
     }
 
@@ -130,21 +182,53 @@ public class TIFFBitmapHandler extends IIOBitmapHandler {
         reader.setInput(input);
         try {
             Bitmap.Frame[] frames = new Bitmap.Frame[reader.getNumImages(true)];
+            IIOMetadataNode ifd;
+            IIOMetadataNode node;
+            String[] tmp;
+            long xrf, xrd, xpf, xpd, yrf, yrd, ypf, ypd;
+            xrf = xrd = xpf = xpd = yrf = yrd = ypf = ypd = 1;
             for (int i = 0; i < frames.length; i ++) {
-                TIFFDirectory IFD = TIFFDirectory.createFromMetadata(reader.getImageMetadata(i));
-                double resolutionX = IFD.getTIFFField(NUMBER_X_RESOLUTION).getAsDouble(0);
-                double resolutionY = IFD.getTIFFField(NUMBER_Y_RESOLUTION).getAsDouble(0);
-                double positionX = IFD.getTIFFField(NUMBER_X_POSITION).getAsDouble(0);
-                double positionY = IFD.getTIFFField(NUMBER_Y_POSITION).getAsDouble(0);
-                frames[i] = new Bitmap.Frame(new DesktopBitmap(BitmapImageFactory.getImage(reader.read(i), types[typesOffset + i], true)),
-                        (int) (positionX * resolutionX), (int) (positionY * resolutionY),
-                        0, Bitmap.DisposalMode.NONE, Bitmap.BlendMode.SOURCE);
+                ifd = (IIOMetadataNode) reader.getImageMetadata(i).getAsTree(NATIVE_FORMAT_NAME).getFirstChild();
+                node = (IIOMetadataNode) ifd.getFirstChild();
+                while (node != null) {
+                    if ("TIFFField".equals(node.getNodeName())) {
+                        switch (Integer.parseInt(node.getAttribute("number"))) {
+                            case TAG_X_RESOLUTION:
+                                tmp = ((IIOMetadataNode) node.getFirstChild().getFirstChild()).getAttribute("value").split("/");
+                                xrf = Long.parseLong(tmp[0]);
+                                xrd = Long.parseLong(tmp[1]);
+                                break;
+                            case TAG_Y_RESOLUTION:
+                                tmp = ((IIOMetadataNode) node.getFirstChild().getFirstChild()).getAttribute("value").split("/");
+                                yrf = Long.parseLong(tmp[0]);
+                                yrd = Long.parseLong(tmp[1]);
+                                break;
+                            case TAG_X_POSITION:
+                                tmp = ((IIOMetadataNode) node.getFirstChild().getFirstChild()).getAttribute("value").split("/");
+                                xpf = Long.parseLong(tmp[0]);
+                                xpd = Long.parseLong(tmp[1]);
+                                break;
+                            case TAG_Y_POSITION:
+                                tmp = ((IIOMetadataNode) node.getFirstChild().getFirstChild()).getAttribute("value").split("/");
+                                ypf = Long.parseLong(tmp[0]);
+                                ypd = Long.parseLong(tmp[1]);
+                                break;
+                        }
+                    }
+                    node = (IIOMetadataNode) node.getNextSibling();
+                }
+                frames[i] = new Bitmap.Frame(new DesktopBitmap(BitmapSupport.getImage(reader.read(i), types[typesOffset + i], true)),
+                        (int) (xpf * xrf / xpd / xrd), (int) (ypf * yrf / ypd / yrd), 0, Bitmap.DisposalMode.NONE, Bitmap.BlendMode.SOURCE);
             }
             return new Bitmap.MultiFrame(frames);
         }
         finally {
             reader.dispose();
-            IOUtils.closeQuietly(input);
+            try {
+                input.close();
+            }
+            catch (IOException ignored) {
+            }
         }
     }
 
@@ -158,22 +242,19 @@ public class TIFFBitmapHandler extends IIOBitmapHandler {
         if (param.canWriteCompressed()) {
             param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
             param.setCompressionType(quality < 1.0f ? "Deflate" : "LZW");
-            param.setCompressionQuality(Math.clamp(quality, 0, 1));
+            param.setCompressionQuality(FastMath.clamp(quality, 0, 1));
         }
         try {
             writer.prepareWriteSequence(null);
             try {
-                TIFFDirectory IFD = TIFFDirectory.createFromMetadata(writer.getDefaultImageMetadata(null, param));
+                IIOMetadata metadata = writer.getDefaultImageMetadata(null, param);
                 for (Bitmap.Frame frame : frames) {
-                    int bufferedImageType = BitmapImageFactory.getBufferedImageType(frame.getBitmap().getType());
+                    int bufferedImageType = BitmapSupport.getBufferedImageType(frame.getBitmap().getType());
                     BufferedImage raw = ((DesktopBitmap) frame.getBitmap()).getBufferedImage();
-                    BufferedImage image = BitmapImageFactory.getBufferedImage(raw, bufferedImageType, false);
-                    IFD.addTIFFField(new TIFFField(TAG_X_RESOLUTION, TIFFTag.TIFF_RATIONAL, 1, new long[][] {{ 96, 1 }}));
-                    IFD.addTIFFField(new TIFFField(TAG_Y_RESOLUTION, TIFFTag.TIFF_RATIONAL, 1, new long[][] {{ 96, 1 }}));
-                    IFD.addTIFFField(new TIFFField(TAG_X_POSITION, TIFFTag.TIFF_RATIONAL, 1, new long[][] {{ frame.getHotSpotX(), 96 }}));
-                    IFD.addTIFFField(new TIFFField(TAG_Y_POSITION, TIFFTag.TIFF_RATIONAL, 1, new long[][] {{ frame.getHotSpotY(), 96 }}));
+                    BufferedImage image = BitmapSupport.getBufferedImage(raw, bufferedImageType, false);
+                    metadata.mergeTree(NATIVE_FORMAT_NAME, generateMetadata(frame));
                     try {
-                        writer.writeToSequence(new IIOImage(image, null, IFD.getAsMetadata()), param);
+                        writer.writeToSequence(new IIOImage(image, null, metadata), param);
                     }
                     finally {
                         if (image != raw) image.flush();
@@ -202,23 +283,20 @@ public class TIFFBitmapHandler extends IIOBitmapHandler {
         try {
             writer.prepareWriteSequence(null);
             try {
-                TIFFDirectory IFD = TIFFDirectory.createFromMetadata(writer.getDefaultImageMetadata(null, param));
+                IIOMetadata metadata = writer.getDefaultImageMetadata(null, param);
                 for (int i = 0; i < frames.size(); i ++) {
                     Bitmap.Frame frame = frames.get(i);
-                    int bufferedImageType = BitmapImageFactory.getBufferedImageType(frame.getBitmap().getType());
+                    int bufferedImageType = BitmapSupport.getBufferedImageType(frame.getBitmap().getType());
                     BufferedImage raw = ((DesktopBitmap) frame.getBitmap()).getBufferedImage();
-                    BufferedImage image = BitmapImageFactory.getBufferedImage(raw, bufferedImageType, false);
-                    IFD.addTIFFField(new TIFFField(TAG_X_RESOLUTION, TIFFTag.TIFF_RATIONAL, 1, new long[][] {{ 96, 1 }}));
-                    IFD.addTIFFField(new TIFFField(TAG_Y_RESOLUTION, TIFFTag.TIFF_RATIONAL, 1, new long[][] {{ 96, 1 }}));
-                    IFD.addTIFFField(new TIFFField(TAG_X_POSITION, TIFFTag.TIFF_RATIONAL, 1, new long[][] {{ frame.getHotSpotX(), 96 }}));
-                    IFD.addTIFFField(new TIFFField(TAG_Y_POSITION, TIFFTag.TIFF_RATIONAL, 1, new long[][] {{ frame.getHotSpotY(), 96 }}));
+                    BufferedImage image = BitmapSupport.getBufferedImage(raw, bufferedImageType, false);
+                    metadata.mergeTree(NATIVE_FORMAT_NAME, generateMetadata(frame));
                     if (param.canWriteCompressed()) {
                         float q = quality[qualityOffset + i];
                         param.setCompressionType(q < 1.0f ? "Deflate" : "LZW");
-                        param.setCompressionQuality(Math.clamp(q, 0, 1));
+                        param.setCompressionQuality(FastMath.clamp(q, 0, 1));
                     }
                     try {
-                        writer.writeToSequence(new IIOImage(image, null, IFD.getAsMetadata()), param);
+                        writer.writeToSequence(new IIOImage(image, null, metadata), param);
                     }
                     finally {
                         if (image != raw) image.flush();

@@ -1,12 +1,12 @@
 package unrefined.runtime;
 
+import unrefined.desktop.AWTSupport;
 import unrefined.desktop.BiRadialGradientPaint;
-import unrefined.desktop.CursorFactory;
+import unrefined.desktop.CursorSupport;
 import unrefined.desktop.ExtendedComposite;
 import unrefined.desktop.ExtendedPaint;
-import unrefined.desktop.FontFactory;
+import unrefined.desktop.FontSupport;
 import unrefined.desktop.TransformedTexturePaint;
-import unrefined.internal.AWTUtils;
 import unrefined.internal.bitmap.BMPBitmapHandler;
 import unrefined.internal.bitmap.GIFBitmapHandler;
 import unrefined.internal.bitmap.JPEGBitmapHandler;
@@ -65,13 +65,13 @@ public class DesktopDrawing extends Drawing {
                              int tileMode) {
         return new DesktopBrush(new LinearGradientPaint(x1, y1, x2, y2,
                 Arrays.copyOfRange(stops, stopsOffset, stopsOffset + length),
-                AWTUtils.toAWTColors(colors, colorsOffset, length),
-                AWTUtils.toCycleMethod(tileMode)));
+                AWTSupport.toColors(colors, colorsOffset, length),
+                AWTSupport.toCycleMethod(tileMode)));
     }
 
     @Override
     public Brush createBrush(float x1, float y1, float x2, float y2, float[] stops, int[] colors, int tileMode) {
-        return new DesktopBrush(new LinearGradientPaint(x1, y1, x2, y2, stops, AWTUtils.toAWTColors(colors), AWTUtils.toCycleMethod(tileMode)));
+        return new DesktopBrush(new LinearGradientPaint(x1, y1, x2, y2, stops, AWTSupport.toColors(colors), AWTSupport.toCycleMethod(tileMode)));
     }
 
     @Override
@@ -80,13 +80,13 @@ public class DesktopDrawing extends Drawing {
                              int tileMode) {
         return new DesktopBrush(new BiRadialGradientPaint(x2, y2, r2, x1, y1, r1,
                 Arrays.copyOfRange(stops, stopsOffset, stopsOffset + length),
-                AWTUtils.toAWTColors(colors, colorsOffset, length),
-                AWTUtils.toCycleMethod(tileMode)));
+                AWTSupport.toColors(colors, colorsOffset, length),
+                AWTSupport.toCycleMethod(tileMode)));
     }
 
     @Override
     public Brush createBrush(float x1, float y1, float r1, float x2, float y2, float r2, float[] stops, int[] colors, int tileMode) {
-        return new DesktopBrush(new BiRadialGradientPaint(x2, y2, r2, x1, y1, r1, stops, AWTUtils.toAWTColors(colors), AWTUtils.toCycleMethod(tileMode)));
+        return new DesktopBrush(new BiRadialGradientPaint(x2, y2, r2, x1, y1, r1, stops, AWTSupport.toColors(colors), AWTSupport.toCycleMethod(tileMode)));
     }
 
     @Override
@@ -100,8 +100,8 @@ public class DesktopDrawing extends Drawing {
     }
 
     @Override
-    public Path createPath() {
-        return new DesktopPath();
+    public Path createPath(int fillRule) {
+        return new DesktopPath(fillRule);
     }
 
     @Override
@@ -116,17 +116,17 @@ public class DesktopDrawing extends Drawing {
 
     @Override
     public Font getFont(String family, int style) throws FontNotFoundException {
-        return new DesktopFont(FontFactory.getFont(family, style));
+        return new DesktopFont(FontSupport.getFont(family, style));
     }
 
     @Override
     public Font readFont(File input) throws IOException {
-        return new DesktopFont(FontFactory.readFont(input));
+        return new DesktopFont(FontSupport.readFont(input));
     }
 
     @Override
     public Font readFont(Asset input) throws IOException {
-        return new DesktopFont(FontFactory.readFont(input.openStream()));
+        return new DesktopFont(FontSupport.readFont(input.openStream()));
     }
 
     @Override
@@ -141,7 +141,7 @@ public class DesktopDrawing extends Drawing {
 
     @Override
     public int getMaximumCursorColors() {
-        return CursorFactory.getMaximumCursorColors();
+        return CursorSupport.getMaximumCursorColors();
     }
 
 }

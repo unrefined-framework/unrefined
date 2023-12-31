@@ -2,15 +2,14 @@ package unrefined.media.graphics;
 
 import unrefined.io.Disposable;
 import unrefined.math.FastMath;
-import unrefined.util.Copyable;
+import unrefined.util.Cacheable;
 import unrefined.util.NotInstantiableError;
 import unrefined.util.Resettable;
-import unrefined.util.Swappable;
 
 import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.Objects;
-import java.util.Queue;
 
 public abstract class Graphics implements Disposable, Resettable {
 
@@ -36,10 +35,10 @@ public abstract class Graphics implements Disposable, Resettable {
         }
     }
 
-    public static class Info implements Copyable, Swappable, Resettable {
+    public static class Info implements Cacheable {
 
-        private transient Path clip;
-        private transient Transform transform;
+        private Path clip;
+        private Transform transform;
         private transient Composite composite;
 
         private transient Brush brush;
@@ -118,7 +117,7 @@ public abstract class Graphics implements Disposable, Resettable {
         }
 
         public void setClip(Path clip) {
-            this.clip = clip;
+            this.clip = clip == null ? null : clip.clone();
         }
 
         public Transform getTransform() {
@@ -126,7 +125,7 @@ public abstract class Graphics implements Disposable, Resettable {
         }
 
         public void setTransform(Transform transform) {
-            this.transform = transform;
+            this.transform = transform == null ? null : transform.clone();
         }
 
         public Composite getComposite() {
@@ -479,6 +478,8 @@ public abstract class Graphics implements Disposable, Resettable {
             try {
                 Info clone = (Info) super.clone();
                 clone.strokeDash = strokeDash == null ? null : strokeDash.clone();
+                clone.clip = clip == null ? null : clip.clone();
+                clone.transform = transform == null ? null : transform.clone();
                 return clone;
             }
             catch (CloneNotSupportedException e) {
@@ -859,33 +860,33 @@ public abstract class Graphics implements Disposable, Resettable {
                 info.getTextScaleX(), info.getTextScaleY(), info.getTextSkewX(), info.getTextSkewY());
     }
 
-    private final Queue<Info> infoQueue = new ArrayDeque<>();
-    public int getInfoQueueSize() {
-        return infoQueue.size();
+    private final Deque<Info> infoDeque = new ArrayDeque<>();
+    public int getInfoDequeSize() {
+        return infoDeque.size();
     }
 
     public void save() {
         Info info = new Info();
         getInfo(info);
-        infoQueue.add(info);
+        infoDeque.push(info);
     }
     public void restore() {
-        setInfo(infoQueue.poll());
+        setInfo(infoDeque.pop());
     }
     public void restore(int depth) {
-        depth = Math.min(depth, getInfoQueueSize());
+        depth = Math.min(depth, getInfoDequeSize());
         for (int i = 0; i < depth; i ++) {
             restore();
         }
     }
     public void restoreAll() {
-        int depth = getInfoQueueSize();
+        int depth = getInfoDequeSize();
         for (int i = 0; i < depth; i ++) {
             restore();
         }
     }
     public void restoreTo(int index) {
-        int max = getInfoQueueSize();
+        int max = getInfoDequeSize();
         index = FastMath.clamp(index, 0, max);
         for (int i = index; i < max; i ++) {
             restore();

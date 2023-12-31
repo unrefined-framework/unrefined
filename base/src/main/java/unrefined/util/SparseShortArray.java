@@ -16,7 +16,8 @@
 
 package unrefined.util;
 
-import unrefined.internal.ArrayUtils;
+import java.util.Iterator;
+import java.util.RandomAccess;
 
 /**
  * SparseShortArrays map integers to shorts.  Unlike a normal array of shorts,
@@ -39,7 +40,7 @@ import unrefined.internal.ArrayUtils;
  * keys in ascending order, or the values corresponding to the keys in ascending
  * order in the case of <code>valueAt(int)</code>.</p>
  */
-public class SparseShortArray implements Cloneable {
+public class SparseShortArray implements Cloneable, Iterable<Short>, RandomAccess {
 
     private int[] keys;
     private short[] values;
@@ -64,7 +65,7 @@ public class SparseShortArray implements Cloneable {
             keys = EmptyArray.INT;
             values = EmptyArray.SHORT;
         } else {
-            initialCapacity = ArrayUtils.sparseIntArraySize(initialCapacity);
+            initialCapacity = FastArray.sparseIntArraySize(initialCapacity);
             keys = new int[initialCapacity];
             values = new short[initialCapacity];
         }
@@ -97,7 +98,7 @@ public class SparseShortArray implements Cloneable {
      * if no such mapping has been made.
      */
     public short get(int key, short valueIfKeyNotFound) {
-        int i = ArrayUtils.binarySearchUnchecked(keys, 0, size, key);
+        int i = FastArray.binarySearchUnchecked(keys, 0, size, key);
 
         if (i < 0) {
             return valueIfKeyNotFound;
@@ -110,7 +111,7 @@ public class SparseShortArray implements Cloneable {
      * Removes the mapping from the specified key, if there was any.
      */
     public void remove(int key) {
-        int i = ArrayUtils.binarySearchUnchecked(keys, 0, size, key);
+        int i = FastArray.binarySearchUnchecked(keys, 0, size, key);
 
         if (i >= 0) {
             removeAt(i);
@@ -132,7 +133,7 @@ public class SparseShortArray implements Cloneable {
      * was one.
      */
     public void put(int key, short value) {
-        int i = ArrayUtils.binarySearchUnchecked(keys, 0, size, key);
+        int i = FastArray.binarySearchUnchecked(keys, 0, size, key);
 
         if (i >= 0) {
             values[i] = value;
@@ -140,7 +141,7 @@ public class SparseShortArray implements Cloneable {
             i = ~i;
 
             if (size >= keys.length) {
-                int n = ArrayUtils.sparseIntArraySize(size + 1);
+                int n = FastArray.sparseIntArraySize(size + 1);
 
                 int[] nkeys = new int[n];
                 short[] nvalues = new short[n];
@@ -241,7 +242,7 @@ public class SparseShortArray implements Cloneable {
      * key is not mapped.
      */
     public int indexOfKey(int key) {
-        return ArrayUtils.binarySearchUnchecked(keys, 0, size, key);
+        return FastArray.binarySearchUnchecked(keys, 0, size, key);
     }
 
     /**
@@ -279,7 +280,7 @@ public class SparseShortArray implements Cloneable {
 
         int pos = size;
         if (pos >= keys.length) {
-            int n =  ArrayUtils.sparseIntArraySize(pos + 1);
+            int n =  FastArray.sparseIntArraySize(pos + 1);
 
             int[] nkeys = new int[n];
             short[] nvalues = new short[n];
@@ -347,6 +348,22 @@ public class SparseShortArray implements Cloneable {
         }
         buffer.append('}');
         return buffer.toString();
+    }
+
+    @Override
+    public Iterator<Short> iterator() {
+        return new Iterator<Short>() {
+            private int index = -1;
+            @Override
+            public boolean hasNext() {
+                return index + 1 < size();
+            }
+            @Override
+            public Short next() {
+                index ++;
+                return get(index);
+            }
+        };
     }
 
 }

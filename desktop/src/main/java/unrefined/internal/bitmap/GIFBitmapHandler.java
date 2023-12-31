@@ -1,8 +1,8 @@
 package unrefined.internal.bitmap;
 
-import unrefined.desktop.BitmapImageFactory;
+import unrefined.desktop.BitmapSupport;
 import unrefined.desktop.IIOBitmapHandler;
-import unrefined.internal.IOUtils;
+import unrefined.math.FastMath;
 import unrefined.media.graphics.Bitmap;
 import unrefined.runtime.DesktopBitmap;
 
@@ -20,6 +20,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Set;
@@ -30,8 +31,8 @@ public class GIFBitmapHandler extends IIOBitmapHandler {
 
     private static final String METADATA_FORMAT_NAME = "javax_imageio_gif_image_1.0";
 
-    private static final Set<String> READER_FORMAT_NAMES = Set.of( "gif" );
-    private static final Set<String> WRITER_FORMAT_NAMES = Set.of( "gif" );
+    private static final Set<String> READER_FORMAT_NAMES = Collections.singleton( "gif" );
+    private static final Set<String> WRITER_FORMAT_NAMES = Collections.singleton( "gif" );
 
     private static ImageReader getGIFImageReader() {
         Iterator<ImageReader> it = ImageIO.getImageReadersByFormatName("gif");
@@ -69,12 +70,12 @@ public class GIFBitmapHandler extends IIOBitmapHandler {
     }
 
     private static String getDisposalMethod(int disposalMode) {
-        return switch (disposalMode) {
-            case Bitmap.DisposalMode.BACKGROUND -> "restoreToBackgroundColor";
-            case Bitmap.DisposalMode.PREVIOUS -> "restoreToPrevious";
-            case Bitmap.DisposalMode.NONE -> null;
-            default -> throw new IllegalArgumentException("Illegal disposal mode: " + disposalMode);
-        };
+        switch (disposalMode) {
+            case Bitmap.DisposalMode.BACKGROUND: return "restoreToBackgroundColor";
+            case Bitmap.DisposalMode.PREVIOUS: return "restoreToPrevious";
+            case Bitmap.DisposalMode.NONE: return null;
+            default: throw new IllegalArgumentException("Illegal disposal mode: " + disposalMode);
+        }
     }
 
     private static void mergeMetadata(IIOMetadataNode root, Bitmap.MultiFrame frames) {
@@ -105,7 +106,7 @@ public class GIFBitmapHandler extends IIOBitmapHandler {
                 String disposalMethod = getDisposalMethod(frame.getDisposalMode());
                 if (disposalMethod != null) node.setAttribute("disposalMethod",disposalMethod);
                 node.setAttribute("delayTime",
-                        Integer.toString(Math.clamp(frame.getDuration() / 10L, Integer.MIN_VALUE, Integer.MAX_VALUE)));
+                        Integer.toString(FastMath.clamp(frame.getDuration() / 10L, Integer.MIN_VALUE, Integer.MAX_VALUE)));
             }
             node = (IIOMetadataNode) node.getNextSibling();
         }
@@ -175,7 +176,7 @@ public class GIFBitmapHandler extends IIOBitmapHandler {
                     node = (IIOMetadataNode) node.getNextSibling();
                 }
                 frames[i] = new Bitmap.Frame(
-                        new DesktopBitmap(BitmapImageFactory.getImage(reader.read(i), type, true)),
+                        new DesktopBitmap(BitmapSupport.getImage(reader.read(i), type, true)),
                         hotSpotX, hotSpotY, duration, disposalMode, Bitmap.BlendMode.SOURCE);
             }
             Bitmap.MultiFrame result = new Bitmap.MultiFrame(frames);
@@ -184,7 +185,11 @@ public class GIFBitmapHandler extends IIOBitmapHandler {
         }
         finally {
             reader.dispose();
-            IOUtils.closeQuietly(input);
+            try {
+                input.close();
+            }
+            catch (IOException ignored) {
+            }
         }
     }
 
@@ -232,7 +237,7 @@ public class GIFBitmapHandler extends IIOBitmapHandler {
                     node = (IIOMetadataNode) node.getNextSibling();
                 }
                 frames[i] = new Bitmap.Frame(
-                        new DesktopBitmap(BitmapImageFactory.getImage(reader.read(i), types[i + typesOffset], true)),
+                        new DesktopBitmap(BitmapSupport.getImage(reader.read(i), types[i + typesOffset], true)),
                         hotSpotX, hotSpotY, duration, disposalMode, Bitmap.BlendMode.SOURCE);
             }
             Bitmap.MultiFrame result = new Bitmap.MultiFrame(frames);
@@ -241,7 +246,11 @@ public class GIFBitmapHandler extends IIOBitmapHandler {
         }
         finally {
             reader.dispose();
-            IOUtils.closeQuietly(input);
+            try {
+                input.close();
+            }
+            catch (IOException ignored) {
+            }
         }
     }
 
@@ -255,13 +264,13 @@ public class GIFBitmapHandler extends IIOBitmapHandler {
         if (param.canWriteCompressed()) {
             param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
             param.setCompressionType("LZW");
-            param.setCompressionQuality(Math.clamp(quality, 0, 1));
+            param.setCompressionQuality(FastMath.clamp(quality, 0, 1));
         }
         try {
             writer.prepareWriteSequence(null);
             try {
                 ImageTypeSpecifier specifier = ImageTypeSpecifier.createFromBufferedImageType(
-                        BitmapImageFactory.getBufferedImageType(frames.getCompatibleType()));
+                        BitmapSupport.getBufferedImageType(frames.getCompatibleType()));
                 IIOMetadata metadata = writer.getDefaultImageMetadata(specifier, param);
                 IIOMetadataNode metadataTree = (IIOMetadataNode) metadata.getAsTree( METADATA_FORMAT_NAME );
                 mergeMetadata(metadataTree, frames);
@@ -298,7 +307,7 @@ public class GIFBitmapHandler extends IIOBitmapHandler {
             writer.prepareWriteSequence(null);
             try {
                 ImageTypeSpecifier specifier = ImageTypeSpecifier.createFromBufferedImageType(
-                        BitmapImageFactory.getBufferedImageType(frames.getCompatibleType()));
+                        BitmapSupport.getBufferedImageType(frames.getCompatibleType()));
                 IIOMetadata metadata = writer.getDefaultImageMetadata(specifier, param);
                 IIOMetadataNode metadataTree = (IIOMetadataNode) metadata.getAsTree(METADATA_FORMAT_NAME);
                 mergeMetadata(metadataTree, frames);
@@ -306,7 +315,7 @@ public class GIFBitmapHandler extends IIOBitmapHandler {
                     Bitmap.Frame frame = frames.get(i);
                     mergeMetadata(metadataTree, frame);
                     metadata.mergeTree(METADATA_FORMAT_NAME, metadataTree);
-                    if (param.canWriteCompressed()) param.setCompressionQuality(Math.clamp(quality[qualityOffset + i], 0, 1));
+                    if (param.canWriteCompressed()) param.setCompressionQuality(FastMath.clamp(quality[qualityOffset + i], 0, 1));
                     writer.writeToSequence(new IIOImage(((DesktopBitmap) frame.getBitmap()).getBufferedImage(),
                             null, metadata), param);
                 }

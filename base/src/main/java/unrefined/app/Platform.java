@@ -8,7 +8,7 @@ public abstract class Platform {
 
     private static volatile Platform INSTANCE;
     private static final Object INSTANCE_LOCK = new Object();
-    public static Platform getPlatform() {
+    public static Platform getInstance() {
         if (INSTANCE == null) synchronized (INSTANCE_LOCK) {
             if (INSTANCE == null) INSTANCE = Environment.global().get("unrefined.runtime.platform", Platform.class);
         }

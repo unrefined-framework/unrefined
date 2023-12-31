@@ -23,8 +23,8 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.FlatteningPathIterator;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Utilitiy class for length calculations of paths.
@@ -42,7 +42,6 @@ import java.util.ArrayList;
  * </p>
  *
  * @author <a href="mailto:dean.jackson@cmis.csiro.au">Dean Jackson</a>
- * @version $Id$
  */
 public class PathLength {
 

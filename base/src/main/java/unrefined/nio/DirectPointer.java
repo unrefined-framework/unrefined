@@ -1,6 +1,6 @@
 package unrefined.nio;
 
-import unrefined.internal.NumberUtils;
+import unrefined.math.FastMath;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -388,6 +388,36 @@ public class DirectPointer extends Pointer {
     }
 
     @Override
+    public long getZeroTerminatedStringLength(long offset) {
+        return getAllocator().getZeroTerminatedStringLength(address + offset);
+    }
+
+    @Override
+    public long getZeroTerminatedStringLength(long offset, long maxLength) {
+        return getAllocator().getZeroTerminatedWideCharStringLength(address + offset, maxLength);
+    }
+
+    @Override
+    public long getZeroTerminatedWideCharStringLength(long offset) {
+        return getAllocator().getZeroTerminatedWideCharStringLength(address + offset);
+    }
+
+    @Override
+    public long getZeroTerminatedWideCharStringLength(long offset, long maxLength) {
+        return getAllocator().getZeroTerminatedStringLength(address + offset, maxLength);
+    }
+
+    @Override
+    public long getZeroTerminatedStringLength(long offset, Charset charset) {
+        return getAllocator().getZeroTerminatedStringLength(address + offset, charset);
+    }
+
+    @Override
+    public long getZeroTerminatedStringLength(long offset, long maxLength, Charset charset) {
+        return getAllocator().getZeroTerminatedStringLength(address + offset, maxLength, charset);
+    }
+
+    @Override
     public byte[] getZeroTerminatedByteArray(long offset) {
         return getAllocator().getZeroTerminatedByteArray(address + offset);
     }
@@ -395,6 +425,46 @@ public class DirectPointer extends Pointer {
     @Override
     public byte[] getZeroTerminatedByteArray(long offset, int maxLength) {
         return getAllocator().getZeroTerminatedByteArray(address + offset, maxLength);
+    }
+
+    @Override
+    public byte[] getZeroTerminatedWideCharByteArray(long offset) {
+        return getAllocator().getZeroTerminatedWideCharByteArray(address + offset);
+    }
+
+    @Override
+    public byte[] getZeroTerminatedWideCharByteArray(long offset, int maxLength) {
+        return getAllocator().getZeroTerminatedWideCharByteArray(address + offset, maxLength);
+    }
+
+    @Override
+    public byte[] getZeroTerminatedByteArray(long offset, Charset charset) {
+        return getAllocator().getZeroTerminatedByteArray(address + offset, charset);
+    }
+
+    @Override
+    public byte[] getZeroTerminatedByteArray(long offset, int maxLength, Charset charset) {
+        return getAllocator().getZeroTerminatedByteArray(address + offset, maxLength, charset);
+    }
+
+    @Override
+    public String getZeroTerminatedString(long offset) {
+        return getAllocator().getZeroTerminatedString(address + offset);
+    }
+
+    @Override
+    public String getZeroTerminatedString(long offset, int maxLength) {
+        return getAllocator().getZeroTerminatedString(address + offset, maxLength);
+    }
+
+    @Override
+    public String getZeroTerminatedWideCharString(long offset) {
+        return getAllocator().getZeroTerminatedWideCharString(address + offset);
+    }
+
+    @Override
+    public String getZeroTerminatedWideCharString(long offset, int maxLength) {
+        return getAllocator().getZeroTerminatedWideCharString(address + offset, maxLength);
     }
 
     @Override
@@ -415,6 +485,36 @@ public class DirectPointer extends Pointer {
     @Override
     public void putZeroTerminatedByteArray(long offset, byte[] array, int index, int length) {
         getAllocator().putZeroTerminatedByteArray(address + offset, array, index, length);
+    }
+
+    @Override
+    public void putZeroTerminatedWideCharByteArray(long offset, byte[] array) {
+        getAllocator().putZeroTerminatedWideCharByteArray(address + offset, array);
+    }
+
+    @Override
+    public void putZeroTerminatedWideCharByteArray(long offset, byte[] array, int index, int length) {
+        getAllocator().putZeroTerminatedWideCharByteArray(address + offset, array, index, length);
+    }
+
+    @Override
+    public void putZeroTerminatedByteArray(long offset, byte[] array, Charset charset) {
+        getAllocator().putZeroTerminatedByteArray(address + offset, array, charset);
+    }
+
+    @Override
+    public void putZeroTerminatedByteArray(long offset, byte[] array, int index, int length, Charset charset) {
+        getAllocator().putZeroTerminatedByteArray(address + offset, array, index, length, charset);
+    }
+
+    @Override
+    public void putZeroTerminatedString(long offset, String string) {
+        getAllocator().putZeroTerminatedString(address + offset, string);
+    }
+
+    @Override
+    public void putZeroTerminatedWideCharString(long offset, String string) {
+        getAllocator().putZeroTerminatedWideCharString(address + offset, string);
     }
 
     @Override
@@ -469,22 +569,22 @@ public class DirectPointer extends Pointer {
 
     @Override
     public void checkBounds(long offset, long length) throws IndexOutOfBoundsException {
-        BigInteger address = NumberUtils.toUnsignedBigInteger(this.address);
-        BigInteger size = address.add(NumberUtils.toUnsignedBigInteger(this.size));
+        BigInteger address = FastMath.unsign(this.address);
+        BigInteger size = address.add(FastMath.unsign(this.size));
         BigInteger checkIndex = address
-                .add(NumberUtils.toUnsignedBigInteger(offset))
-                .add(NumberUtils.toUnsignedBigInteger(length));
+                .add(FastMath.unsign(offset))
+                .add(FastMath.unsign(length));
         if (bounded && checkIndex.compareTo(size) < 0) return;
         throw new IndexOutOfBoundsException("Index out of range: " + checkIndex);
     }
 
     @Override
     public boolean inBounds(long offset, long length) {
-        BigInteger address = NumberUtils.toUnsignedBigInteger(this.address);
-        BigInteger size = address.add(NumberUtils.toUnsignedBigInteger(this.size));
+        BigInteger address = FastMath.unsign(this.address);
+        BigInteger size = address.add(FastMath.unsign(this.size));
         BigInteger checkIndex = address
-                .add(NumberUtils.toUnsignedBigInteger(offset))
-                .add(NumberUtils.toUnsignedBigInteger(length));
+                .add(FastMath.unsign(offset))
+                .add(FastMath.unsign(length));
         if (bounded) return checkIndex.compareTo(size) < 0;
         else return false;
     }
@@ -520,11 +620,31 @@ public class DirectPointer extends Pointer {
     }
 
     @Override
+    public long indexOf(long offset, byte[] value) {
+        return getAllocator().indexOf(address + offset, value);
+    }
+
+    @Override
+    public long indexOf(long offset, byte[] value, int valueOffset, int valueLength) {
+        return getAllocator().indexOf(address + offset, value, valueOffset, valueLength);
+    }
+
+    @Override
+    public long indexOf(long offset, byte[] value, long maxLength) {
+        return getAllocator().indexOf(address + offset, value, maxLength);
+    }
+
+    @Override
+    public long indexOf(long offset, byte[] value, int valueOffset, int valueLength, long maxLength) {
+        return getAllocator().indexOf(address + offset, value, valueOffset, valueLength, maxLength);
+    }
+
+    @Override
     public Pointer reallocate(long size) throws IOException {
         if (!hasMemory) throw new IOException("duplicate or slice");
         else {
             long address = getAllocator().reallocateMemory(this.address, size);
-            if (address == 0) throw new IOException("Unable to allocate native memory, size: " + NumberUtils.toUnsignedBigInteger(size));
+            if (address == 0) throw new IOException("Unable to allocate native memory, size: " + FastMath.unsign(size));
             else return new DirectPointer(getAllocator(), address, size, true);
         }
     }

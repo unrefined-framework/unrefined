@@ -1,91 +1,79 @@
 package unrefined.runtime;
 
 import unrefined.desktop.ExtendedComposite;
+import unrefined.math.FastMath;
 import unrefined.media.graphics.Composite;
-import unrefined.util.AlreadyDisposedException;
 
 import java.awt.AlphaComposite;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DesktopComposite extends Composite {
 
-    private volatile java.awt.Composite composite;
+    private final java.awt.Composite composite;
 
     private final int mode;
     private final float alpha;
 
     public DesktopComposite(java.awt.Composite composite, float alpha) {
-        if (composite instanceof AlphaComposite alphaComposite) {
+        if (composite instanceof AlphaComposite) {
+            AlphaComposite alphaComposite = (AlphaComposite) composite; 
             this.mode = getCompositeMode(alphaComposite.getRule());
             this.alpha = alphaComposite.getAlpha();
         }
-        else if (composite instanceof ExtendedComposite extendedComposite) {
+        else if (composite instanceof ExtendedComposite) {
+            ExtendedComposite extendedComposite = (ExtendedComposite) composite; 
             this.mode = extendedComposite.getMode();
             this.alpha = extendedComposite.getAlpha();
         }
         else {
             this.mode = Mode.CUSTOM;
-            this.alpha = Math.clamp(alpha, 0, 1);
+            this.alpha = FastMath.clamp(alpha, 0, 1);
         }
         this.composite = composite;
     }
 
     public static int getCompositeMode(int alphaCompositeRule) {
-        return switch (alphaCompositeRule) {
-            case AlphaComposite.SRC_OVER -> Composite.Mode.SRC_OVER;
-            case AlphaComposite.SRC_IN -> Composite.Mode.SRC_IN;
-            case AlphaComposite.SRC_OUT -> Composite.Mode.SRC_OUT;
-            case AlphaComposite.SRC_ATOP -> Composite.Mode.SRC_ATOP;
-            case AlphaComposite.DST_OVER -> Composite.Mode.DST_OVER;
-            case AlphaComposite.DST_IN -> Composite.Mode.DST_IN;
-            case AlphaComposite.DST_OUT -> Composite.Mode.DST_OUT;
-            case AlphaComposite.DST_ATOP -> Composite.Mode.DST_ATOP;
-            case AlphaComposite.DST -> Composite.Mode.COPY;
-            case AlphaComposite.XOR -> Composite.Mode.XOR;
-            case AlphaComposite.SRC -> Composite.Mode.DISCARD;
-            case AlphaComposite.CLEAR -> Composite.Mode.CLEAR;
-            default -> throw new IllegalArgumentException("Illegal alpha composite rule: " + alphaCompositeRule);
-        };
+        switch (alphaCompositeRule) {
+            case AlphaComposite.SRC_OVER: return Composite.Mode.SRC_OVER;
+            case AlphaComposite.SRC_IN: return Composite.Mode.SRC_IN;
+            case AlphaComposite.SRC_OUT: return Composite.Mode.SRC_OUT;
+            case AlphaComposite.SRC_ATOP: return Composite.Mode.SRC_ATOP;
+            case AlphaComposite.DST_OVER: return Composite.Mode.DST_OVER;
+            case AlphaComposite.DST_IN: return Composite.Mode.DST_IN;
+            case AlphaComposite.DST_OUT: return Composite.Mode.DST_OUT;
+            case AlphaComposite.DST_ATOP: return Composite.Mode.DST_ATOP;
+            case AlphaComposite.DST: return Composite.Mode.COPY;
+            case AlphaComposite.XOR: return Composite.Mode.XOR;
+            case AlphaComposite.SRC: return Composite.Mode.DISCARD;
+            case AlphaComposite.CLEAR: return Composite.Mode.CLEAR;
+            default: throw new IllegalArgumentException("Illegal alpha composite rule: " + alphaCompositeRule);
+        }
     }
 
     public DesktopComposite(ExtendedComposite composite) {
         mode = composite.getMode();
         alpha = composite.getAlpha();
+        this.composite = composite;
     }
 
     public DesktopComposite(AlphaComposite composite) {
         mode = getCompositeMode(composite.getRule());
         alpha = composite.getAlpha();
+        this.composite = composite;
     }
 
     public java.awt.Composite getComposite() {
-        if (isDisposed()) throw new AlreadyDisposedException();
         return composite;
     }
 
     @Override
     public int getMode() {
-        if (isDisposed()) throw new AlreadyDisposedException();
         return mode;
     }
 
     @Override
     public float getAlpha() {
-        if (isDisposed()) throw new AlreadyDisposedException();
         return alpha;
-    }
-
-    private final AtomicBoolean disposed = new AtomicBoolean(false);
-
-    @Override
-    public void dispose() {
-        if (disposed.compareAndSet(false, true)) composite = null;
-    }
-
-    @Override
-    public boolean isDisposed() {
-        return disposed.get();
     }
 
     @Override

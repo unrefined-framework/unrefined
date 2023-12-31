@@ -3,10 +3,11 @@ package unrefined.math;
 import unrefined.util.NotInstantiableError;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Random;
 
 public final class FastMath {
-    
+
     private FastMath() {
         throw new NotInstantiableError(FastMath.class);
     }
@@ -931,6 +932,22 @@ public final class FastMath {
         return ExtendedMath.equals(a, b, delta);
     }
 
+    public static short unsign(byte x) {
+        return (short) Byte.toUnsignedInt(x);
+    }
+
+    public static int unsign(short x) {
+        return Short.toUnsignedInt(x);
+    }
+
+    public static long unsign(int x) {
+        return Integer.toUnsignedLong(x);
+    }
+
+    public static BigInteger unsign(long x) {
+        return ExtendedMath.unsign(x);
+    }
+
     private static final class ExtendedMath {
 
         private ExtendedMath() {
@@ -1775,6 +1792,21 @@ public final class FastMath {
 
         public static boolean equals(double a, double b, double delta) {
             return Double.compare(a, b) == 0 || Math.abs(a - b) <= delta;
+        }
+
+        public static BigInteger unsign(long x) {
+            return Unsign.compute(x);
+        }
+
+        private static final class Unsign {
+            private Unsign() {
+                throw new NotInstantiableError(Unsign.class);
+            }
+            private static final BigInteger UNSIGNED_LONG_MASK = BigInteger.ONE.shiftLeft(Long.SIZE).subtract(BigInteger.ONE);
+            public static BigInteger compute(long x) {
+                if (x >= 0) return BigInteger.valueOf(x);
+                else return BigInteger.valueOf(x).and(UNSIGNED_LONG_MASK);
+            }
         }
 
     }

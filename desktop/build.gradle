@@ -1,7 +1,9 @@
 dependencies {
     implementation project(':base')
     api project(':base')
-    testImplementation project(':game2d')
+
+    implementation 'com.github.jnr:jffi:1.3.12'
+    implementation 'com.github.jnr:jffi:1.3.12:native'
 }
 
 jar {

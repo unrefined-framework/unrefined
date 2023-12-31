@@ -18,7 +18,7 @@ public class Asset {
 
     public Asset(String pathname, AssetLoader assetLoader) {
         Objects.requireNonNull(pathname);
-        this.assetLoader = assetLoader == null ? AssetLoader.defaultAssetLoader() : assetLoader;
+        this.assetLoader = assetLoader == null ? AssetLoader.defaultInstance() : assetLoader;
         this.pathname = pathname;
     }
 

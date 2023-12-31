@@ -24,19 +24,19 @@ public abstract class LongProperty {
         return new FunctionBinding(getter);
     }
 
-    public static LongProperty ofAtomicInstance(long initialValue) {
+    public static LongProperty ofAtomic(long initialValue) {
         return new AtomicInstance(initialValue);
     }
 
-    public static LongProperty ofAtomicInstance() {
+    public static LongProperty ofAtomic() {
         return new AtomicInstance();
     }
 
-    public static LongProperty ofInstance(long initialValue) {
+    public static LongProperty of(long initialValue) {
         return new Instance(initialValue);
     }
 
-    public static LongProperty ofInstance() {
+    public static LongProperty ofDefault() {
         return new Instance();
     }
 
@@ -101,7 +101,7 @@ public abstract class LongProperty {
         }
         public void set(long value) {
             long previousValue = this.value.getAndSet(value);
-            if (previousValue != value && !onChanged().isEmpty()) onChanged().emit(new ChangedEvent(this, previousValue, value));
+            if (previousValue != value && !onChange().isEmpty()) onChange().emit(new ChangeEvent(this, previousValue, value));
         }
         public long get() {
             return value.get();
@@ -122,16 +122,16 @@ public abstract class LongProperty {
         public void set(long value) {
             long previousValue = this.value;
             this.value = value;
-            if (previousValue != value && !onChanged().isEmpty()) onChanged().emit(new ChangedEvent(this, previousValue, value));
+            if (previousValue != value && !onChange().isEmpty()) onChange().emit(new ChangeEvent(this, previousValue, value));
         }
         public long get() {
             return value;
         }
     }
 
-    private final Signal<EventSlot<ChangedEvent>> onChanged = Signal.ofSlot();
-    public Signal<EventSlot<ChangedEvent>> onChanged() {
-        return onChanged;
+    private final Signal<EventSlot<ChangeEvent>> onChange = Signal.ofSlot();
+    public Signal<EventSlot<ChangeEvent>> onChange() {
+        return onChange;
     }
 
     public abstract void set(long value);
@@ -161,11 +161,11 @@ public abstract class LongProperty {
         return result;
     }
 
-    public static final class ChangedEvent extends Event<LongProperty> {
+    public static final class ChangeEvent extends Event<LongProperty> {
 
         private final long previousValue, currentValue;
 
-        public ChangedEvent(LongProperty source, long previousValue, long currentValue) {
+        public ChangeEvent(LongProperty source, long previousValue, long currentValue) {
             super(source);
             this.previousValue = previousValue;
             this.currentValue = currentValue;
@@ -180,11 +180,12 @@ public abstract class LongProperty {
         }
 
         @Override
-        public boolean equals(Object object) {
-            if (this == object) return true;
-            if (object == null || getClass() != object.getClass()) return false;
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            if (!super.equals(o)) return false;
 
-            ChangedEvent that = (ChangedEvent) object;
+            ChangeEvent that = (ChangeEvent) o;
 
             if (previousValue != that.previousValue) return false;
             return currentValue == that.currentValue;
@@ -192,7 +193,8 @@ public abstract class LongProperty {
 
         @Override
         public int hashCode() {
-            int result = (int) (previousValue ^ (previousValue >>> 32));
+            int result = super.hashCode();
+            result = 31 * result + (int) (previousValue ^ (previousValue >>> 32));
             result = 31 * result + (int) (currentValue ^ (currentValue >>> 32));
             return result;
         }

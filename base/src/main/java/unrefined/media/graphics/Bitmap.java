@@ -12,12 +12,102 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Set;
 
 public abstract class Bitmap implements Disposable, Copyable, Duplicatable {
+
+    public static Bitmap of(int width, int height, int type) {
+        return Drawing.getInstance().createBitmap(width, height, type);
+    }
+
+    public static Bitmap read(File input) throws IOException {
+        return Drawing.getInstance().readBitmap(input);
+    }
+    public static Bitmap read(InputStream input) throws IOException {
+        return Drawing.getInstance().readBitmap(input);
+    }
+    public static Bitmap read(Asset input) throws IOException {
+        return Drawing.getInstance().readBitmap(input);
+    }
+    public static Bitmap read(File input, int type) throws IOException {
+        return Drawing.getInstance().readBitmap(input, type);
+    }
+    public static Bitmap read(InputStream input, int type) throws IOException {
+        return Drawing.getInstance().readBitmap(input, type);
+    }
+    public static Bitmap read(Asset input, int type) throws IOException {
+        return Drawing.getInstance().readBitmap(input, type);
+    }
+    public static void writeBitmap(Bitmap bitmap, File output, String format, float quality) throws IOException {
+        Drawing.getInstance().writeBitmap(bitmap, output, format, quality);
+    }
+    public static void writeBitmap(Bitmap bitmap, OutputStream output, String format, float quality) throws IOException {
+        Drawing.getInstance().writeBitmap(bitmap, output, format, quality);
+    }
+
+    public static Bitmap.MultiFrame readMultiFrame(File input) throws IOException {
+        return Drawing.getInstance().readBitmapMultiFrame(input);
+    }
+    public static Bitmap.MultiFrame readMultiFrame(InputStream input) throws IOException {
+        return Drawing.getInstance().readBitmapMultiFrame(input);
+    }
+    public static Bitmap.MultiFrame readMultiFrame(Asset input) throws IOException {
+        return Drawing.getInstance().readBitmapMultiFrame(input);
+    }
+    public static Bitmap.MultiFrame readMultiFrame(File input, int type) throws IOException {
+        return Drawing.getInstance().readBitmapMultiFrame(input, type);
+    }
+    public static Bitmap.MultiFrame readMultiFrame(InputStream input, int type) throws IOException {
+        return Drawing.getInstance().readBitmapMultiFrame(input, type);
+    }
+    public static Bitmap.MultiFrame readMultiFrame(Asset input, int type) throws IOException {
+        return Drawing.getInstance().readBitmapMultiFrame(input, type);
+    }
+    public static Bitmap.MultiFrame readMultiFrame(File input, int[] types, int typesOffset) throws IOException {
+        return Drawing.getInstance().readBitmapMultiFrame(input, types, typesOffset);
+    }
+    public static Bitmap.MultiFrame readMultiFrame(InputStream input, int[] types, int typesOffset) throws IOException {
+        return Drawing.getInstance().readBitmapMultiFrame(input, types, typesOffset);
+    }
+    public static Bitmap.MultiFrame readMultiFrame(Asset input, int[] types, int typesOffset) throws IOException {
+        return Drawing.getInstance().readBitmapMultiFrame(input, types, typesOffset);
+    }
+    public static Bitmap.MultiFrame readMultiFrame(File input, int[] types) throws IOException {
+        return Drawing.getInstance().readBitmapMultiFrame(input, types);
+    }
+    public static Bitmap.MultiFrame readMultiFrame(InputStream input, int[] types) throws IOException {
+        return Drawing.getInstance().readBitmapMultiFrame(input, types);
+    }
+    public static Bitmap.MultiFrame readMultiFrame(Asset input, int[] types) throws IOException {
+        return Drawing.getInstance().readBitmapMultiFrame(input, types);
+    }
+    public static void writeMultiFrame(Bitmap.MultiFrame frames, File output, String format, float quality) throws IOException {
+        Drawing.getInstance().writeBitmapMultiFrame(frames, output, format, quality);
+    }
+    public static void writeMultiFrame(Bitmap.MultiFrame frames, OutputStream output, String format, float quality) throws IOException {
+        Drawing.getInstance().writeBitmapMultiFrame(frames, output, format, quality);
+    }
+    public static void writeMultiFrame(Bitmap.MultiFrame frames, File output, String format, float[] quality, int qualityOffset) throws IOException {
+        Drawing.getInstance().writeBitmapMultiFrame(frames, output, format, quality, qualityOffset);
+    }
+    public static void writeMultiFrame(Bitmap.MultiFrame frames, OutputStream output, String format, float[] quality, int qualityOffset) throws IOException {
+        Drawing.getInstance().writeBitmapMultiFrame(frames, output, format, quality, qualityOffset);
+    }
+    public static void writeMultiFrame(Bitmap.MultiFrame frames, File output, String format, float[] quality) throws IOException {
+        Drawing.getInstance().writeBitmapMultiFrame(frames, output, format, quality);
+    }
+    public static void writeMultiFrame(Bitmap.MultiFrame frames, OutputStream output, String format, float[] quality) throws IOException {
+        Drawing.getInstance().writeBitmapMultiFrame(frames, output, format, quality);
+    }
+
+    public static Set<String> getReaderFormats() {
+        return Drawing.getInstance().getBitmapReaderFormats();
+    }
+    public static Set<String> getWriterFormats() {
+        return Drawing.getInstance().getBitmapWriterFormats();
+    }
 
     public static abstract class Handler {
         public abstract Bitmap read(File input, int type) throws IOException;
@@ -272,31 +362,36 @@ public abstract class Bitmap implements Disposable, Copyable, Duplicatable {
         private int loops = 0;
 
         public MultiFrame(Collection<Frame> frames) {
-            super(frames);
-            replaceAll(Frame::clone);
+            for (Frame frame : frames) {
+                add(frame.clone());
+            }
         }
 
         public MultiFrame(Frame... frames) {
-            super(Arrays.asList(frames));
-            replaceAll(Frame::clone);
+            for (Frame frame : frames) {
+                add(frame.clone());
+            }
         }
 
         public void setFrames(Collection<Frame> frames) {
             clear();
-            addAll(frames);
-            replaceAll(Frame::clone);
+            for (Frame frame : frames) {
+                add(frame.clone());
+            }
         }
 
         public void setFrames(Frame[] frames, int framesOffset, int length) {
             clear();
-            addAll(Arrays.asList(Arrays.copyOfRange(frames, framesOffset, framesOffset + length)));
-            replaceAll(Frame::clone);
+            for (int i = 0; i < length; i ++) {
+                add(frames[framesOffset + i].clone());
+            }
         }
 
         public void setFrames(Frame... frames) {
             clear();
-            addAll(Arrays.asList(frames));
-            replaceAll(Frame::clone);
+            for (Frame frame : frames) {
+                add(frame.clone());
+            }
         }
 
         public int getLooping() {
@@ -353,7 +448,10 @@ public abstract class Bitmap implements Disposable, Copyable, Duplicatable {
         @Override
         public MultiFrame clone() {
             MultiFrame clone = (MultiFrame) super.clone();
-            clone.replaceAll(Frame::clone);
+            clone.clear();
+            for (Frame frame : this) {
+                clone.add(frame.clone());
+            }
             return clone;
         }
 

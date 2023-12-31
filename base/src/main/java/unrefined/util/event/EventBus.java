@@ -16,7 +16,7 @@ public abstract class EventBus {
 
     private static volatile EventBus DEFAULT_INSTANCE;
     private static final Object DEFAULT_INSTANCE_LOCK = new Object();
-    public static EventBus defaultEventBus() {
+    public static EventBus defaultInstance() {
         if (DEFAULT_INSTANCE == null) synchronized (DEFAULT_INSTANCE_LOCK) {
             if (DEFAULT_INSTANCE == null) DEFAULT_INSTANCE = Environment.global().get("unrefined.runtime.eventBus", EventBus.class);
         }

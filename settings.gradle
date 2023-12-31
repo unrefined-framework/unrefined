@@ -18,9 +18,6 @@ rootProject.name = 'uxgl'
 // core
 include ':base'
 
-// legacy
-//include ':legacy' //TODO
-
 // desktop
 include ':desktop'
 //include ':winui' //TODO
@@ -31,7 +28,3 @@ include ':android'
 
 // html5
 //include ':teavm'  //TODO
-
-// game
-include ':game2d'
-

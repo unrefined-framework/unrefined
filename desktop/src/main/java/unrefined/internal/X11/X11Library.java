@@ -1,11 +1,10 @@
 package unrefined.internal.X11;
 
-import unrefined.internal.SystemUtils;
+import com.kenai.jffi.Library;
+import unrefined.internal.OperatingSystem;
 import unrefined.util.NotInstantiableError;
 
 import java.awt.GraphicsEnvironment;
-import java.lang.foreign.Arena;
-import java.lang.foreign.SymbolLookup;
 
 public final class X11Library {
 
@@ -13,11 +12,12 @@ public final class X11Library {
         throw new NotInstantiableError(X11Library.class);
     }
 
-    public static final SymbolLookup X11_LOOKUP;
+    public static final Library X11;
     static {
-        if (SystemUtils.IS_X11 && !GraphicsEnvironment.isHeadless()) X11_LOOKUP = SymbolLookup.libraryLookup(System.mapLibraryName("X11"), Arena.global());
-        else X11_LOOKUP = null;
+        if (OperatingSystem.IS_X11 && !GraphicsEnvironment.isHeadless())
+            X11 = Library.getCachedInstance(System.mapLibraryName("X11"), Library.LAZY | Library.GLOBAL);
+        else X11 = null;
     }
-    public static final SymbolLookup XCURSOR_LOOKUP = X11CursorUtils.XCURSOR_LOOKUP;
+    public static final Library Xcursor = X11CursorSupport.Xcursor;
 
 }

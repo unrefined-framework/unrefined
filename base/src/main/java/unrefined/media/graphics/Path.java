@@ -1,14 +1,19 @@
 package unrefined.media.graphics;
 
-import unrefined.util.Copyable;
-import unrefined.io.Disposable;
+import unrefined.util.Cacheable;
 import unrefined.util.NotInstantiableError;
-import unrefined.util.Resettable;
-import unrefined.util.Swappable;
 
 import static unrefined.media.graphics.Path.SegmentType.*;
 
-public abstract class Path implements Disposable, Copyable, Swappable, Resettable {
+public abstract class Path implements Cacheable {
+
+    public static Path of(int fillRule) {
+        return Drawing.getInstance().createPath(fillRule);
+    }
+
+    public static Path ofDefault() {
+        return Drawing.getInstance().createPath();
+    }
 
     public static final class FillRule {
         private FillRule() {
@@ -167,14 +172,9 @@ public abstract class Path implements Disposable, Copyable, Swappable, Resettabl
 
     @Override
     public String toString() {
-        if (isDisposed()) return getClass().getName() + "@" + Integer.toHexString(hashCode())
+        return getClass().getName() + "@" + Integer.toHexString(hashCode())
                 + '{' +
-                "disposed=true" +
-                '}';
-        else return getClass().getName() + "@" + Integer.toHexString(hashCode())
-                + '{' +
-                "disposed=false" +
-                ", fillRule=" + FillRule.toString(getFillRule()) +
+                "fillRule=" + FillRule.toString(getFillRule()) +
                 '}';
     }
 

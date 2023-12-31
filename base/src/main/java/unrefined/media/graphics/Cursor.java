@@ -1,9 +1,32 @@
 package unrefined.media.graphics;
 
-import unrefined.io.Disposable;
 import unrefined.util.NotInstantiableError;
 
-public abstract class Cursor implements Disposable {
+public abstract class Cursor {
+
+    public static Cursor ofSystem(int type) throws CursorNotFoundException {
+        return Drawing.getInstance().getCursor(type);
+    }
+
+    public static Cursor of(Bitmap bitmap, int hotSpotX, int hotSpotY) {
+        return Drawing.getInstance().createCursor(bitmap, hotSpotX, hotSpotY);
+    }
+
+    public static Cursor ofAnimated(Cursor[] cursors, int cursorsOffset, long[] durations, int durationsOffset, int length) {
+        return Drawing.getInstance().createCursor(cursors, cursorsOffset, durations, durationsOffset, length);
+    }
+
+    public static Cursor ofAnimated(Cursor[] cursors, long[] durations) {
+        return Drawing.getInstance().createCursor(cursors, durations);
+    }
+
+    public static Cursor ofAnimated(Bitmap.MultiFrame frames) {
+        return Drawing.getInstance().createCursor(frames);
+    }
+
+    public static int getMaximumColors() {
+        return Drawing.getInstance().getMaximumCursorColors();
+    }
 
     public static final class Type {
         private Type() {
@@ -109,25 +132,17 @@ public abstract class Cursor implements Disposable {
 
     @Override
     public String toString() {
-        if (isDisposed()) return getClass().getName() + "@" + Integer.toHexString(hashCode())
+        int type = getType();
+        if (type == Type.CUSTOM) return getClass().getName()
                 + '{' +
-                "disposed=true" +
+                "type=CUSTOM" +
+                ", hotSpotX=" + getHotSpotX() +
+                ", hotSpotY=" + getHotSpotY() +
                 '}';
-        else {
-            int type = getType();
-            if (type == Type.CUSTOM) return getClass().getName()
-                    + '{' +
-                    "disposed=false" +
-                    ", type=CUSTOM" +
-                    ", hotSpotX=" + getHotSpotX() +
-                    ", hotSpotY=" + getHotSpotY() +
-                    '}';
-            else return getClass().getName()
-                    + '{' +
-                    "disposed=false" +
-                    ", type=" + Type.toString(getType()) +
-                    '}';
-        }
+        else return getClass().getName()
+                + '{' +
+                "type=" + Type.toString(type) +
+                '}';
     }
 
 }

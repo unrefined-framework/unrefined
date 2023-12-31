@@ -32,7 +32,7 @@ public abstract class Dispatcher {
 	 */
 	private static volatile Dispatcher DEFAULT_INSTANCE;
 	private static final Object DEFAULT_INSTANCE_LOCK = new Object();
-	public static Dispatcher defaultDispatcher() {
+	public static Dispatcher defaultInstance() {
 		if (DEFAULT_INSTANCE == null) synchronized (DEFAULT_INSTANCE_LOCK) {
 			if (DEFAULT_INSTANCE == null) DEFAULT_INSTANCE = Environment.global().get("unrefined.runtime.dispatcher", Dispatcher.class);
 		}

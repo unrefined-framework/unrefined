@@ -1,10 +1,9 @@
 package unrefined.runtime;
 
 import unrefined.app.Preferences;
-import unrefined.internal.FileUtils;
 import unrefined.util.event.EventSlot;
-import unrefined.util.function.Slot;
 import unrefined.util.signal.Signal;
+import unrefined.util.signal.SignalSlot;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,7 +11,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,10 +20,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import static java.nio.file.StandardOpenOption.READ;
-import static java.nio.file.StandardOpenOption.WRITE;
-import static java.nio.file.StandardOpenOption.CREATE;
-import static java.nio.file.StandardOpenOption.SYNC;
+import static java.nio.file.StandardOpenOption.*;
 
 public class DesktopPreferences extends Preferences {
 
@@ -100,14 +95,14 @@ public class DesktopPreferences extends Preferences {
     private class Editor extends Preferences.Editor {
         private Editor put(String key, String value) {
             synchronized (cacheLock) {
-                if (!value.equals(cache.put(key, value)) && !DesktopPreferences.this.onChanged().isEmpty())
-                    DesktopPreferences.this.onChanged().emit(new ChangedEvent(DesktopPreferences.this, key));
+                if (!value.equals(cache.put(key, value)) && !DesktopPreferences.this.onChange().isEmpty())
+                    DesktopPreferences.this.onChange().emit(new ChangeEvent(DesktopPreferences.this, key));
             }
             return this;
         }
         @Override
-        public Editor onChanged(Slot<Signal<EventSlot<ChangedEvent>>> consumer) {
-            consumer.accept(DesktopPreferences.this.onChanged());
+        public Editor onChange(SignalSlot<EventSlot<ChangeEvent>> consumer) {
+            consumer.accept(DesktopPreferences.this.onChange());
             return this;
         }
         @Override
@@ -119,7 +114,7 @@ public class DesktopPreferences extends Preferences {
             return put(key, Byte.toString(value));
         }
         @Override
-        public Editor putCharacter(String key, char value) {
+        public Editor putChar(String key, char value) {
             return put(key, Character.toString(value));
         }
         @Override
@@ -127,7 +122,7 @@ public class DesktopPreferences extends Preferences {
             return put(key, Short.toString(value));
         }
         @Override
-        public Editor putInteger(String key, int value) {
+        public Editor putInt(String key, int value) {
             return put(key, Integer.toString(value));
         }
         @Override
@@ -206,7 +201,7 @@ public class DesktopPreferences extends Preferences {
     }
 
     @Override
-    public char getCharacter(String key, char defaultValue) {
+    public char getChar(String key, char defaultValue) {
         String value = properties.getProperty(key);
         return value == null ? defaultValue : parseChar(value);
     }
@@ -218,7 +213,7 @@ public class DesktopPreferences extends Preferences {
     }
 
     @Override
-    public int getInteger(String key, int defaultValue) {
+    public int getInt(String key, int defaultValue) {
         String value = properties.getProperty(key);
         return value == null ? defaultValue : Integer.parseInt(value);
     }
@@ -283,12 +278,12 @@ public class DesktopPreferences extends Preferences {
         synchronized (fileLock) {
             try {
                 if (file.exists()) {
-                    if (FileUtils.createFileIfNotExists(bakFile)) Files.copy(file.toPath(), bakFile.toPath(), REPLACE_EXISTING);
+                    if (createFileIfNotExists(bakFile)) Files.copy(file.toPath(), bakFile.toPath(), REPLACE_EXISTING);
                     else return false;
                 }
-                if (FileUtils.createFileIfNotExists(file)) {
+                if (createFileIfNotExists(file)) {
                     try (OutputStream stream = Files.newOutputStream(file.toPath(), WRITE, CREATE, SYNC)) {
-                        properties.storeToXML(stream, null, StandardCharsets.UTF_8);
+                        properties.storeToXML(stream, null, "UTF-8");
                         Files.delete(bakFile.toPath());
                         return true;
                     }
@@ -299,6 +294,22 @@ public class DesktopPreferences extends Preferences {
             catch (IOException e) {
                 return false;
             }
+        }
+    }
+
+    private static boolean createFileIfNotExists(File file) {
+        try {
+            if (file.exists() && file.isFile()) return true;
+            else {
+                File parentFile = file.getParentFile();
+                if (!parentFile.exists()) {
+                    if (!parentFile.mkdirs()) return false;
+                }
+                return file.createNewFile();
+            }
+        }
+        catch (IOException e) {
+            return false;
         }
     }
 

@@ -1,15 +1,43 @@
 package unrefined.media.graphics;
 
-import unrefined.io.Portable;
-import unrefined.util.Copyable;
-import unrefined.io.Disposable;
+import unrefined.io.Savable;
 import unrefined.util.NotInstantiableError;
-import unrefined.util.Resettable;
-import unrefined.util.Swappable;
 
 import static unrefined.media.graphics.Transform.Index.*;
 
-public abstract class Transform implements Portable, Disposable, Copyable, Swappable, Resettable {
+public abstract class Transform implements Savable {
+
+    public static Transform ofDefault() {
+        return Drawing.getInstance().createTransform();
+    }
+
+    public static Transform of(float sx, float kx, float dx, float ky, float sy, float dy) {
+        return Drawing.getInstance().createTransform(sx, kx, dx, ky, sy, dy);
+    }
+
+    public static Transform ofValues(float... values) {
+        return Drawing.getInstance().createTransform(values);
+    }
+
+    public static Transform ofScale(float sx, float sy) {
+        return Drawing.getInstance().createScaleTransform(sx, sy);
+    }
+
+    public static Transform ofSkew(float kx, float ky) {
+        return Drawing.getInstance().createSkewTransform(kx, ky);
+    }
+
+    public static Transform ofTranslate(float dx, float dy) {
+        return Drawing.getInstance().createTranslateTransform(dx, dy);
+    }
+
+    public static Transform ofRotate(float radians, float px, float py) {
+        return Drawing.getInstance().createRotateTransform(radians, px, py);
+    }
+
+    public static Transform ofRotate(float radians) {
+        return Drawing.getInstance().createRotateTransform(radians);
+    }
 
     public static final class Index {
         private Index() {
@@ -75,7 +103,7 @@ public abstract class Transform implements Portable, Disposable, Copyable, Swapp
         preTransform(values[SCALE_X], values[SKEW_X], values[TRANSLATE_X], values[SKEW_Y], values[SCALE_Y], values[TRANSLATE_Y]);
     }
     
-    public void rValues(float... values) {
+    public void values(float... values) {
         transform(values[SCALE_X], values[SKEW_X], values[TRANSLATE_X], values[SKEW_Y], values[SCALE_Y], values[TRANSLATE_Y]);
     }
     
@@ -180,22 +208,15 @@ public abstract class Transform implements Portable, Disposable, Copyable, Swapp
 
     @Override
     public String toString() {
-        if (isDisposed()) return getClass().getName() + "@" + Integer.toHexString(hashCode())
+        StringBuilder builder = new StringBuilder();
+        float[] values = new float[6];
+        getValues(values);
+        builder.append("[[").append(values[0]).append(", ").append(values[1]).append(", ").append(values[2]).append("], ");
+        builder.append('[').append(values[3]).append(", ").append(values[4]).append(", ").append(values[5]).append("]]");
+        return getClass().getName()
                 + '{' +
-                "disposed=true" +
+                "values=" + builder +
                 '}';
-        else {
-            StringBuilder builder = new StringBuilder();
-            float[] values = new float[6];
-            getValues(values);
-            builder.append("[[").append(values[0]).append(", ").append(values[1]).append(", ").append(values[2]).append("], ");
-            builder.append('[').append(values[3]).append(", ").append(values[4]).append(", ").append(values[5]).append("]]");
-            return getClass().getName()
-                    + '{' +
-                    "disposed=false" +
-                    ", values=" + builder +
-                    '}';
-        }
     }
 
 }

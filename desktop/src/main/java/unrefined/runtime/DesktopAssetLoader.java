@@ -1,11 +1,10 @@
 package unrefined.runtime;
 
-import unrefined.internal.FileUtils;
-import unrefined.internal.IOUtils;
 import unrefined.io.asset.AssetLoader;
 import unrefined.io.asset.AssetNotFoundException;
 import unrefined.util.concurrent.Producer;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -14,12 +13,16 @@ import java.util.Objects;
 
 public class DesktopAssetLoader extends AssetLoader {
 
+    private static String removeStartSeparator(String text) {
+        return text.charAt(0) == File.separatorChar ? text.substring(1) : text;
+    }
+
     public static InputStream getResourceAsStream(ClassLoader classLoader, String pathname) {
-        return classLoader.getResourceAsStream(FileUtils.removeStartSeparator(pathname));
+        return classLoader.getResourceAsStream(removeStartSeparator(pathname));
     }
 
     public static URL getResource(ClassLoader classLoader, String pathname) {
-        return classLoader.getResource(FileUtils.removeStartSeparator(pathname));
+        return classLoader.getResource(removeStartSeparator(pathname));
     }
 
     private final Producer<ClassLoader> classLoaderProducer;
@@ -47,7 +50,11 @@ public class DesktopAssetLoader extends AssetLoader {
                 return true;
             }
             finally {
-                IOUtils.closeQuietly(stream);
+                try {
+                    stream.close();
+                }
+                catch (IOException ignored) {
+                }
             }
         }
     }
@@ -75,7 +82,11 @@ public class DesktopAssetLoader extends AssetLoader {
                 return stream.available();
             }
             finally {
-                IOUtils.closeQuietly(stream);
+                try {
+                    stream.close();
+                }
+                catch (IOException ignored) {
+                }
             }
         }
     }

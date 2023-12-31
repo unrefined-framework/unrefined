@@ -1,15 +1,14 @@
 package unrefined.media.graphics;
 
-import unrefined.io.Portable;
-import unrefined.io.PortableInput;
-import unrefined.io.PortableOutput;
-import unrefined.util.Copyable;
-import unrefined.util.Resettable;
-import unrefined.util.Swappable;
+import unrefined.io.BinaryInput;
+import unrefined.io.BinaryOutput;
+import unrefined.io.BundleInput;
+import unrefined.io.BundleOutput;
+import unrefined.io.Savable;
 
 import java.io.IOException;
 
-public class Insets implements Portable, Copyable, Swappable, Resettable {
+public class Insets implements Savable {
 
     private int left;
     private int top;
@@ -80,7 +79,7 @@ public class Insets implements Portable, Copyable, Swappable, Resettable {
     }
 
     @Override
-    public void writePortable(PortableOutput out) throws IOException {
+    public void writePortable(BinaryOutput out) throws IOException {
         out.writeInt(left);
         out.writeInt(top);
         out.writeInt(right);
@@ -88,7 +87,7 @@ public class Insets implements Portable, Copyable, Swappable, Resettable {
     }
 
     @Override
-    public void readPortable(PortableInput in) throws IOException {
+    public void readPortable(BinaryInput in) throws IOException {
         left = in.readInt();
         top = in.readInt();
         right = in.readInt();
@@ -172,6 +171,22 @@ public class Insets implements Portable, Copyable, Swappable, Resettable {
                 ", right=" + right +
                 ", bottom=" + bottom +
                 '}';
+    }
+
+    @Override
+    public void writeToBundle(BundleOutput out) throws IOException {
+        out.putInt("left", left);
+        out.putInt("top", top);
+        out.putInt("right", right);
+        out.putInt("bottom", bottom);
+    }
+
+    @Override
+    public void readFromBundle(BundleInput in) throws IOException {
+        left = in.getInt("left", 0);
+        top = in.getInt("top", 0);
+        right = in.getInt("right", 0);
+        bottom = in.getInt("bottom", 0);
     }
 
 }

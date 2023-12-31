@@ -24,19 +24,19 @@ public abstract class ByteProperty {
         return new FunctionBinding(getter);
     }
 
-    public static ByteProperty ofAtomicInstance(byte initialValue) {
+    public static ByteProperty ofAtomic(byte initialValue) {
         return new AtomicInstance(initialValue);
     }
 
-    public static ByteProperty ofAtomicInstance() {
+    public static ByteProperty ofAtomic() {
         return new AtomicInstance();
     }
 
-    public static ByteProperty ofInstance(byte initialValue) {
+    public static ByteProperty of(byte initialValue) {
         return new Instance(initialValue);
     }
 
-    public static ByteProperty ofInstance() {
+    public static ByteProperty ofDefault() {
         return new Instance();
     }
 
@@ -101,7 +101,7 @@ public abstract class ByteProperty {
         }
         public void set(byte value) {
             byte previousValue = this.value.getAndSet(value);
-            if (previousValue != value && !onChanged().isEmpty()) onChanged().emit(new ChangedEvent(this, previousValue, value));
+            if (previousValue != value && !onChange().isEmpty()) onChange().emit(new ChangeEvent(this, previousValue, value));
         }
         public byte get() {
             return value.get();
@@ -122,16 +122,16 @@ public abstract class ByteProperty {
         public void set(byte value) {
             byte previousValue = this.value;
             this.value = value;
-            if (previousValue != value && !onChanged().isEmpty()) onChanged().emit(new ChangedEvent(this, previousValue, value));
+            if (previousValue != value && !onChange().isEmpty()) onChange().emit(new ChangeEvent(this, previousValue, value));
         }
         public byte get() {
             return value;
         }
     }
 
-    private final Signal<EventSlot<ChangedEvent>> onChanged = Signal.ofSlot();
-    public Signal<EventSlot<ChangedEvent>> onChanged() {
-        return onChanged;
+    private final Signal<EventSlot<ChangeEvent>> onChange = Signal.ofSlot();
+    public Signal<EventSlot<ChangeEvent>> onChange() {
+        return onChange;
     }
 
     public abstract void set(byte value);
@@ -160,11 +160,11 @@ public abstract class ByteProperty {
         return result;
     }
 
-    public static final class ChangedEvent extends Event<ByteProperty> {
+    public static final class ChangeEvent extends Event<ByteProperty> {
 
         private final byte previousValue, currentValue;
 
-        public ChangedEvent(ByteProperty source, byte previousValue, byte currentValue) {
+        public ChangeEvent(ByteProperty source, byte previousValue, byte currentValue) {
             super(source);
             this.previousValue = previousValue;
             this.currentValue = currentValue;
@@ -179,11 +179,12 @@ public abstract class ByteProperty {
         }
 
         @Override
-        public boolean equals(Object object) {
-            if (this == object) return true;
-            if (object == null || getClass() != object.getClass()) return false;
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            if (!super.equals(o)) return false;
 
-            ChangedEvent that = (ChangedEvent) object;
+            ChangeEvent that = (ChangeEvent) o;
 
             if (previousValue != that.previousValue) return false;
             return currentValue == that.currentValue;
@@ -191,7 +192,8 @@ public abstract class ByteProperty {
 
         @Override
         public int hashCode() {
-            int result = previousValue;
+            int result = super.hashCode();
+            result = 31 * result + (int) previousValue;
             result = 31 * result + (int) currentValue;
             return result;
         }

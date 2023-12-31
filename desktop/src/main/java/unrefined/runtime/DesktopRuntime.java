@@ -1,7 +1,7 @@
 package unrefined.runtime;
 
 import unrefined.context.Environment;
-import unrefined.internal.AWTUtils;
+import unrefined.desktop.AWTSupport;
 import unrefined.util.NotInstantiableError;
 import unrefined.util.UnexpectedError;
 
@@ -41,7 +41,7 @@ public final class DesktopRuntime {
                 throw new UnexpectedError(e);
             }
 
-            AWTUtils.patch();
+            AWTSupport.patch();
 
             Environment.global().put("unrefined.runtime.platform", new DesktopPlatform());
             Environment.global().put("unrefined.runtime.base64", new DesktopBase64());
@@ -49,6 +49,7 @@ public final class DesktopRuntime {
             Environment.global().put("unrefined.runtime.cleaner", new DesktopCleaner());
             Environment.global().put("unrefined.runtime.console", new DesktopConsole());
             Environment.global().put("unrefined.runtime.drawing", new DesktopDrawing());
+            Environment.global().put("unrefined.runtime.foreign", new DesktopForeign());
 
             Environment.global().put("unrefined.runtime.textManager", new BaseTextManager());
             Environment.global().put("unrefined.runtime.eventBus", new BaseEventBus());

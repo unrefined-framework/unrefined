@@ -1,15 +1,14 @@
 package unrefined.media.graphics;
 
-import unrefined.io.Portable;
-import unrefined.io.PortableInput;
-import unrefined.io.PortableOutput;
-import unrefined.util.Copyable;
-import unrefined.util.Resettable;
-import unrefined.util.Swappable;
+import unrefined.io.BinaryInput;
+import unrefined.io.BinaryOutput;
+import unrefined.io.BundleInput;
+import unrefined.io.BundleOutput;
+import unrefined.io.Savable;
 
 import java.io.IOException;
 
-public class DimensionF implements Portable, Copyable, Swappable, Resettable {
+public class DimensionF implements Savable {
 
     private float width;
     private float height;
@@ -54,13 +53,13 @@ public class DimensionF implements Portable, Copyable, Swappable, Resettable {
     }
 
     @Override
-    public void writePortable(PortableOutput out) throws IOException {
+    public void writePortable(BinaryOutput out) throws IOException {
         out.writeFloat(width);
         out.writeFloat(height);
     }
 
     @Override
-    public void readPortable(PortableInput in) throws IOException {
+    public void readPortable(BinaryInput in) throws IOException {
         width = in.readFloat();
         height = in.readFloat();
     }
@@ -134,6 +133,18 @@ public class DimensionF implements Portable, Copyable, Swappable, Resettable {
                 "width=" + width +
                 ", height=" + height +
                 '}';
+    }
+
+    @Override
+    public void writeToBundle(BundleOutput out) throws IOException {
+        out.putFloat("width", width);
+        out.putFloat("height", height);
+    }
+
+    @Override
+    public void readFromBundle(BundleInput in) throws IOException {
+        width = in.getFloat("width", 0);
+        height = in.getFloat("height", 0);
     }
 
 }

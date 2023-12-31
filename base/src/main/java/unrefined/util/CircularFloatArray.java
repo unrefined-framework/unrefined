@@ -15,12 +15,15 @@
  */
 package unrefined.util;
 
+import java.util.Iterator;
+import java.util.RandomAccess;
+
 /**
  * CircularFloatArray is a circular float array data structure that provides O(1) random read, O(1)
  * prepend and O(1) append. The CircularFloatArray automatically grows its capacity when number of
  * added floats is over its capacity.
  */
-public class CircularFloatArray {
+public class CircularFloatArray implements Cloneable, Iterable<Float>, RandomAccess {
 
     private float[] elements;
     private int head;
@@ -75,6 +78,22 @@ public class CircularFloatArray {
 
         capacityBitmask = arrayCapacity - 1;
         elements = new float[arrayCapacity];
+    }
+
+    @Override
+    public CircularFloatArray clone() {
+        CircularFloatArray clone;
+        try {
+            clone = (CircularFloatArray) super.clone();
+        }
+        catch (CloneNotSupportedException e) {
+            clone = new CircularFloatArray();
+            clone.head = head;
+            clone.tail = tail;
+            clone.capacityBitmask = capacityBitmask;
+        }
+        clone.elements = elements.clone();
+        return clone;
     }
 
     /**
@@ -254,6 +273,22 @@ public class CircularFloatArray {
         }
         buffer.append(']');
         return buffer.toString();
+    }
+
+    @Override
+    public Iterator<Float> iterator() {
+        return new Iterator<Float>() {
+            private int index = -1;
+            @Override
+            public boolean hasNext() {
+                return index + 1 < size();
+            }
+            @Override
+            public Float next() {
+                index ++;
+                return get(index);
+            }
+        };
     }
 
 }

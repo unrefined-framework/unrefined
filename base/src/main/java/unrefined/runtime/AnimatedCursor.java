@@ -3,11 +3,10 @@ package unrefined.runtime;
 import unrefined.media.graphics.Cursor;
 
 import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AnimatedCursor extends Cursor {
 
-    private volatile Cursor[] cursors;
+    private final Cursor[] cursors;
     private final long[] durations;
 
     public AnimatedCursor(Cursor[] cursors, int cursorsOffset, long[] durations, int durationsOffset, int length) {
@@ -29,23 +28,6 @@ public class AnimatedCursor extends Cursor {
         return durations;
     }
 
-    private final AtomicBoolean disposed = new AtomicBoolean(false);
-
-    @Override
-    public void dispose() {
-        if (disposed.compareAndSet(false, true)) {
-            for (Cursor cursor : cursors) {
-                cursor.dispose();
-            }
-            cursors = null;
-        }
-    }
-
-    @Override
-    public boolean isDisposed() {
-        return disposed.get();
-    }
-
     @Override
     public int getType() {
         return Type.CUSTOM;
@@ -63,14 +45,9 @@ public class AnimatedCursor extends Cursor {
 
     @Override
     public String toString() {
-        if (isDisposed()) return getClass().getName() + "@" + Integer.toHexString(hashCode())
+        return getClass().getName()
                 + '{' +
-                "disposed=true" +
-                '}';
-        else return getClass().getName()
-                + '{' +
-                "disposed=false" +
-                ", type=CUSTOM" +
+                "type=CUSTOM" +
                 '}';
     }
 

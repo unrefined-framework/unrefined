@@ -6,7 +6,7 @@ public abstract class Cleaner {
 
     private static volatile Cleaner INSTANCE;
     private static final Object INSTANCE_LOCK = new Object();
-    public static Cleaner getCleaner() {
+    public static Cleaner getInstance() {
         if (INSTANCE == null) synchronized (INSTANCE_LOCK) {
             if (INSTANCE == null) INSTANCE = Environment.global().get("unrefined.runtime.cleaner", Cleaner.class);
         }

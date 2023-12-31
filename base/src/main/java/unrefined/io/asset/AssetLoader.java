@@ -11,7 +11,7 @@ public abstract class AssetLoader {
 
     private static volatile AssetLoader DEFAULT_INSTANCE;
     private static final Object DEFAULT_INSTANCE_LOCK = new Object();
-    public static AssetLoader defaultAssetLoader() {
+    public static AssetLoader defaultInstance() {
         if (DEFAULT_INSTANCE == null) synchronized (DEFAULT_INSTANCE_LOCK) {
             if (DEFAULT_INSTANCE == null) DEFAULT_INSTANCE = Environment.global().get("unrefined.runtime.assetLoader", AssetLoader.class);
         }

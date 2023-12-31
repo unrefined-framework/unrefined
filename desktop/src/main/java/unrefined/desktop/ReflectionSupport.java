@@ -1,28 +1,46 @@
 package unrefined.desktop;
 
-import sun.misc.Unsafe;
-import unrefined.internal.MethodLookupUtils;
-import unrefined.internal.UnsafeUtils;
 import unrefined.util.UnexpectedError;
 
-import java.lang.invoke.MethodHandles;
 import java.lang.invoke.WrongMethodTypeException;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Proxy;
 
 import static java.lang.reflect.Modifier.isStatic;
+import static unrefined.desktop.UnsafeSupport.IMPL_LOOKUP;
+import static unrefined.desktop.UnsafeSupport.UNSAFE;
 
 public class ReflectionSupport {
 
-    private static final Unsafe UNSAFE = UnsafeUtils.getUnsafe();
-    private static final MethodHandles.Lookup IMPL_LOOKUP = MethodLookupUtils.getImplLookup();
-    
+    private static final Method trySetAccessibleMethod;
+    static {
+        Method method;
+        try {
+            method = AccessibleObject.class.getDeclaredMethod("trySetAccessible");
+        } catch (NoSuchMethodException e) {
+            method = null;
+        }
+        trySetAccessibleMethod = method;
+    }
+
     public static boolean trySetAccessible(AccessibleObject accessible) throws SecurityException, NullPointerException {
-        return accessible.trySetAccessible();
+        if (trySetAccessibleMethod == null) {
+            accessible.setAccessible(true);
+            return true;
+        }
+        else {
+            try {
+                return (boolean) trySetAccessibleMethod.invoke(accessible);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw new UnexpectedError(e);
+            }
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -58,7 +76,7 @@ public class ReflectionSupport {
                     .append(field.getDeclaringClass().getName()).append(".").append(field.getName())
                     .append(" to ");
             String attemptedType = object.getClass().getName();
-            if (attemptedType.length() > 0) builder.append(attemptedType);
+            if (!attemptedType.isEmpty()) builder.append(attemptedType);
             else builder.append("null value");
             throw new IllegalArgumentException(builder.toString());
         }
@@ -600,6 +618,25 @@ public class ReflectionSupport {
             throw new InvocationTargetException(e);
         }
     }
+
+    public static Object invokeMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        try {
+            if (trySetAccessible(method)) return method.invoke(object, args);
+        } catch (IllegalAccessException ignored) {
+        }
+        try {
+            if (Modifier.isStatic(method.getModifiers())) return IMPL_LOOKUP.unreflect(method).invokeWithArguments(args);
+            else return IMPL_LOOKUP.unreflect(method).bindTo(object).invokeWithArguments(args);
+        } catch (IllegalAccessException e) {
+            throw new UnexpectedError(e);
+        } catch (ClassCastException | WrongMethodTypeException e) {
+            throw new IllegalArgumentException(e);
+        } catch (RuntimeException | Error | InvocationTargetException e) {
+            throw e;
+        } catch (Throwable e) {
+            throw new InvocationTargetException(e);
+        }
+    }
     
     public static void invokeNonVirtualVoidMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
         if (method.getReturnType() != void.class) throw new IllegalArgumentException("Illegal return type; expected void");
@@ -759,6 +796,306 @@ public class ReflectionSupport {
         } catch (Throwable e) {
             throw new InvocationTargetException(e);
         }
+    }
+
+    public static Object invokeNonVirtualMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        try {
+            return IMPL_LOOKUP.unreflectSpecial(method, method.getDeclaringClass()).bindTo(object).invokeWithArguments(args);
+        } catch (IllegalAccessException e) {
+            throw new UnexpectedError(e);
+        } catch (ClassCastException | WrongMethodTypeException e) {
+            throw new IllegalArgumentException(e);
+        } catch (RuntimeException | Error | InvocationTargetException e) {
+            throw e;
+        } catch (Throwable e) {
+            throw new InvocationTargetException(e);
+        }
+    }
+
+    public static Object newProxyInstance(ClassLoader classLoader, InvocationHandler handler, Class<?>... interfaces) {
+        return Proxy.newProxyInstance(classLoader, interfaces, handler);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T newProxyInstance(ClassLoader classLoader, InvocationHandler handler, Class<T> theInterface) {
+        return (T) Proxy.newProxyInstance(classLoader, new Class<?>[] { theInterface }, handler);
+    }
+
+    public static boolean isProxyClass(Class<?> clazz) {
+        return Proxy.isProxyClass(clazz);
+    }
+
+    public static boolean isProxyObject(Object object) {
+        return Proxy.isProxyClass(object.getClass());
+    }
+
+    public static InvocationHandler getInvocationHandler(Object object) {
+        return Proxy.getInvocationHandler(object);
+    }
+
+    private static final Method invokeDefaultMethod;
+    static {
+        Method method;
+        try {
+            method = InvocationHandler.class.getDeclaredMethod("invokeDefault", Object.class, Method.class, Object[].class);
+        } catch (NoSuchMethodException e) {
+            method = null;
+        }
+        invokeDefaultMethod = method;
+    }
+
+    public static void invokeDefaultVoidMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        if (!Proxy.isProxyClass(object.getClass())) throw new IllegalArgumentException("not a proxy object");
+        if (!method.isDefault()) throw new IllegalArgumentException("not a default method");
+        if (invokeDefaultMethod == null) invokeNonVirtualVoidMethod(object, method, args);
+        else {
+            if (method.getReturnType() != void.class) throw new IllegalArgumentException("Illegal return type; expected void");
+            else if (isStatic(method.getModifiers())) throw new IllegalArgumentException("Illegal method modifier; expected non-static");
+            try {
+                invokeDefaultMethod.invoke(null, object, method, args);
+            } catch (IllegalArgumentException e) {
+                Throwable cause = e.getCause();
+                if (cause instanceof ClassCastException) throw new IllegalArgumentException(cause);
+                else if (cause instanceof NullPointerException) throw (NullPointerException) cause;
+                else throw e;
+            } catch (IllegalAccessException e) {
+                throw new UnexpectedError(e);
+            } catch (Throwable e) {
+                throw new InvocationTargetException(e);
+            }
+        }
+    }
+
+    public static boolean invokeDefaultBooleanMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        if (!Proxy.isProxyClass(object.getClass())) throw new IllegalArgumentException("not a proxy object");
+        if (!method.isDefault()) throw new IllegalArgumentException("not a default method");
+        if (invokeDefaultMethod == null) return invokeNonVirtualBooleanMethod(object, method, args);
+        else {
+            if (method.getReturnType() != boolean.class) throw new IllegalArgumentException("Illegal return type; expected boolean");
+            else if (isStatic(method.getModifiers())) throw new IllegalArgumentException("Illegal method modifier; expected non-static");
+            try {
+                return (boolean) invokeDefaultMethod.invoke(null, object, method, args);
+            } catch (IllegalArgumentException e) {
+                Throwable cause = e.getCause();
+                if (cause instanceof ClassCastException) throw new IllegalArgumentException(cause);
+                else if (cause instanceof NullPointerException) throw (NullPointerException) cause;
+                else throw e;
+            } catch (IllegalAccessException e) {
+                throw new UnexpectedError(e);
+            } catch (Throwable e) {
+                throw new InvocationTargetException(e);
+            }
+        }
+    }
+
+    public static byte invokeDefaultByteMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        if (!Proxy.isProxyClass(object.getClass())) throw new IllegalArgumentException("not a proxy object");
+        if (!method.isDefault()) throw new IllegalArgumentException("not a default method");
+        if (invokeDefaultMethod == null) return invokeNonVirtualByteMethod(object, method, args);
+        else {
+            if (method.getReturnType() != byte.class) throw new IllegalArgumentException("Illegal return type; expected byte");
+            else if (isStatic(method.getModifiers())) throw new IllegalArgumentException("Illegal method modifier; expected non-static");
+            try {
+                return (byte) invokeDefaultMethod.invoke(null, object, method, args);
+            } catch (IllegalArgumentException e) {
+                Throwable cause = e.getCause();
+                if (cause instanceof ClassCastException) throw new IllegalArgumentException(cause);
+                else if (cause instanceof NullPointerException) throw (NullPointerException) cause;
+                else throw e;
+            } catch (IllegalAccessException e) {
+                throw new UnexpectedError(e);
+            } catch (Throwable e) {
+                throw new InvocationTargetException(e);
+            }
+        }
+    }
+
+    public static char invokeDefaultCharMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        if (!Proxy.isProxyClass(object.getClass())) throw new IllegalArgumentException("not a proxy object");
+        if (!method.isDefault()) throw new IllegalArgumentException("not a default method");
+        if (invokeDefaultMethod == null) return invokeNonVirtualCharMethod(object, method, args);
+        else {
+            if (method.getReturnType() != char.class) throw new IllegalArgumentException("Illegal return type; expected char");
+            else if (isStatic(method.getModifiers())) throw new IllegalArgumentException("Illegal method modifier; expected non-static");
+            try {
+                return (char) invokeDefaultMethod.invoke(null, object, method, args);
+            } catch (IllegalArgumentException e) {
+                Throwable cause = e.getCause();
+                if (cause instanceof ClassCastException) throw new IllegalArgumentException(cause);
+                else if (cause instanceof NullPointerException) throw (NullPointerException) cause;
+                else throw e;
+            } catch (IllegalAccessException e) {
+                throw new UnexpectedError(e);
+            } catch (Throwable e) {
+                throw new InvocationTargetException(e);
+            }
+        }
+    }
+
+    public static short invokeDefaultShortMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        if (!Proxy.isProxyClass(object.getClass())) throw new IllegalArgumentException("not a proxy object");
+        if (!method.isDefault()) throw new IllegalArgumentException("not a default method");
+        if (invokeDefaultMethod == null) return invokeNonVirtualShortMethod(object, method, args);
+        else {
+            if (method.getReturnType() != short.class) throw new IllegalArgumentException("Illegal return type; expected short");
+            else if (isStatic(method.getModifiers())) throw new IllegalArgumentException("Illegal method modifier; expected non-static");
+            try {
+                return (short) invokeDefaultMethod.invoke(null, object, method, args);
+            } catch (IllegalArgumentException e) {
+                Throwable cause = e.getCause();
+                if (cause instanceof ClassCastException) throw new IllegalArgumentException(cause);
+                else if (cause instanceof NullPointerException) throw (NullPointerException) cause;
+                else throw e;
+            } catch (IllegalAccessException e) {
+                throw new UnexpectedError(e);
+            } catch (Throwable e) {
+                throw new InvocationTargetException(e);
+            }
+        }
+    }
+
+    public static int invokeDefaultIntMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        if (!Proxy.isProxyClass(object.getClass())) throw new IllegalArgumentException("not a proxy object");
+        if (!method.isDefault()) throw new IllegalArgumentException("not a default method");
+        if (invokeDefaultMethod == null) return invokeNonVirtualIntMethod(object, method, args);
+        else {
+            if (method.getReturnType() != int.class) throw new IllegalArgumentException("Illegal return type; expected int");
+            else if (isStatic(method.getModifiers())) throw new IllegalArgumentException("Illegal method modifier; expected non-static");
+            try {
+                return (int) invokeDefaultMethod.invoke(null, object, method, args);
+            } catch (IllegalArgumentException e) {
+                Throwable cause = e.getCause();
+                if (cause instanceof ClassCastException) throw new IllegalArgumentException(cause);
+                else if (cause instanceof NullPointerException) throw (NullPointerException) cause;
+                else throw e;
+            } catch (IllegalAccessException e) {
+                throw new UnexpectedError(e);
+            } catch (Throwable e) {
+                throw new InvocationTargetException(e);
+            }
+        }
+    }
+
+    public static long invokeDefaultLongMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        if (!Proxy.isProxyClass(object.getClass())) throw new IllegalArgumentException("not a proxy object");
+        if (!method.isDefault()) throw new IllegalArgumentException("not a default method");
+        if (invokeDefaultMethod == null) return invokeNonVirtualLongMethod(object, method, args);
+        else {
+            if (method.getReturnType() != long.class) throw new IllegalArgumentException("Illegal return type; expected long");
+            else if (isStatic(method.getModifiers())) throw new IllegalArgumentException("Illegal method modifier; expected non-static");
+            try {
+                return (long) invokeDefaultMethod.invoke(null, object, method, args);
+            } catch (IllegalArgumentException e) {
+                Throwable cause = e.getCause();
+                if (cause instanceof ClassCastException) throw new IllegalArgumentException(cause);
+                else if (cause instanceof NullPointerException) throw (NullPointerException) cause;
+                else throw e;
+            } catch (IllegalAccessException e) {
+                throw new UnexpectedError(e);
+            } catch (Throwable e) {
+                throw new InvocationTargetException(e);
+            }
+        }
+    }
+
+    public static float invokeDefaultFloatMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        if (!Proxy.isProxyClass(object.getClass())) throw new IllegalArgumentException("not a proxy object");
+        if (!method.isDefault()) throw new IllegalArgumentException("not a default method");
+        if (invokeDefaultMethod == null) return invokeNonVirtualFloatMethod(object, method, args);
+        else {
+            if (method.getReturnType() != float.class) throw new IllegalArgumentException("Illegal return type; expected float");
+            else if (isStatic(method.getModifiers())) throw new IllegalArgumentException("Illegal method modifier; expected non-static");
+            try {
+                return (float) invokeDefaultMethod.invoke(null, object, method, args);
+            } catch (IllegalArgumentException e) {
+                Throwable cause = e.getCause();
+                if (cause instanceof ClassCastException) throw new IllegalArgumentException(cause);
+                else if (cause instanceof NullPointerException) throw (NullPointerException) cause;
+                else throw e;
+            } catch (IllegalAccessException e) {
+                throw new UnexpectedError(e);
+            } catch (Throwable e) {
+                throw new InvocationTargetException(e);
+            }
+        }
+    }
+
+    public static double invokeDefaultDoubleMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        if (!Proxy.isProxyClass(object.getClass())) throw new IllegalArgumentException("not a proxy object");
+        if (!method.isDefault()) throw new IllegalArgumentException("not a default method");
+        if (invokeDefaultMethod == null) return invokeNonVirtualDoubleMethod(object, method, args);
+        else {
+            if (method.getReturnType() != double.class) throw new IllegalArgumentException("Illegal return type; expected double");
+            else if (isStatic(method.getModifiers())) throw new IllegalArgumentException("Illegal method modifier; expected non-static");
+            try {
+                return (double) invokeDefaultMethod.invoke(null, object, method, args);
+            } catch (IllegalArgumentException e) {
+                Throwable cause = e.getCause();
+                if (cause instanceof ClassCastException) throw new IllegalArgumentException(cause);
+                else if (cause instanceof NullPointerException) throw (NullPointerException) cause;
+                else throw e;
+            } catch (IllegalAccessException e) {
+                throw new UnexpectedError(e);
+            } catch (Throwable e) {
+                throw new InvocationTargetException(e);
+            }
+        }
+    }
+
+    public static Object invokeDefaultObjectMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        if (!Proxy.isProxyClass(object.getClass())) throw new IllegalArgumentException("not a proxy object");
+        if (!method.isDefault()) throw new IllegalArgumentException("not a default method");
+        if (invokeDefaultMethod == null) return invokeNonVirtualObjectMethod(object, method, args);
+        else {
+            if (method.getReturnType().isPrimitive()) throw new IllegalArgumentException("Illegal return type; expected non-primitive");
+            else if (isStatic(method.getModifiers())) throw new IllegalArgumentException("Illegal method modifier; expected non-static");
+            try {
+                return invokeDefaultMethod.invoke(null, object, method, args);
+            } catch (IllegalArgumentException e) {
+                Throwable cause = e.getCause();
+                if (cause instanceof ClassCastException) throw new IllegalArgumentException(cause);
+                else if (cause instanceof NullPointerException) throw (NullPointerException) cause;
+                else throw e;
+            } catch (IllegalAccessException e) {
+                throw new UnexpectedError(e);
+            } catch (Throwable e) {
+                throw new InvocationTargetException(e);
+            }
+        }
+    }
+
+    public static Object invokeDefaultMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        if (!Proxy.isProxyClass(object.getClass())) throw new IllegalArgumentException("not a proxy object");
+        if (!method.isDefault()) throw new IllegalArgumentException("not a default method");
+        if (invokeDefaultMethod == null) return invokeNonVirtualObjectMethod(object, method, args);
+        else {
+            try {
+                return invokeDefaultMethod.invoke(null, object, method, args);
+            } catch (IllegalArgumentException e) {
+                Throwable cause = e.getCause();
+                if (cause instanceof ClassCastException) throw new IllegalArgumentException(cause);
+                else if (cause instanceof NullPointerException) throw (NullPointerException) cause;
+                else throw e;
+            } catch (IllegalAccessException e) {
+                throw new UnexpectedError(e);
+            } catch (Throwable e) {
+                throw new InvocationTargetException(e);
+            }
+        }
+    }
+
+    public static Class<?> getCallerClass() {
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        try {
+            return Class.forName(stackTrace[stackTrace.length - 1].getClassName());
+        } catch (ClassNotFoundException e) {
+            throw new UnexpectedError(e);
+        }
+    }
+
+    public static String getCallerMethod() {
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        return stackTrace[stackTrace.length - 1].getMethodName();
     }
 
 }

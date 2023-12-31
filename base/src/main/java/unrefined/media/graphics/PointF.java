@@ -1,15 +1,14 @@
 package unrefined.media.graphics;
 
-import unrefined.io.Portable;
-import unrefined.io.PortableInput;
-import unrefined.io.PortableOutput;
-import unrefined.util.Copyable;
-import unrefined.util.Resettable;
-import unrefined.util.Swappable;
+import unrefined.io.BinaryInput;
+import unrefined.io.BinaryOutput;
+import unrefined.io.BundleInput;
+import unrefined.io.BundleOutput;
+import unrefined.io.Savable;
 
 import java.io.IOException;
 
-public class PointF implements Portable, Copyable, Swappable, Resettable {
+public class PointF implements Savable {
 
     private float x;
     private float y;
@@ -54,13 +53,13 @@ public class PointF implements Portable, Copyable, Swappable, Resettable {
     }
 
     @Override
-    public void writePortable(PortableOutput out) throws IOException {
+    public void writePortable(BinaryOutput out) throws IOException {
         out.writeFloat(x);
         out.writeFloat(y);
     }
 
     @Override
-    public void readPortable(PortableInput in) throws IOException {
+    public void readPortable(BinaryInput in) throws IOException {
         x = in.readFloat();
         y = in.readFloat();
     }
@@ -134,6 +133,18 @@ public class PointF implements Portable, Copyable, Swappable, Resettable {
                 "x=" + x +
                 ", y=" + y +
                 '}';
+    }
+
+    @Override
+    public void writeToBundle(BundleOutput out) throws IOException {
+        out.putFloat("x", x);
+        out.putFloat("y", y);
+    }
+
+    @Override
+    public void readFromBundle(BundleInput in) throws IOException {
+        x = in.getFloat("x", 0);
+        y = in.getFloat("y", 0);
     }
 
 }

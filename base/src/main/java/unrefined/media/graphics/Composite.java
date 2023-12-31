@@ -1,11 +1,27 @@
 package unrefined.media.graphics;
 
-import unrefined.io.Disposable;
 import unrefined.util.NotInstantiableError;
+import unrefined.util.function.IntBiOperator;
 
 import static unrefined.media.graphics.Composite.Mode.CUSTOM;
 
-public abstract class Composite implements Disposable {
+public abstract class Composite {
+
+    public static Composite ofMode(int mode) {
+        return Drawing.getInstance().createComposite(mode);
+    }
+
+    public static Composite ofMode(int mode, float alpha) {
+        return Drawing.getInstance().createComposite(mode, alpha);
+    }
+
+    public static Composite of(IntBiOperator composeProc) {
+        return Drawing.getInstance().createComposite(composeProc);
+    }
+
+    public static Composite of(IntBiOperator composeProc, float alpha) {
+        return Drawing.getInstance().createComposite(composeProc, alpha);
+    }
 
     public static final class Mode {
         private Mode() {
@@ -89,25 +105,17 @@ public abstract class Composite implements Disposable {
 
     @Override
     public String toString() {
-        if (isDisposed()) return getClass().getName() + "@" + Integer.toHexString(hashCode())
+        int mode = getMode();
+        if (mode == CUSTOM) return getClass().getName() + "@" + Integer.toHexString(hashCode())
                 + '{' +
-                "disposed=true" +
+                "mode=CUSTOM" +
+                ", alpha=" + getAlpha() +
                 '}';
-        else {
-            int mode = getMode();
-            if (mode == CUSTOM) return getClass().getName() + "@" + Integer.toHexString(hashCode())
-                    + '{' +
-                    "disposed=false" +
-                    ", mode=CUSTOM" +
-                    ", alpha=" + getAlpha() +
-                    '}';
-            else return getClass().getName()
-                    + '{' +
-                    "disposed=false" +
-                    ", mode=" + Mode.toString(mode) +
-                    ", alpha=" + getAlpha() +
-                    '}';
-        }
+        else return getClass().getName()
+                + '{' +
+                "mode=" + Mode.toString(mode) +
+                ", alpha=" + getAlpha() +
+                '}';
     }
 
 }

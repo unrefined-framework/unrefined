@@ -32,7 +32,7 @@ public class CreateContainer {
                 // GUI-related attributes, such as window insets, not correct here
                 // You can set the container's attributes, or allocate resources here
 
-                Drawing drawing = Drawing.getDrawing();         // Get the platform-dependent 2D factory instance
+                Drawing drawing = Drawing.getInstance();        // Get the platform-dependent 2D factory instance
                 try {
                     wait = drawing.getCursor(Cursor.Type.WAIT); // Get the system "wait" cursor
                 } catch (CursorNotFoundException e) {
@@ -47,8 +47,6 @@ public class CreateContainer {
             public void onDispose(Container container) {
                 // The container is disposed
                 // You can free resources here
-
-                wait.dispose();
             }
 
             @Override

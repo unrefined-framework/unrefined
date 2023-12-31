@@ -24,19 +24,19 @@ public abstract class IntegerProperty {
         return new FunctionBinding(getter);
     }
 
-    public static IntegerProperty ofAtomicInstance(int initialValue) {
+    public static IntegerProperty ofAtomic(int initialValue) {
         return new AtomicInstance(initialValue);
     }
 
-    public static IntegerProperty ofAtomicInstance() {
+    public static IntegerProperty ofAtomic() {
         return new AtomicInstance();
     }
 
-    public static IntegerProperty ofInstance(int initialValue) {
+    public static IntegerProperty of(int initialValue) {
         return new Instance(initialValue);
     }
 
-    public static IntegerProperty ofInstance() {
+    public static IntegerProperty ofDefault() {
         return new Instance();
     }
 
@@ -101,7 +101,7 @@ public abstract class IntegerProperty {
         }
         public void set(int value) {
             int previousValue = this.value.getAndSet(value);
-            if (previousValue != value && !onChanged().isEmpty()) onChanged().emit(new ChangedEvent(this, previousValue, value));
+            if (previousValue != value && !onChange().isEmpty()) onChange().emit(new ChangeEvent(this, previousValue, value));
         }
         public int get() {
             return value.get();
@@ -122,16 +122,16 @@ public abstract class IntegerProperty {
         public void set(int value) {
             int previousValue = this.value;
             this.value = value;
-            if (previousValue != value && !onChanged().isEmpty()) onChanged().emit(new ChangedEvent(this, previousValue, value));
+            if (previousValue != value && !onChange().isEmpty()) onChange().emit(new ChangeEvent(this, previousValue, value));
         }
         public int get() {
             return value;
         }
     }
 
-    private final Signal<EventSlot<ChangedEvent>> onChanged = Signal.ofSlot();
-    public Signal<EventSlot<ChangedEvent>> onChanged() {
-        return onChanged;
+    private final Signal<EventSlot<ChangeEvent>> onChange = Signal.ofSlot();
+    public Signal<EventSlot<ChangeEvent>> onChange() {
+        return onChange;
     }
 
     public abstract void set(int value);
@@ -160,11 +160,11 @@ public abstract class IntegerProperty {
         return result;
     }
 
-    public static final class ChangedEvent extends Event<IntegerProperty> {
+    public static final class ChangeEvent extends Event<IntegerProperty> {
 
         private final int previousValue, currentValue;
 
-        public ChangedEvent(IntegerProperty source, int previousValue, int currentValue) {
+        public ChangeEvent(IntegerProperty source, int previousValue, int currentValue) {
             super(source);
             this.previousValue = previousValue;
             this.currentValue = currentValue;
@@ -179,11 +179,12 @@ public abstract class IntegerProperty {
         }
 
         @Override
-        public boolean equals(Object object) {
-            if (this == object) return true;
-            if (object == null || getClass() != object.getClass()) return false;
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            if (!super.equals(o)) return false;
 
-            ChangedEvent that = (ChangedEvent) object;
+            ChangeEvent that = (ChangeEvent) o;
 
             if (previousValue != that.previousValue) return false;
             return currentValue == that.currentValue;
@@ -191,7 +192,8 @@ public abstract class IntegerProperty {
 
         @Override
         public int hashCode() {
-            int result = previousValue;
+            int result = super.hashCode();
+            result = 31 * result + previousValue;
             result = 31 * result + currentValue;
             return result;
         }

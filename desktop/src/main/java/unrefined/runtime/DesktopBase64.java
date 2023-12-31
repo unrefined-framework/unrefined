@@ -32,13 +32,13 @@ public class DesktopBase64 extends Base64 {
     private static java.util.Base64.Encoder getEncoder(int flags) {
         flags = Flag.removeUnusedBits(flags);
         try {
-            int linemax = (flags & NO_WRAP) == NO_WRAP ? -1 : MIMELINEMAX;
+            int linemax = (flags & NO_WRAP) != 0 ? -1 : MIMELINEMAX;
             return ReflectionSupport.newInstance(
                     base64EncoderConstructor,
-                   (flags & URL_SAFE) == URL_SAFE,
-                   (flags & Flag.CRLF) == Flag.CRLF ? CRLF : (linemax > 0 ? LF : null),
+                   (flags & URL_SAFE) != 0,
+                   (flags & Flag.CRLF) != 0 ? CRLF : (linemax > 0 ? LF : null),
                    linemax,
-                   (flags & NO_PADDING) != NO_PADDING
+                   (flags & NO_PADDING) == 0
             );
         } catch (InvocationTargetException | InstantiationException e) {
             throw new UnexpectedError(e);
@@ -46,7 +46,7 @@ public class DesktopBase64 extends Base64 {
     }
 
     private static java.util.Base64.Decoder getDecoder(int flags) {
-        if ((flags & URL_SAFE) == URL_SAFE) return java.util.Base64.getUrlDecoder();
+        if ((flags & URL_SAFE) != 0) return java.util.Base64.getUrlDecoder();
         else return java.util.Base64.getDecoder();
     }
 

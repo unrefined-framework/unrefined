@@ -24,19 +24,19 @@ public abstract class BooleanProperty {
         return new FunctionBinding(getter);
     }
 
-    public static BooleanProperty ofAtomicInstance(boolean initialValue) {
+    public static BooleanProperty ofAtomic(boolean initialValue) {
         return new AtomicInstance(initialValue);
     }
 
-    public static BooleanProperty ofAtomicInstance() {
+    public static BooleanProperty ofAtomic() {
         return new AtomicInstance();
     }
 
-    public static BooleanProperty ofInstance(boolean initialValue) {
+    public static BooleanProperty of(boolean initialValue) {
         return new Instance(initialValue);
     }
 
-    public static BooleanProperty ofInstance() {
+    public static BooleanProperty ofDefault() {
         return new Instance();
     }
 
@@ -101,7 +101,7 @@ public abstract class BooleanProperty {
         }
         public void set(boolean value) {
             boolean previousValue = this.value.getAndSet(value);
-            if (previousValue != value && !onChanged().isEmpty()) onChanged().emit(new ChangedEvent(this, previousValue, value));
+            if (previousValue != value && !onChange().isEmpty()) onChange().emit(new ChangeEvent(this, previousValue, value));
         }
         public boolean get() {
             return value.get();
@@ -122,16 +122,16 @@ public abstract class BooleanProperty {
         public void set(boolean value) {
             boolean previousValue = this.value;
             this.value = value;
-            if (previousValue != value && !onChanged().isEmpty()) onChanged().emit(new ChangedEvent(this, previousValue, value));
+            if (previousValue != value && !onChange().isEmpty()) onChange().emit(new ChangeEvent(this, previousValue, value));
         }
         public boolean get() {
             return value;
         }
     }
 
-    private final Signal<EventSlot<ChangedEvent>> onChanged = Signal.ofSlot();
-    public Signal<EventSlot<ChangedEvent>> onChanged() {
-        return onChanged;
+    private final Signal<EventSlot<ChangeEvent>> onChange = Signal.ofSlot();
+    public Signal<EventSlot<ChangeEvent>> onChange() {
+        return onChange;
     }
 
     public abstract void set(boolean value);
@@ -160,11 +160,11 @@ public abstract class BooleanProperty {
         return result;
     }
 
-    public static final class ChangedEvent extends Event<BooleanProperty> {
+    public static final class ChangeEvent extends Event<BooleanProperty> {
 
         private final boolean previousValue, currentValue;
 
-        public ChangedEvent(BooleanProperty source, boolean previousValue, boolean currentValue) {
+        public ChangeEvent(BooleanProperty source, boolean previousValue, boolean currentValue) {
             super(source);
             this.previousValue = previousValue;
             this.currentValue = currentValue;
@@ -179,11 +179,12 @@ public abstract class BooleanProperty {
         }
 
         @Override
-        public boolean equals(Object object) {
-            if (this == object) return true;
-            if (object == null || getClass() != object.getClass()) return false;
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            if (!super.equals(o)) return false;
 
-            ChangedEvent that = (ChangedEvent) object;
+            ChangeEvent that = (ChangeEvent) o;
 
             if (previousValue != that.previousValue) return false;
             return currentValue == that.currentValue;
@@ -191,7 +192,8 @@ public abstract class BooleanProperty {
 
         @Override
         public int hashCode() {
-            int result = (previousValue ? 1 : 0);
+            int result = super.hashCode();
+            result = 31 * result + (previousValue ? 1 : 0);
             result = 31 * result + (currentValue ? 1 : 0);
             return result;
         }

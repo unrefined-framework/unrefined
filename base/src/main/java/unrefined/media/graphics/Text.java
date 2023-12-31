@@ -1,9 +1,7 @@
 package unrefined.media.graphics;
 
-import unrefined.util.Copyable;
+import unrefined.util.Cacheable;
 import unrefined.util.NotInstantiableError;
-import unrefined.util.Resettable;
-import unrefined.util.Swappable;
 
 public final class Text {
     
@@ -11,7 +9,7 @@ public final class Text {
         throw new NotInstantiableError(Text.class);
     }
 
-    public static class Metrics implements Copyable, Swappable, Resettable {
+    public static class Metrics implements Cacheable {
 
         private float baseline;
         private float ascent;
@@ -203,7 +201,7 @@ public final class Text {
 
     }
 
-    public static class HitInfo implements Copyable, Swappable, Resettable {
+    public static class HitInfo implements Cacheable {
 
         private int index;
         private int insertion;
@@ -381,6 +379,14 @@ public final class Text {
                 default: throw new IllegalArgumentException("Illegal text alignment: " + alignment);
             }
         }
+    }
+
+    public static char[] toCharArray(CharSequence text, int start, int end) {
+        char[] array = new char[end - start];
+        for (int i = 0; i < array.length; i ++) {
+            array[i] = text.charAt(i + start);
+        }
+        return array;
     }
 
 }

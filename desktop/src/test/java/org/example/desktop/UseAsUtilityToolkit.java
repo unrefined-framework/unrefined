@@ -13,8 +13,8 @@ public class UseAsUtilityToolkit {
     public static void main(String[] args) {
         DesktopRuntime.setup(args);             // Initialize the UXGL runtime environment
 
-        Logger logger = Logger.defaultLogger(); // Get the platform-dependent logger
-        Base64 base64 = Base64.getBase64();     // Get the platform-dependent base64 coder
+        Logger logger = Logger.defaultInstance(); // Get the platform-dependent logger
+        Base64 base64 = Base64.getInstance();     // Get the platform-dependent base64 coder
 
         byte[] base64Encoded = base64.encode("Hello UXGL".getBytes(Charsets.UTF_8)); // Encode to base64
         byte[] base64Decoded = base64.decode(base64Encoded);                         // Decode from base64

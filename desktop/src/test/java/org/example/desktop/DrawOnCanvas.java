@@ -38,7 +38,7 @@ public class DrawOnCanvas {
 
                 insets = new Insets();
 
-                Drawing drawing = Drawing.getDrawing();   // Get the platform-dependent 2D factory instance
+                Drawing drawing = Drawing.getInstance();  // Get the platform-dependent 2D factory instance
                 black = drawing.createBrush(Color.BLACK); // Create the "plain black" brush
 
                 canvas = container.createContext(new ContextAdapter() { // The lifecycle listener, it's fully platform-independent
@@ -78,8 +78,6 @@ public class DrawOnCanvas {
             public void onDispose(Container container) {
                 // The container is disposed
                 // You can free resources here
-
-                black.dispose();
             }
 
             @Override

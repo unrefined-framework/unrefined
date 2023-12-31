@@ -25,6 +25,25 @@ JavaScript Engine [macOS/iOS JavaScriptCore (JIT disabled), other QuickJS]
 --------------------------------
 
 --------------------------------
+Utilities
+--------------------------------
+Atomic [Single-instance factory]
+FFI Types API [Struct/Union Mapping Required]
+File Monitor
+Array Utilities
+Collection/Map Utilities
+String/Text Utilities
+InputStream/OutputStream Utilities
+--------------------------------
+
+--------------------------------
+2D Graphics
+--------------------------------
+Panel Application
+Attributed Text
+--------------------------------
+
+--------------------------------
 Networking
 --------------------------------
 TCP/UDP/SSL Socket
@@ -82,5 +101,5 @@ Android SDK API 19
 TeaVM HTML 5
 IKVM.NET WinUI 3
 RoboVM iOS 9
-Java SE 8
+Java SE 21
 --------------------------------

@@ -1,8 +1,8 @@
 package unrefined.internal.bitmap;
 
-import unrefined.desktop.BitmapImageFactory;
+import unrefined.desktop.BitmapSupport;
 import unrefined.desktop.IIOBitmapHandler;
-import unrefined.internal.IOUtils;
+import unrefined.math.FastMath;
 import unrefined.media.graphics.Bitmap;
 import unrefined.runtime.DesktopBitmap;
 
@@ -16,6 +16,7 @@ import javax.imageio.stream.ImageOutputStream;
 import java.awt.image.BufferedImage;
 import java.io.EOFException;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Set;
@@ -24,8 +25,8 @@ public class BMPBitmapHandler extends IIOBitmapHandler {
 
     public static final BMPBitmapHandler INSTANCE = new BMPBitmapHandler();
 
-    private static final Set<String> READER_FORMAT_NAMES = Set.of( "bmp" );
-    private static final Set<String> WRITER_FORMAT_NAMES = Set.of( "bmp" );
+    private static final Set<String> READER_FORMAT_NAMES = Collections.singleton( "bmp" );
+    private static final Set<String> WRITER_FORMAT_NAMES = Collections.singleton( "bmp" );
 
     private static boolean isBMP(ImageInputStream input) throws IOException {
         byte[] b = new byte[8];
@@ -71,11 +72,15 @@ public class BMPBitmapHandler extends IIOBitmapHandler {
         if (reader == null) return null;
         reader.setInput(input, false, true);
         try {
-            return new DesktopBitmap(BitmapImageFactory.getImage(reader.read(0), type, true));
+            return new DesktopBitmap(BitmapSupport.getImage(reader.read(0), type, true));
         }
         finally {
             reader.dispose();
-            IOUtils.closeQuietly(input);
+            try {
+                input.close();
+            }
+            catch (IOException ignored) {
+            }
         }
     }
 
@@ -89,9 +94,9 @@ public class BMPBitmapHandler extends IIOBitmapHandler {
         if (param.canWriteCompressed()) {
             param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
             param.setCompressionType("BI_RGB");
-            param.setCompressionQuality(Math.clamp(quality, 0, 1));
+            param.setCompressionQuality(FastMath.clamp(quality, 0, 1));
         }
-        BufferedImage image = BitmapImageFactory.getBufferedImage(((DesktopBitmap) bitmap).getBufferedImage(),
+        BufferedImage image = BitmapSupport.getBufferedImage(((DesktopBitmap) bitmap).getBufferedImage(),
                 BufferedImage.TYPE_3BYTE_BGR, false);
         try {
             writer.write(null, new IIOImage(image, null, null), param);

@@ -40,19 +40,19 @@ public abstract class Property<V> {
         return new BeanBinding<>(key, registerProc, unregisterProc, getter);
     }
 
-    public static <V> Property<V> ofAtomicInstance(V initialValue) {
+    public static <V> Property<V> ofAtomic(V initialValue) {
         return new AtomicInstance<>(initialValue);
     }
 
-    public static <V> Property<V> ofAtomicInstance() {
+    public static <V> Property<V> ofAtomic() {
         return new AtomicInstance<>();
     }
 
-    public static <V> Property<V> ofInstance(V initialValue) {
+    public static <V> Property<V> of(V initialValue) {
         return new Instance<>(initialValue);
     }
 
-    public static <V> Property<V> ofInstance() {
+    public static <V> Property<V> ofDefault() {
         return new Instance<>();
     }
 
@@ -64,11 +64,11 @@ public abstract class Property<V> {
         public MappedPropertyMapBinding(PropertyMap map, K key, Functor<V, String> toStringProc, Functor<String, V> fromStringProc) {
             this.map = Objects.requireNonNull(map);
             this.key = Objects.requireNonNull(key);
-            map.onChanged().connect(changedEvent -> {
+            map.onChange().connect(changedEvent -> {
                 V previousValue = fromStringProc.apply(changedEvent.getPreviousValue(String.class));
                 V currentValue = fromStringProc.apply(changedEvent.getCurrentValue(String.class));
-                if (previousValue != null || currentValue != null && !onChanged().isEmpty()) {
-                    onChanged().emit(new ChangedEvent<>(MappedPropertyMapBinding.this, previousValue, currentValue));
+                if (previousValue != null || currentValue != null && !onChange().isEmpty()) {
+                    onChange().emit(new ChangeEvent<>(MappedPropertyMapBinding.this, previousValue, currentValue));
                 }
             });
             this.toStringProc = Objects.requireNonNull(toStringProc);
@@ -96,7 +96,7 @@ public abstract class Property<V> {
         public PropertyMapBinding(PropertyMap map, K key) {
             this.map = Objects.requireNonNull(map);
             this.key = Objects.requireNonNull(key);
-            map.onChanged().connect(changedEvent -> {
+            map.onChange().connect(changedEvent -> {
                 V previousValue, currentValue;
                 try {
                     previousValue = (V) changedEvent.getPreviousValue();
@@ -110,8 +110,8 @@ public abstract class Property<V> {
                 catch (ClassCastException e) {
                     currentValue = null;
                 }
-                if (previousValue != null || currentValue != null && !onChanged().isEmpty()) {
-                    onChanged().emit(new ChangedEvent<>(PropertyMapBinding.this, previousValue, currentValue));
+                if (previousValue != null || currentValue != null && !onChange().isEmpty()) {
+                    onChange().emit(new ChangeEvent<>(PropertyMapBinding.this, previousValue, currentValue));
                 }
             });
         }
@@ -169,7 +169,7 @@ public abstract class Property<V> {
         public BeanBinding(String key, BiSlot<String, PropertyChangeListener> registerProc, BiSlot<String, PropertyChangeListener> unregisterProc, Functor<String, V> getter, Slot<V> setter) {
             this.key = Objects.requireNonNull(key);
             registerProc.accept(key, this);
-            Cleaner.getCleaner().register(this, () -> unregisterProc.accept(key, BeanBinding.this));
+            Cleaner.getInstance().register(this, () -> unregisterProc.accept(key, BeanBinding.this));
             this.getter = Objects.requireNonNull(getter);
             this.setter = setter;
         }
@@ -205,8 +205,8 @@ public abstract class Property<V> {
             catch (ClassCastException e) {
                 currentValue = null;
             }
-            if ((previousValue != null || currentValue != null) && !Objects.equals(previousValue, currentValue) && !onChanged().isEmpty()) {
-                onChanged().emit(new ChangedEvent<>(BeanBinding.this, previousValue, currentValue));
+            if ((previousValue != null || currentValue != null) && !Objects.equals(previousValue, currentValue) && !onChange().isEmpty()) {
+                onChange().emit(new ChangeEvent<>(BeanBinding.this, previousValue, currentValue));
             }
         }
     }
@@ -225,8 +225,8 @@ public abstract class Property<V> {
         }
         public void set(V value) {
             V previousValue = this.value.getAndSet(value);
-            if ((previousValue != null || value != null) && !Objects.equals(previousValue, value) && !onChanged().isEmpty())
-                onChanged().emit(new ChangedEvent<>(AtomicInstance.this, previousValue, value));
+            if ((previousValue != null || value != null) && !Objects.equals(previousValue, value) && !onChange().isEmpty())
+                onChange().emit(new ChangeEvent<>(AtomicInstance.this, previousValue, value));
         }
         public V get() {
             return value.get();
@@ -247,17 +247,17 @@ public abstract class Property<V> {
         public void set(V value) {
             V previousValue = this.value;
             this.value = value;
-            if ((previousValue != null || value != null) && !Objects.equals(previousValue, value) && !onChanged().isEmpty())
-                onChanged().emit(new ChangedEvent<>(Instance.this, previousValue, value));
+            if ((previousValue != null || value != null) && !Objects.equals(previousValue, value) && !onChange().isEmpty())
+                onChange().emit(new ChangeEvent<>(Instance.this, previousValue, value));
         }
         public V get() {
             return value;
         }
     }
 
-    private final Signal<EventSlot<ChangedEvent<V>>> onChanged = Signal.ofSlot();
-    public Signal<EventSlot<ChangedEvent<V>>> onChanged() {
-        return onChanged;
+    private final Signal<EventSlot<ChangeEvent<V>>> onChange = Signal.ofSlot();
+    public Signal<EventSlot<ChangeEvent<V>>> onChange() {
+        return onChange;
     }
 
     public abstract void set(V value);
@@ -286,11 +286,11 @@ public abstract class Property<V> {
         return value != null ? value.hashCode() : 0;
     }
 
-    public static final class ChangedEvent<V> extends Event<Property<V>> {
+    public static final class ChangeEvent<V> extends Event<Property<V>> {
 
         private final V previousValue, currentValue;
 
-        public ChangedEvent(Property<V> source, V previousValue, V currentValue) {
+        public ChangeEvent(Property<V> source, V previousValue, V currentValue) {
             super(source);
             this.previousValue = previousValue;
             this.currentValue = currentValue;
@@ -305,11 +305,12 @@ public abstract class Property<V> {
         }
 
         @Override
-        public boolean equals(Object object) {
-            if (this == object) return true;
-            if (object == null || getClass() != object.getClass()) return false;
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            if (!super.equals(o)) return false;
 
-            ChangedEvent<?> that = (ChangedEvent<?>) object;
+            ChangeEvent<?> that = (ChangeEvent<?>) o;
 
             if (!Objects.equals(previousValue, that.previousValue))
                 return false;
@@ -318,7 +319,8 @@ public abstract class Property<V> {
 
         @Override
         public int hashCode() {
-            int result = previousValue != null ? previousValue.hashCode() : 0;
+            int result = super.hashCode();
+            result = 31 * result + (previousValue != null ? previousValue.hashCode() : 0);
             result = 31 * result + (currentValue != null ? currentValue.hashCode() : 0);
             return result;
         }

@@ -1,7 +1,6 @@
 package unrefined.util;
 
 import unrefined.context.Environment;
-import unrefined.internal.BitwiseUtils;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -13,7 +12,7 @@ public abstract class Base64 {
 
     private static volatile Base64 INSTANCE;
     private static final Object INSTANCE_LOCK = new Object();
-    public static Base64 getBase64() {
+    public static Base64 getInstance() {
         if (INSTANCE == null) synchronized (INSTANCE_LOCK) {
             if (INSTANCE == null) INSTANCE = Environment.global().get("unrefined.runtime.base64", Base64.class);
         }
@@ -30,16 +29,16 @@ public abstract class Base64 {
         public static final int CRLF = 1 << 2;
         public static final int URL_SAFE = 1 << 3;
         public static int removeUnusedBits(int flags) {
-            return BitwiseUtils.removeUnusedBits(flags, 4);
+            return flags << 4 >>> 4;
         }
         public static String toString(int flags) {
             flags = removeUnusedBits(flags);
             StringBuilder builder = new StringBuilder("[");
-            if ((flags & NO_PADDING) == NO_PADDING) builder.append("NO_PADDING");
+            if ((flags & NO_PADDING) != 0) builder.append("NO_PADDING");
             else builder.append("DEFAULT");
-            if ((flags & NO_WRAP) == NO_WRAP) builder.append(", NO_WRAP");
-            if ((flags & CRLF) == CRLF) builder.append(", CRLF");
-            if ((flags & URL_SAFE) == URL_SAFE) builder.append(", URL_SAFE");
+            if ((flags & NO_WRAP) != 0) builder.append(", NO_WRAP");
+            if ((flags & CRLF) != 0) builder.append(", CRLF");
+            if ((flags & URL_SAFE) != 0) builder.append(", URL_SAFE");
             builder.append("]");
             return builder.toString();
         }

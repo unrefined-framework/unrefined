@@ -19,7 +19,7 @@ public abstract class Drawing {
 
     private static volatile Drawing INSTANCE;
     private static final Object INSTANCE_LOCK = new Object();
-    public static Drawing getDrawing() {
+    public static Drawing getInstance() {
         if (INSTANCE == null) synchronized (INSTANCE_LOCK) {
             if (INSTANCE == null) INSTANCE = Environment.global().get("unrefined.runtime.drawing", Drawing.class);
         }
@@ -62,7 +62,10 @@ public abstract class Drawing {
     public abstract Brush createBrush(Bitmap bitmap, Transform transform);
     public abstract Brush createBrush(IntBiOperator paintProc);
 
-    public abstract Path createPath();
+    public abstract Path createPath(int fillRule);
+    public Path createPath() {
+        return createPath(Path.FillRule.NON_ZERO);
+    }
     public Path createPath(Path path) {
         Path result = createPath();
         result.from(path);
@@ -100,14 +103,14 @@ public abstract class Drawing {
         result.setTranslate(dx, dy);
         return result;
     }
-    public Transform createRotateTransform(float degrees, float px, float py) {
+    public Transform createRotateTransform(float radians, float px, float py) {
         Transform result = createTransform();
-        result.setRotate(degrees, px, py);
+        result.setRotate(radians, px, py);
         return result;
     }
-    public Transform createRotateTransform(float degrees) {
+    public Transform createRotateTransform(float radians) {
         Transform result = createTransform();
-        result.setRotate(degrees);
+        result.setRotate(radians);
         return result;
     }
 
@@ -280,9 +283,9 @@ public abstract class Drawing {
         Cursor[] cursors = new Cursor[frames.size()];
         long[] durations = new long[frames.size()];
         Bitmap background = createBitmap(frames.getCompatibleWidth(), frames.getCompatibleHeight(), frames.getCompatibleType());
-        Drawing drawing = Drawing.getDrawing();
-        Composite composite = null;
+        Drawing drawing = Drawing.getInstance();
         try (Graphics graphics = background.getGraphics()) {
+            Composite composite = null;
             for (int i = 0; i < frames.size(); i ++) {
                 Bitmap.Frame frame = frames.get(i);
                 switch (frame.getDisposalMode()) {
@@ -300,9 +303,6 @@ public abstract class Drawing {
                 durations[i] = frame.getDuration();
             }
             return createCursor(cursors, durations);
-        }
-        finally {
-            if (composite != null) composite.dispose();
         }
     }
     public abstract int getMaximumCursorColors();

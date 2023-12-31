@@ -1,10 +1,8 @@
 package unrefined.internal.windows;
 
-import unrefined.internal.SystemUtils;
+import com.kenai.jffi.Library;
+import unrefined.internal.OperatingSystem;
 import unrefined.util.NotInstantiableError;
-
-import java.lang.foreign.Arena;
-import java.lang.foreign.SymbolLookup;
 
 public final class WindowsLibrary {
 
@@ -12,21 +10,21 @@ public final class WindowsLibrary {
         throw new NotInstantiableError(WindowsLibrary.class);
     }
 
-    public static final SymbolLookup USER32_LOOKUP;
-    public static final SymbolLookup KERNEL32_LOOKUP;
-    public static final SymbolLookup ADVAPI32_LOOKUP;
+    public static final Library User32;
+    public static final Library Kernel32;
+    public static final Library Advapi32;
     static {
-        if (SystemUtils.IS_WINDOWS) {
-            USER32_LOOKUP = SymbolLookup.libraryLookup(System.mapLibraryName("User32"), Arena.global());
-            KERNEL32_LOOKUP = SymbolLookup.libraryLookup(System.mapLibraryName("Kernel32"), Arena.global());
-            ADVAPI32_LOOKUP = SymbolLookup.libraryLookup(System.mapLibraryName("Advapi32"), Arena.global());
+        if (OperatingSystem.IS_WINDOWS) {
+            User32 = Library.getCachedInstance(System.mapLibraryName("User32"), Library.LAZY | Library.GLOBAL);
+            Kernel32 = Library.getCachedInstance(System.mapLibraryName("Kernel32"), Library.LAZY | Library.GLOBAL);
+            Advapi32 = Library.getCachedInstance(System.mapLibraryName("Advapi32"), Library.LAZY | Library.GLOBAL);
         }
         else {
-            USER32_LOOKUP = null;
-            KERNEL32_LOOKUP = null;
-            ADVAPI32_LOOKUP = null;
+            User32 = null;
+            Kernel32 = null;
+            Advapi32 = null;
         }
     }
-    public static final SymbolLookup SHCORE_LOOKUP = WindowsAWTUtils.SHCORE_LOOKUP;
+    public static final Library Shcore = WindowsAWTSupport.Shcore;
 
 }

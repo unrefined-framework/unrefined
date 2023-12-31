@@ -1,10 +1,14 @@
 package unrefined.nio;
 
-import unrefined.internal.NumberUtils;
+import unrefined.math.FastMath;
+import unrefined.util.foreign.Foreign;
 
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
+import java.util.Arrays;
+
+import static unrefined.nio.Allocator.SIZE_MAX;
 
 public class HeapPointer extends Pointer {
 
@@ -35,9 +39,9 @@ public class HeapPointer extends Pointer {
         }
     };
 
-    private final NativeTypeAdapter NATIVE_INT_ADAPTER = getAllocator().nativeIntSize() == 8 ? NATIVE_TYPE_ADAPTER_64 : NATIVE_TYPE_ADAPTER_32;
-    private final NativeTypeAdapter NATIVE_LONG_ADAPTER = getAllocator().nativeLongSize() == 8 ? NATIVE_TYPE_ADAPTER_64 : NATIVE_TYPE_ADAPTER_32;
-    private final NativeTypeAdapter ADDRESS_ADAPTER = getAllocator().addressSize() == 8 ? NATIVE_TYPE_ADAPTER_64 : NATIVE_TYPE_ADAPTER_32;
+    private final NativeTypeAdapter NATIVE_INT_ADAPTER = Foreign.getInstance().nativeIntSize() == 8 ? NATIVE_TYPE_ADAPTER_64 : NATIVE_TYPE_ADAPTER_32;
+    private final NativeTypeAdapter NATIVE_LONG_ADAPTER = Foreign.getInstance().nativeLongSize() == 8 ? NATIVE_TYPE_ADAPTER_64 : NATIVE_TYPE_ADAPTER_32;
+    private final NativeTypeAdapter ADDRESS_ADAPTER = Foreign.getInstance().addressSize() == 8 ? NATIVE_TYPE_ADAPTER_64 : NATIVE_TYPE_ADAPTER_32;
 
     private static final long MAX_2D_ARRAY_SIZE = (long) Integer.MAX_VALUE * Integer.MAX_VALUE;
 
@@ -136,7 +140,7 @@ public class HeapPointer extends Pointer {
 
     @Override
     public byte getByte(long offset) {
-        if (offset < 0 || offset >= size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
+        if (offset < 0 || offset >= size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
         else return getByte0(offset + arraysOffset);
     }
 
@@ -147,8 +151,8 @@ public class HeapPointer extends Pointer {
 
     @Override
     public short getShort(long offset) {
-        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
-        else if (offset + 1 >= size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset + 1));
+        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
+        else if (offset + 1 >= size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset + 1));
         else {
             offset += arraysOffset;
             return (short) ((getByte0(offset) << 8) + (getByte0(offset + 1)));
@@ -162,8 +166,8 @@ public class HeapPointer extends Pointer {
 
     @Override
     public char getChar(long offset) {
-        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
-        else if (offset + 1 >= size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset + 1));
+        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
+        else if (offset + 1 >= size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset + 1));
         else {
             offset += arraysOffset;
             return (char) ((getByte0(offset) << 8) + (getByte0(offset + 1)));
@@ -176,8 +180,8 @@ public class HeapPointer extends Pointer {
 
     @Override
     public int getInt(long offset) {
-        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
-        else if (offset + 3 >= size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset + 3));
+        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
+        else if (offset + 3 >= size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset + 3));
         else {
             offset += arraysOffset;
             return getInt0(offset);
@@ -191,8 +195,8 @@ public class HeapPointer extends Pointer {
 
     @Override
     public long getLong(long offset) {
-        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
-        else if (offset + 7 >= size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset + 7));
+        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
+        else if (offset + 7 >= size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset + 7));
         else {
             offset += arraysOffset;
             return ((long) getInt0(offset) << 32) + getInt0(offset + 4);
@@ -201,7 +205,7 @@ public class HeapPointer extends Pointer {
 
     @Override
     public BigInteger getUnsignedLong(long offset) {
-        return NumberUtils.toUnsignedBigInteger(getLong(offset));
+        return FastMath.unsign(getLong(offset));
     }
 
     @Override
@@ -235,7 +239,7 @@ public class HeapPointer extends Pointer {
 
     @Override
     public void putByte(long offset, byte value) {
-        if (offset < 0 || offset >= size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
+        if (offset < 0 || offset >= size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
         else putByte0(offset + arraysOffset, value);
     }
 
@@ -256,8 +260,8 @@ public class HeapPointer extends Pointer {
 
     @Override
     public void putShort(long offset, short value) {
-        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
-        else if (offset + 1 >= size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset + 1));
+        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
+        else if (offset + 1 >= size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset + 1));
         else {
             offset += arraysOffset;
             putByte0(offset, (byte) (value >> 8));
@@ -284,8 +288,8 @@ public class HeapPointer extends Pointer {
 
     @Override
     public void putInt(long offset, int value) {
-        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
-        else if (offset + 3 >= size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset + 1));
+        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
+        else if (offset + 3 >= size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset + 1));
         else {
             offset += arraysOffset;
             putInt0(offset, value);
@@ -299,8 +303,8 @@ public class HeapPointer extends Pointer {
 
     @Override
     public void putLong(long offset, long value) {
-        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
-        else if (offset + 7 >= size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset + 1));
+        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
+        else if (offset + 7 >= size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset + 1));
         else {
             offset += arraysOffset;
             putInt0(offset, (int) (value >> 32));
@@ -340,7 +344,7 @@ public class HeapPointer extends Pointer {
 
     @Override
     public void getByteArray(long offset, byte[] array, int index, int length) {
-        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
+        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
         else {
             if (index < 0) throw new ArrayIndexOutOfBoundsException(index);
             else if (length < 0) throw new ArrayIndexOutOfBoundsException(length);
@@ -348,7 +352,7 @@ public class HeapPointer extends Pointer {
             if (size < 0 || size > array.length) throw new ArrayIndexOutOfBoundsException(size);
         }
         long size = offset + length;
-        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(size));
+        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(size));
         else {
             offset += arraysOffset;
             int startArray = (int) (offset / Integer.MAX_VALUE);
@@ -371,7 +375,7 @@ public class HeapPointer extends Pointer {
 
     @Override
     public void putByteArray(long offset, byte[] array, int index, int length) {
-        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
+        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
         else {
             if (index < 0) throw new ArrayIndexOutOfBoundsException(index);
             else if (length < 0) throw new ArrayIndexOutOfBoundsException(length);
@@ -379,7 +383,7 @@ public class HeapPointer extends Pointer {
             if (size < 0 || size > array.length) throw new ArrayIndexOutOfBoundsException(size);
         }
         long size = offset + length;
-        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(size));
+        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(size));
         else {
             offset += arraysOffset;
             int startArray = (int) (offset / Integer.MAX_VALUE);
@@ -402,7 +406,7 @@ public class HeapPointer extends Pointer {
 
     @Override
     public void getShortArray(long offset, short[] array, int index, int length) {
-        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
+        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
         else {
             if (index < 0) throw new ArrayIndexOutOfBoundsException(index);
             else if (length < 0) throw new ArrayIndexOutOfBoundsException(length);
@@ -410,7 +414,7 @@ public class HeapPointer extends Pointer {
             if (size < 0 || size > array.length) throw new ArrayIndexOutOfBoundsException(size);
         }
         long size = offset + (long) length << 1;
-        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(size));
+        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(size));
         offset += arraysOffset;
         long l;
         for (int i = index; i < length; i ++) {
@@ -426,7 +430,7 @@ public class HeapPointer extends Pointer {
 
     @Override
     public void putShortArray(long offset, short[] array, int index, int length) {
-        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
+        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
         else {
             if (index < 0) throw new ArrayIndexOutOfBoundsException(index);
             else if (length < 0) throw new ArrayIndexOutOfBoundsException(length);
@@ -434,7 +438,7 @@ public class HeapPointer extends Pointer {
             if (size < 0 || size > array.length) throw new ArrayIndexOutOfBoundsException(size);
         }
         long size = offset + (long) length << 1;
-        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(size));
+        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(size));
         offset += arraysOffset;
         long l;
         for (int i = index; i < length; i ++) {
@@ -451,7 +455,7 @@ public class HeapPointer extends Pointer {
 
     @Override
     public void getCharArray(long offset, char[] array, int index, int length) {
-        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
+        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
         else {
             if (index < 0) throw new ArrayIndexOutOfBoundsException(index);
             else if (length < 0) throw new ArrayIndexOutOfBoundsException(length);
@@ -459,7 +463,7 @@ public class HeapPointer extends Pointer {
             if (size < 0 || size > array.length) throw new ArrayIndexOutOfBoundsException(size);
         }
         long size = offset + (long) length << 1;
-        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(size));
+        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(size));
         offset += arraysOffset;
         long l;
         for (int i = index; i < length; i ++) {
@@ -475,7 +479,7 @@ public class HeapPointer extends Pointer {
 
     @Override
     public void putCharArray(long offset, char[] array, int index, int length) {
-        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
+        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
         else {
             if (index < 0) throw new ArrayIndexOutOfBoundsException(index);
             else if (length < 0) throw new ArrayIndexOutOfBoundsException(length);
@@ -483,7 +487,7 @@ public class HeapPointer extends Pointer {
             if (size < 0 || size > array.length) throw new ArrayIndexOutOfBoundsException(size);
         }
         long size = offset + (long) length << 1;
-        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(size));
+        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(size));
         offset += arraysOffset;
         long l;
         for (int i = index; i < length; i ++) {
@@ -500,7 +504,7 @@ public class HeapPointer extends Pointer {
 
     @Override
     public void getIntArray(long offset, int[] array, int index, int length) {
-        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
+        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
         else {
             if (index < 0) throw new ArrayIndexOutOfBoundsException(index);
             else if (length < 0) throw new ArrayIndexOutOfBoundsException(length);
@@ -508,7 +512,7 @@ public class HeapPointer extends Pointer {
             if (size < 0 || size > array.length) throw new ArrayIndexOutOfBoundsException(size);
         }
         long size = offset + (long) length << 2;
-        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(size));
+        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(size));
         offset += arraysOffset;
         long l;
         for (int i = index; i < length; i ++) {
@@ -524,7 +528,7 @@ public class HeapPointer extends Pointer {
 
     @Override
     public void putIntArray(long offset, int[] array, int index, int length) {
-        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
+        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
         else {
             if (index < 0) throw new ArrayIndexOutOfBoundsException(index);
             else if (length < 0) throw new ArrayIndexOutOfBoundsException(length);
@@ -532,7 +536,7 @@ public class HeapPointer extends Pointer {
             if (size < 0 || size > array.length) throw new ArrayIndexOutOfBoundsException(size);
         }
         long size = offset + (long) length << 2;
-        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(size));
+        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(size));
         offset += arraysOffset;
         long l;
         for (int i = index; i < length; i ++) {
@@ -548,7 +552,7 @@ public class HeapPointer extends Pointer {
 
     @Override
     public void getLongArray(long offset, long[] array, int index, int length) {
-        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
+        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
         else {
             if (index < 0) throw new ArrayIndexOutOfBoundsException(index);
             else if (length < 0) throw new ArrayIndexOutOfBoundsException(length);
@@ -556,7 +560,7 @@ public class HeapPointer extends Pointer {
             if (size < 0 || size > array.length) throw new ArrayIndexOutOfBoundsException(size);
         }
         long size = offset + (long) length << 3;
-        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(size));
+        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(size));
         offset += arraysOffset;
         long l;
         for (int i = index; i < length; i ++) {
@@ -572,7 +576,7 @@ public class HeapPointer extends Pointer {
 
     @Override
     public void putLongArray(long offset, long[] array, int index, int length) {
-        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
+        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
         else {
             if (index < 0) throw new ArrayIndexOutOfBoundsException(index);
             else if (length < 0) throw new ArrayIndexOutOfBoundsException(length);
@@ -580,7 +584,7 @@ public class HeapPointer extends Pointer {
             if (size < 0 || size > array.length) throw new ArrayIndexOutOfBoundsException(size);
         }
         long size = offset + (long) length << 3;
-        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(size));
+        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(size));
         offset += arraysOffset;
         long l;
         for (int i = index; i < length; i ++) {
@@ -597,7 +601,7 @@ public class HeapPointer extends Pointer {
 
     @Override
     public void getFloatArray(long offset, float[] array, int index, int length) {
-        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
+        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
         else {
             if (index < 0) throw new ArrayIndexOutOfBoundsException(index);
             else if (length < 0) throw new ArrayIndexOutOfBoundsException(length);
@@ -605,7 +609,7 @@ public class HeapPointer extends Pointer {
             if (size < 0 || size > array.length) throw new ArrayIndexOutOfBoundsException(size);
         }
         long size = offset + (long) length << 2;
-        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(size));
+        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(size));
         offset += arraysOffset;
         long l;
         for (int i = index; i < length; i ++) {
@@ -621,7 +625,7 @@ public class HeapPointer extends Pointer {
 
     @Override
     public void putFloatArray(long offset, float[] array, int index, int length) {
-        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
+        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
         else {
             if (index < 0) throw new ArrayIndexOutOfBoundsException(index);
             else if (length < 0) throw new ArrayIndexOutOfBoundsException(length);
@@ -629,7 +633,7 @@ public class HeapPointer extends Pointer {
             if (size < 0 || size > array.length) throw new ArrayIndexOutOfBoundsException(size);
         }
         long size = offset + (long) length << 2;
-        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(size));
+        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(size));
         offset += arraysOffset;
         long l;
         for (int i = index; i < length; i ++) {
@@ -645,7 +649,7 @@ public class HeapPointer extends Pointer {
 
     @Override
     public void getDoubleArray(long offset, double[] array, int index, int length) {
-        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
+        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
         else {
             if (index < 0) throw new ArrayIndexOutOfBoundsException(index);
             else if (length < 0) throw new ArrayIndexOutOfBoundsException(length);
@@ -653,7 +657,7 @@ public class HeapPointer extends Pointer {
             if (size < 0 || size > array.length) throw new ArrayIndexOutOfBoundsException(size);
         }
         long size = offset + (long) length << 3;
-        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(size));
+        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(size));
         offset += arraysOffset;
         long l;
         for (int i = index; i < length; i ++) {
@@ -669,7 +673,7 @@ public class HeapPointer extends Pointer {
 
     @Override
     public void putDoubleArray(long offset, double[] array, int index, int length) {
-        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
+        if (offset < 0) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
         else {
             if (index < 0) throw new ArrayIndexOutOfBoundsException(index);
             else if (length < 0) throw new ArrayIndexOutOfBoundsException(length);
@@ -677,7 +681,7 @@ public class HeapPointer extends Pointer {
             if (size < 0 || size > array.length) throw new ArrayIndexOutOfBoundsException(size);
         }
         long size = offset + (long) length << 3;
-        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(size));
+        if (size < 0 || size > this.size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(size));
         offset += arraysOffset;
         long l;
         long value;
@@ -695,45 +699,162 @@ public class HeapPointer extends Pointer {
     }
 
     @Override
+    public long getZeroTerminatedStringLength(long offset) {
+        return getZeroTerminatedStringLength(offset, null);
+    }
+
+    @Override
+    public long getZeroTerminatedStringLength(long offset, long maxLength) {
+        return getZeroTerminatedStringLength(offset, maxLength, null);
+    }
+
+    @Override
+    public long getZeroTerminatedWideCharStringLength(long offset, long maxLength) {
+        return getZeroTerminatedStringLength(offset, maxLength, Foreign.getInstance().wideCharset());
+    }
+
+    @Override
+    public long getZeroTerminatedWideCharStringLength(long offset) {
+        return getZeroTerminatedStringLength(offset, Foreign.getInstance().wideCharset());
+    }
+
+    @Override
+    public long getZeroTerminatedStringLength(long offset, Charset charset) {
+        return getZeroTerminatedStringLength(offset, SIZE_MAX);
+    }
+
+    @Override
+    public long getZeroTerminatedStringLength(long offset, long maxLength, Charset charset) {
+        if (charset == null) charset = Charset.defaultCharset();
+        byte[] terminator = "\0".getBytes(charset);
+        int size = terminator.length;
+        if (size == 1 && terminator[0] == '\0') return indexOf(offset, '\0', maxLength);
+        long length = 0;
+        byte[] buffer = new byte[size];
+        while (true) {
+            getByteArray(offset, buffer, 0, size);
+            if (Arrays.equals(terminator, buffer)) return length;
+            else length ++;
+            offset += size;
+        }
+    }
+
+    @Override
     public byte[] getZeroTerminatedByteArray(long offset) {
         return getZeroTerminatedByteArray(offset, Integer.MAX_VALUE);
     }
 
     @Override
     public byte[] getZeroTerminatedByteArray(long offset, int maxLength) {
-        long terminator = indexOf(offset + arraysOffset, '\0', maxLength);
-        if (terminator == -1) return null;
-        else {
-            byte[] array = new byte[(int) terminator];
-            getByteArray(offset, array);
-            return array;
-        }
+        return getZeroTerminatedByteArray(offset, maxLength, null);
+    }
+
+    @Override
+    public byte[] getZeroTerminatedWideCharByteArray(long offset) {
+        return getZeroTerminatedWideCharByteArray(offset, Integer.MAX_VALUE);
+    }
+
+    @Override
+    public byte[] getZeroTerminatedWideCharByteArray(long offset, int maxLength) {
+        return getZeroTerminatedByteArray(offset, maxLength, Foreign.getInstance().wideCharset());
+    }
+
+    @Override
+    public byte[] getZeroTerminatedByteArray(long offset, Charset charset) {
+        return getZeroTerminatedByteArray(offset, Integer.MAX_VALUE, charset);
+    }
+
+    @Override
+    public byte[] getZeroTerminatedByteArray(long offset, int maxLength, Charset charset) {
+        if (charset == null) charset = Charset.defaultCharset();
+        long stringLength = getZeroTerminatedStringLength(offset, maxLength, charset) * "\0".getBytes(charset).length;
+        if (stringLength < 0 || stringLength > Integer.MAX_VALUE) stringLength = Integer.MAX_VALUE;
+        byte[] array = new byte[(int) stringLength];
+        getByteArray(offset, array);
+        return array;
+    }
+
+    @Override
+    public String getZeroTerminatedString(long offset) {
+        return getZeroTerminatedString(offset, Integer.MAX_VALUE);
+    }
+
+    @Override
+    public String getZeroTerminatedString(long offset, int maxLength) {
+        return getZeroTerminatedString(offset, maxLength, null);
+    }
+
+    @Override
+    public String getZeroTerminatedWideCharString(long offset) {
+        return getZeroTerminatedWideCharString(offset, Integer.MAX_VALUE);
+    }
+
+    @Override
+    public String getZeroTerminatedWideCharString(long offset, int maxLength) {
+        return getZeroTerminatedString(offset, maxLength, Foreign.getInstance().wideCharset());
     }
 
     @Override
     public String getZeroTerminatedString(long offset, Charset charset) {
-        return new String(getZeroTerminatedByteArray(offset), charset);
+        return getZeroTerminatedString(offset, Integer.MAX_VALUE, charset);
     }
 
     @Override
     public String getZeroTerminatedString(long offset, int maxLength, Charset charset) {
-        return new String(getZeroTerminatedByteArray(offset, maxLength), charset);
+        if (charset == null) charset = Charset.defaultCharset();
+        long stringLength = getZeroTerminatedStringLength(offset, maxLength, charset) * "\0".getBytes(charset).length;
+        if (stringLength < 0 || stringLength > Integer.MAX_VALUE) stringLength = Integer.MAX_VALUE;
+        byte[] array = new byte[(int) stringLength];
+        getByteArray(offset, array);
+        return new String(array, charset);
     }
 
     @Override
     public void putZeroTerminatedByteArray(long offset, byte[] array) {
-        putZeroTerminatedByteArray(offset, array, 0, array.length);
+        putZeroTerminatedByteArray(offset, array, null);
     }
 
     @Override
     public void putZeroTerminatedByteArray(long offset, byte[] array, int index, int length) {
-        putByte(offset + length + 1, '\0');
+        putZeroTerminatedByteArray(offset, array, index, length, null);
+    }
+
+    @Override
+    public void putZeroTerminatedWideCharByteArray(long offset, byte[] array) {
+        putZeroTerminatedByteArray(offset, array, Foreign.getInstance().wideCharset());
+    }
+
+    @Override
+    public void putZeroTerminatedWideCharByteArray(long offset, byte[] array, int index, int length) {
+        putZeroTerminatedByteArray(offset, array, index, length, Foreign.getInstance().wideCharset());
+    }
+
+    @Override
+    public void putZeroTerminatedByteArray(long offset, byte[] array, Charset charset) {
+        putZeroTerminatedByteArray(offset, array, 0, array.length, charset);
+    }
+
+    @Override
+    public void putZeroTerminatedByteArray(long offset, byte[] array, int index, int length, Charset charset) {
+        if (charset == null) charset = Charset.defaultCharset();
         putByteArray(offset, array, index, length);
+        putByteArray(offset + length, "\0".getBytes(charset));
+    }
+
+    @Override
+    public void putZeroTerminatedString(long offset, String string) {
+        putZeroTerminatedByteArray(offset, string.getBytes(Charset.defaultCharset()));
+    }
+
+    @Override
+    public void putZeroTerminatedWideCharString(long offset, String string) {
+        putZeroTerminatedWideCharByteArray(offset, string.getBytes(Foreign.getInstance().wideCharset()));
     }
 
     @Override
     public void putZeroTerminatedString(long offset, String string, Charset charset) {
-        putZeroTerminatedByteArray(offset, string.getBytes(charset));
+        if (charset == null) charset = Charset.defaultCharset();
+        putZeroTerminatedByteArray(offset, string.getBytes(charset), charset);
     }
 
     @Override
@@ -759,9 +880,9 @@ public class HeapPointer extends Pointer {
     @Override
     public void transferTo(long offset, Pointer dstPointer, long dstOffset, long count) {
         if (dstPointer.isBounded()) dstPointer.checkBounds(dstOffset, count);
-        if (offset < 0 || offset >= this.size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
+        if (offset < 0 || offset >= this.size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
         else {
-            BigInteger size = NumberUtils.toUnsignedBigInteger(count).add(BigInteger.valueOf(offset));
+            BigInteger size = FastMath.unsign(count).add(BigInteger.valueOf(offset));
             if (size.compareTo(BigInteger.valueOf(this.size)) > 0) throw new IndexOutOfBoundsException("Index out of range: " + size);
             offset += arraysOffset;
             int startArray = (int) (offset / Integer.MAX_VALUE);
@@ -788,12 +909,12 @@ public class HeapPointer extends Pointer {
     public void checkBounds(long offset, long length) throws IndexOutOfBoundsException {
         if (offset < 0 || length < 0) {
             throw new IndexOutOfBoundsException("Index out of range: " +
-                    NumberUtils.toUnsignedBigInteger(offset).add(NumberUtils.toUnsignedBigInteger(length)));
+                    FastMath.unsign(offset).add(FastMath.unsign(length)));
         }
         else {
             long size = offset + length;
             if (size < 0 || size > this.size) {
-                throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(size));
+                throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(size));
             }
         }
     }
@@ -830,7 +951,7 @@ public class HeapPointer extends Pointer {
 
     @Override
     public long indexOf(long offset, byte value, long maxLength) {
-        if (offset < 0 || offset >= this.size) throw new IndexOutOfBoundsException("Index out of range: " + NumberUtils.toUnsignedBigInteger(offset));
+        if (offset < 0 || offset >= this.size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
         else {
             BigInteger size = BigInteger.valueOf(maxLength).add(BigInteger.valueOf(offset));
             if (size.compareTo(BigInteger.valueOf(this.size)) > 0) throw new IndexOutOfBoundsException("Index out of range: " + size);
@@ -864,6 +985,36 @@ public class HeapPointer extends Pointer {
     @Override
     public long indexOf(long offset, int value, long maxLength) {
         return indexOf(offset, (byte) value, maxLength);
+    }
+
+    @Override
+    public long indexOf(long offset, byte[] value) {
+        return indexOf(offset, value, 0, value.length);
+    }
+
+    @Override
+    public long indexOf(long offset, byte[] value, int valueOffset, int valueLength) {
+        return indexOf(offset, value, valueOffset, valueLength, SIZE_MAX);
+    }
+
+    @Override
+    public long indexOf(long offset, byte[] value, long maxLength) {
+        return indexOf(offset, value, 0, value.length, maxLength);
+    }
+
+    @Override
+    public long indexOf(long offset, byte[] value, int valueOffset, int valueLength, long maxLength) {
+        if (value.length == 1) return indexOf(offset, value[0]);
+        else {
+            if (maxLength < 0) throw new IndexOutOfBoundsException("Index out of range: " + maxLength);
+            else if (maxLength > MAX_2D_ARRAY_SIZE) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(maxLength));
+            byte[] buffer = new byte[valueLength];
+            for (long searched = 0; searched < size; searched ++) {
+                getByteArray(searched, buffer, valueOffset, valueLength);
+                if (Arrays.equals(value, buffer)) return searched;
+            }
+            return 0;
+        }
     }
 
     @Override

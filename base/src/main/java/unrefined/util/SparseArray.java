@@ -16,9 +16,9 @@
 
 package unrefined.util;
 
-import unrefined.internal.ArrayUtils;
-
+import java.util.Iterator;
 import java.util.Objects;
+import java.util.RandomAccess;
 
 /**
  * <code>SparseArray</code> maps integers to Objects and, unlike a normal array of Objects,
@@ -50,7 +50,7 @@ import java.util.Objects;
  * keys in ascending order. In the case of <code>valueAt(int)</code>, the
  * values corresponding to the keys are returned in ascending order.
  */
-public class SparseArray<E> implements Cloneable {
+public class SparseArray<E> implements Cloneable, Iterable<E>, RandomAccess {
 
     private static final Object DELETED = new Object();
     private boolean garbage = false;
@@ -78,7 +78,7 @@ public class SparseArray<E> implements Cloneable {
             keys = EmptyArray.INT;
             values = EmptyArray.OBJECT;
         } else {
-            initialCapacity = ArrayUtils.sparseIntArraySize(initialCapacity);
+            initialCapacity = FastArray.sparseIntArraySize(initialCapacity);
             keys = new int[initialCapacity];
             values = new Object[initialCapacity];
         }
@@ -124,7 +124,7 @@ public class SparseArray<E> implements Cloneable {
      */
     @SuppressWarnings("unchecked")
     public E get(int key, E valueIfKeyNotFound) {
-        int i = ArrayUtils.binarySearchUnchecked(keys, 0, size, key);
+        int i = FastArray.binarySearchUnchecked(keys, 0, size, key);
 
         if (i < 0 || values[i] == DELETED) {
             return valueIfKeyNotFound;
@@ -137,7 +137,7 @@ public class SparseArray<E> implements Cloneable {
      * Removes the mapping from the specified key, if there was any.
      */
     public void remove(int key) {
-        int i = ArrayUtils.binarySearchUnchecked(keys, 0, size, key);
+        int i = FastArray.binarySearchUnchecked(keys, 0, size, key);
 
         if (i >= 0) {
             if (values[i] != DELETED) {
@@ -215,7 +215,7 @@ public class SparseArray<E> implements Cloneable {
      * was one.
      */
     public void put(int key, E value) {
-        int i = ArrayUtils.binarySearchUnchecked(keys, 0, size, key);
+        int i = FastArray.binarySearchUnchecked(keys, 0, size, key);
 
         if (i >= 0) {
             values[i] = value;
@@ -232,11 +232,11 @@ public class SparseArray<E> implements Cloneable {
                 gc();
 
                 // Search again because indices may have changed.
-                i = ~ ArrayUtils.binarySearchUnchecked(keys, 0, size, key);
+                i = ~ FastArray.binarySearchUnchecked(keys, 0, size, key);
             }
 
             if (size >= keys.length) {
-                int n =  ArrayUtils.sparseIntArraySize(size + 1);
+                int n =  FastArray.sparseIntArraySize(size + 1);
 
                 int[] nkeys = new int[n];
                 Object[] nvalues = new Object[n];
@@ -358,7 +358,7 @@ public class SparseArray<E> implements Cloneable {
             gc();
         }
 
-        return ArrayUtils.binarySearchUnchecked(keys, 0, size, key);
+        return FastArray.binarySearchUnchecked(keys, 0, size, key);
     }
 
     /**
@@ -416,7 +416,7 @@ public class SparseArray<E> implements Cloneable {
 
         int pos = size;
         if (pos >= keys.length) {
-            int n =  ArrayUtils.sparseIntArraySize(pos + 1);
+            int n =  FastArray.sparseIntArraySize(pos + 1);
 
             int[] nkeys = new int[n];
             Object[] nvalues = new Object[n];
@@ -498,6 +498,22 @@ public class SparseArray<E> implements Cloneable {
         }
         buffer.append('}');
         return buffer.toString();
+    }
+
+    @Override
+    public Iterator<E> iterator() {
+        return new Iterator<E>() {
+            private int index = -1;
+            @Override
+            public boolean hasNext() {
+                return index + 1 < size();
+            }
+            @Override
+            public E next() {
+                index ++;
+                return get(index);
+            }
+        };
     }
 
 }

@@ -24,19 +24,19 @@ public abstract class CharacterProperty {
         return new FunctionBinding(getter);
     }
 
-    public static CharacterProperty ofAtomicInstance(char initialValue) {
+    public static CharacterProperty ofAtomic(char initialValue) {
         return new AtomicInstance(initialValue);
     }
 
-    public static CharacterProperty ofAtomicInstance() {
+    public static CharacterProperty ofAtomic() {
         return new AtomicInstance();
     }
 
-    public static CharacterProperty ofInstance(char initialValue) {
+    public static CharacterProperty of(char initialValue) {
         return new Instance(initialValue);
     }
 
-    public static CharacterProperty ofInstance() {
+    public static CharacterProperty ofDefault() {
         return new Instance();
     }
 
@@ -103,7 +103,7 @@ public abstract class CharacterProperty {
         }
         public void set(char value) {
             char previousValue = this.value.getAndSet(value);
-            if (previousValue != value && !onChanged().isEmpty()) onChanged().emit(new ChangedEvent(this, previousValue, value));
+            if (previousValue != value && !onChange().isEmpty()) onChange().emit(new ChangeEvent(this, previousValue, value));
         }
         public char get() {
             return value.get();
@@ -124,16 +124,16 @@ public abstract class CharacterProperty {
         public void set(char value) {
             char previousValue = this.value;
             this.value = value;
-            if (previousValue != value && !onChanged().isEmpty()) onChanged().emit(new ChangedEvent(this, previousValue, value));
+            if (previousValue != value && !onChange().isEmpty()) onChange().emit(new ChangeEvent(this, previousValue, value));
         }
         public char get() {
             return value;
         }
     }
 
-    private final Signal<EventSlot<ChangedEvent>> onChanged = Signal.ofSlot();
-    public Signal<EventSlot<ChangedEvent>> onChanged() {
-        return onChanged;
+    private final Signal<EventSlot<ChangeEvent>> onChange = Signal.ofSlot();
+    public Signal<EventSlot<ChangeEvent>> onChange() {
+        return onChange;
     }
 
     public abstract void set(char value);
@@ -162,11 +162,11 @@ public abstract class CharacterProperty {
         return result;
     }
 
-    public static final class ChangedEvent extends Event<CharacterProperty> {
+    public static final class ChangeEvent extends Event<CharacterProperty> {
 
         private final char previousValue, currentValue;
 
-        public ChangedEvent(CharacterProperty source, char previousValue, char currentValue) {
+        public ChangeEvent(CharacterProperty source, char previousValue, char currentValue) {
             super(source);
             this.previousValue = previousValue;
             this.currentValue = currentValue;
@@ -181,11 +181,12 @@ public abstract class CharacterProperty {
         }
 
         @Override
-        public boolean equals(Object object) {
-            if (this == object) return true;
-            if (object == null || getClass() != object.getClass()) return false;
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            if (!super.equals(o)) return false;
 
-            ChangedEvent that = (ChangedEvent) object;
+            ChangeEvent that = (ChangeEvent) o;
 
             if (previousValue != that.previousValue) return false;
             return currentValue == that.currentValue;
@@ -193,7 +194,8 @@ public abstract class CharacterProperty {
 
         @Override
         public int hashCode() {
-            int result = previousValue;
+            int result = super.hashCode();
+            result = 31 * result + (int) previousValue;
             result = 31 * result + (int) currentValue;
             return result;
         }

@@ -1,6 +1,6 @@
 package unrefined.runtime;
 
-import unrefined.desktop.BitmapImageFactory;
+import unrefined.desktop.BitmapSupport;
 import unrefined.media.graphics.Bitmap;
 import unrefined.media.graphics.Graphics;
 import unrefined.util.AlreadyDisposedException;
@@ -16,27 +16,27 @@ public class DesktopBitmap extends Bitmap {
 
     public DesktopBitmap(BufferedImage bufferedImage) {
         this.bufferedImage = Objects.requireNonNull(bufferedImage);
-        bitmapType = BitmapImageFactory.getBitmapType(bufferedImage);
+        bitmapType = BitmapSupport.getBitmapType(bufferedImage);
     }
 
     public DesktopBitmap(int width, int height, int type) {
-        this.bufferedImage = BitmapImageFactory.createImage(width, height, type);
+        this.bufferedImage = BitmapSupport.createImage(width, height, type);
         attachment = null;
-        bitmapType = BitmapImageFactory.getBitmapType(bufferedImage);
+        bitmapType = BitmapSupport.getBitmapType(bufferedImage);
     }
 
     private volatile DesktopBitmap attachment;
 
     protected DesktopBitmap(DesktopBitmap attachment, int x, int y, int width, int height) {
         this.attachment = Objects.requireNonNull(attachment);
-        this.bufferedImage = BitmapImageFactory.deriveImage(attachment.getBufferedImage(), x, y, width, height);
-        bitmapType = BitmapImageFactory.getBitmapType(bufferedImage);
+        this.bufferedImage = BitmapSupport.deriveImage(attachment.getBufferedImage(), x, y, width, height);
+        bitmapType = BitmapSupport.getBitmapType(bufferedImage);
     }
 
     protected DesktopBitmap(DesktopBitmap attachment) {
         this.attachment = Objects.requireNonNull(attachment);
-        this.bufferedImage = BitmapImageFactory.deriveImage(attachment.getBufferedImage());
-        bitmapType = BitmapImageFactory.getBitmapType(bufferedImage);
+        this.bufferedImage = BitmapSupport.deriveImage(attachment.getBufferedImage());
+        bitmapType = BitmapSupport.getBitmapType(bufferedImage);
     }
 
     public BufferedImage getBufferedImage() {
@@ -127,7 +127,7 @@ public class DesktopBitmap extends Bitmap {
         DesktopBitmap clone = (DesktopBitmap) super.clone();
         if (clone == null) return copy();
         else {
-            clone.bufferedImage = bufferedImage == null ? null : BitmapImageFactory.copyImage(bufferedImage);
+            clone.bufferedImage = bufferedImage == null ? null : BitmapSupport.copyImage(bufferedImage);
             return clone;
         }
     }
@@ -135,7 +135,7 @@ public class DesktopBitmap extends Bitmap {
     @Override
     public Bitmap copy() {
         if (isDisposed()) throw new AlreadyDisposedException();
-        return new DesktopBitmap(BitmapImageFactory.copyImage(bufferedImage));
+        return new DesktopBitmap(BitmapSupport.copyImage(bufferedImage));
     }
 
     private final AtomicBoolean disposed = new AtomicBoolean(false);

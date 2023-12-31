@@ -15,12 +15,15 @@
  */
 package unrefined.util;
 
+import java.util.Iterator;
+import java.util.RandomAccess;
+
 /**
  * CircularDoubleArray is a circular double array data structure that provides O(1) random read, O(1)
  * prepend and O(1) append. The CircularDoubleArray automatically grows its capacity when number of
  * added doubles is over its capacity.
  */
-public class CircularDoubleArray {
+public class CircularDoubleArray implements Cloneable, Iterable<Double>, RandomAccess {
 
     private double[] elements;
     private int head;
@@ -75,6 +78,22 @@ public class CircularDoubleArray {
 
         capacityBitmask = arrayCapacity - 1;
         elements = new double[arrayCapacity];
+    }
+
+    @Override
+    public CircularDoubleArray clone() {
+        CircularDoubleArray clone;
+        try {
+            clone = (CircularDoubleArray) super.clone();
+        }
+        catch (CloneNotSupportedException e) {
+            clone = new CircularDoubleArray();
+            clone.head = head;
+            clone.tail = tail;
+            clone.capacityBitmask = capacityBitmask;
+        }
+        clone.elements = elements.clone();
+        return clone;
     }
 
     /**
@@ -255,6 +274,22 @@ public class CircularDoubleArray {
         }
         buffer.append(']');
         return buffer.toString();
+    }
+
+    @Override
+    public Iterator<Double> iterator() {
+        return new Iterator<Double>() {
+            private int index = -1;
+            @Override
+            public boolean hasNext() {
+                return index + 1 < size();
+            }
+            @Override
+            public Double next() {
+                index ++;
+                return get(index);
+            }
+        };
     }
 
 }

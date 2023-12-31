@@ -2,9 +2,8 @@ plugins {
     id 'com.android.library' version '8.1.0' apply false
 }
 
-def baseProjects    = [project(':base'), project(':game2d')]
+def baseProjects    = [project(':base')]
 
-//def legacyProjects = [project(':legacy')]
 def desktopProjects = [project(':desktop')]
 
 def androidProjects = [project(':android')]
@@ -17,11 +16,11 @@ subprojects {
         libraryName = 'Unrefined Media Layer'
         libraryGroupName = 'unrefined'
         libraryPublishGroupName = 'com.tianscar.uxgl'
-        libraryDescription = 'Simple, lightweight, cross-platform graphics library which also provides some common features for game development.'
+        libraryDescription = 'Simple, lightweight, cross-platform graphics library which also provides some common features for application/game development.'
         libraryUrl = 'https://github.com/Tianscar/uxgl'
 
-        libraryVersionCode = 40
-        libraryVersionName = '0.4.0-SNAPSHOT'
+        libraryVersionCode = 50
+        libraryVersionName = '0.5.0-SNAPSHOT'
         libraryVersionCodeName = 'Claw Hammer'
 
         libraryLicenseName = 'The Apache License, Version 2.0'
@@ -44,11 +43,8 @@ subprojects {
         libraryAndroidSourceCompatibility = JavaVersion.VERSION_1_8
         libraryAndroidTargetCompatibility = JavaVersion.VERSION_1_8
 
-        //libraryLegacySourceCompatibility = JavaVersion.VERSION_1_8
-        //libraryLegacyTargetCompatibility = JavaVersion.VERSION_1_8
-
-        libraryDesktopSourceCompatibility = JavaVersion.VERSION_21
-        libraryDesktopTargetCompatibility = JavaVersion.VERSION_21
+        libraryDesktopSourceCompatibility = JavaVersion.VERSION_1_8
+        libraryDesktopTargetCompatibility = JavaVersion.VERSION_1_8
     }
 
     group libraryGroupName
@@ -62,38 +58,23 @@ configure (baseProjects) {
     targetCompatibility = libraryBaseTargetCompatibility
 }
 
-/*
-configure (legacyProjects) {
-    apply plugin: 'java-library'
-
-    sourceCompatibility = libraryLegacySourceCompatibility
-    targetCompatibility = libraryLegacyTargetCompatibility
-}
- */
-
 configure (desktopProjects) {
     apply plugin: 'java-library'
 
     sourceCompatibility = libraryDesktopSourceCompatibility
     targetCompatibility = libraryDesktopTargetCompatibility
 
-    compileJava {
-        options.compilerArgs += ['--enable-preview']
-    }
-    tasks.withType(JavaCompile).configureEach {
-        options.compilerArgs += ['--enable-preview']
-    }
-    tasks.withType(Test).configureEach {
-        jvmArgs += '--enable-preview'
-        jvmArgs += '--enable-native-access=ALL-UNNAMED'
-    }
-    tasks.withType(JavaExec).configureEach {
-        jvmArgs += '--enable-preview'
-        jvmArgs += '--enable-native-access=ALL-UNNAMED'
+    if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_21)) {
+        tasks.withType(Test).configureEach {
+            jvmArgs += '--enable-native-access=ALL-UNNAMED'
+        }
+        tasks.withType(JavaExec).configureEach {
+            jvmArgs += '--enable-native-access=ALL-UNNAMED'
+        }
     }
 }
 
-configure (baseProjects/* + legacyProjects*/ + desktopProjects) {
+configure (baseProjects + desktopProjects) {
 
     [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 

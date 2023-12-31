@@ -1,8 +1,7 @@
 package unrefined.internal.bitmap;
 
-import unrefined.desktop.BitmapImageFactory;
+import unrefined.desktop.BitmapSupport;
 import unrefined.desktop.IIOBitmapHandler;
-import unrefined.internal.IOUtils;
 import unrefined.media.graphics.Bitmap;
 import unrefined.runtime.DesktopBitmap;
 
@@ -15,6 +14,7 @@ import javax.imageio.stream.ImageOutputStream;
 import java.awt.image.BufferedImage;
 import java.io.EOFException;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Set;
@@ -26,8 +26,8 @@ public class WBMPBitmapHandler extends IIOBitmapHandler {
     private static final int MAX_WBMP_WIDTH = 1024;
     private static final int MAX_WBMP_HEIGHT = 768;
 
-    private static final Set<String> READER_FORMAT_NAMES = Set.of( "wbmp" );
-    private static final Set<String> WRITER_FORMAT_NAMES = Set.of( "wbmp" );
+    private static final Set<String> READER_FORMAT_NAMES = Collections.singleton( "wbmp" );
+    private static final Set<String> WRITER_FORMAT_NAMES = Collections.singleton( "wbmp" );
 
     private static boolean isWBMP(ImageInputStream input) throws IOException {
         input.mark();
@@ -100,11 +100,15 @@ public class WBMPBitmapHandler extends IIOBitmapHandler {
         if (reader == null) return null;
         reader.setInput(input, false, true);
         try {
-            return new DesktopBitmap(BitmapImageFactory.getImage(reader.read(0), type, true));
+            return new DesktopBitmap(BitmapSupport.getImage(reader.read(0), type, true));
         }
         finally {
             reader.dispose();
-            IOUtils.closeQuietly(input);
+            try {
+                input.close();
+            }
+            catch (IOException ignored) {
+            }
         }
     }
 
@@ -114,7 +118,7 @@ public class WBMPBitmapHandler extends IIOBitmapHandler {
         ImageWriter writer = getWBMPImageWriter();
         if (writer == null) return false;
         writer.setOutput(output);
-        BufferedImage image = BitmapImageFactory.getBufferedImage(((DesktopBitmap) bitmap).getBufferedImage(),
+        BufferedImage image = BitmapSupport.getBufferedImage(((DesktopBitmap) bitmap).getBufferedImage(),
                 BufferedImage.TYPE_BYTE_BINARY, false);
         try {
             writer.write(null, new IIOImage(image, null, null), null);

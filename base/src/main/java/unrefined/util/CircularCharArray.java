@@ -15,12 +15,15 @@
  */
 package unrefined.util;
 
+import java.util.Iterator;
+import java.util.RandomAccess;
+
 /**
  * CircularCharArray is a circular character array data structure that provides O(1) random read, O(1)
  * prepend and O(1) append. The CircularCharArray automatically grows its capacity when number of
  * added characters is over its capacity.
  */
-public class CircularCharArray {
+public class CircularCharArray implements Cloneable, Iterable<Character>, RandomAccess {
 
     private char[] elements;
     private int head;
@@ -75,6 +78,22 @@ public class CircularCharArray {
 
         capacityBitmask = arrayCapacity - 1;
         elements = new char[arrayCapacity];
+    }
+
+    @Override
+    public CircularCharArray clone() {
+        CircularCharArray clone;
+        try {
+            clone = (CircularCharArray) super.clone();
+        }
+        catch (CloneNotSupportedException e) {
+            clone = new CircularCharArray();
+            clone.head = head;
+            clone.tail = tail;
+            clone.capacityBitmask = capacityBitmask;
+        }
+        clone.elements = elements.clone();
+        return clone;
     }
 
     /**
@@ -254,6 +273,22 @@ public class CircularCharArray {
         }
         buffer.append(']');
         return buffer.toString();
+    }
+
+    @Override
+    public Iterator<Character> iterator() {
+        return new Iterator<Character>() {
+            private int index = -1;
+            @Override
+            public boolean hasNext() {
+                return index + 1 < size();
+            }
+            @Override
+            public Character next() {
+                index ++;
+                return get(index);
+            }
+        };
     }
 
 }

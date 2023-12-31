@@ -3,9 +3,9 @@ package unrefined.runtime;
 import unrefined.context.Container;
 import unrefined.context.Context;
 import unrefined.context.ContextListener;
-import unrefined.internal.AWTUtils;
-import unrefined.internal.CursorUtils;
-import unrefined.internal.KeyUtils;
+import unrefined.desktop.AWTSupport;
+import unrefined.desktop.CursorAnimator;
+import unrefined.desktop.KeyEventParser;
 import unrefined.media.graphics.Cursor;
 import unrefined.media.graphics.Dimension;
 import unrefined.media.graphics.Point;
@@ -38,7 +38,7 @@ public abstract class DesktopEmbeddedContext extends Context implements KeyListe
         this.component = Objects.requireNonNull(component);
 
         component.setIgnoreRepaint(true);
-        component.setBackground(AWTUtils.TRANSPARENT);
+        component.setBackground(AWTSupport.TRANSPARENT);
         component.enableInputMethods(false);
 
         component.addKeyListener(this);
@@ -172,7 +172,7 @@ public abstract class DesktopEmbeddedContext extends Context implements KeyListe
     public void setCursor(Cursor cursor) {
         this.cursor = cursor == null ? DesktopCursor.getDefaultCursor() : cursor;
         if (!GraphicsEnvironment.isHeadless() && cursor instanceof AnimatedCursor)
-            EventQueue.invokeLater(() -> CursorUtils.registerAnimated(component, (AnimatedCursor) cursor));
+            EventQueue.invokeLater(() -> CursorAnimator.register(component, (AnimatedCursor) cursor));
         else component.setCursor(((DesktopCursor) this.cursor).getCursor());
     }
 
@@ -191,8 +191,8 @@ public abstract class DesktopEmbeddedContext extends Context implements KeyListe
     public void keyPressed(KeyEvent e) {
         ContextListener listener = getContextListener();
         if (listener != null && listener.onKeyDown(this,
-                KeyUtils.parseKey(e),
-                KeyUtils.parseCode(e),
+                KeyEventParser.parseKey(e),
+                KeyEventParser.parseCode(e),
                 e.getKeyLocation() - 1,
                 Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6))) e.consume();
     }
@@ -201,8 +201,8 @@ public abstract class DesktopEmbeddedContext extends Context implements KeyListe
     public void keyReleased(KeyEvent e) {
         ContextListener listener = getContextListener();
         if (listener != null && listener.onKeyUp(this,
-                KeyUtils.parseKey(e),
-                KeyUtils.parseCode(e),
+                KeyEventParser.parseKey(e),
+                KeyEventParser.parseCode(e),
                 e.getKeyLocation() - 1,
                 Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6))) e.consume();
     }
@@ -234,7 +234,7 @@ public abstract class DesktopEmbeddedContext extends Context implements KeyListe
     @Override
     public void mouseEntered(MouseEvent e) {
         if (!GraphicsEnvironment.isHeadless() && cursor instanceof AnimatedCursor)
-            EventQueue.invokeLater(() -> CursorUtils.registerAnimated(component, (AnimatedCursor) cursor));
+            EventQueue.invokeLater(() -> CursorAnimator.register(component, (AnimatedCursor) cursor));
         ContextListener listener = getContextListener();
         if (listener != null && listener.onMouseEnter(this, e.getX(), e.getY(),
                 Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6))) e.consume();
@@ -242,7 +242,7 @@ public abstract class DesktopEmbeddedContext extends Context implements KeyListe
 
     @Override
     public void mouseExited(MouseEvent e) {
-        if (!GraphicsEnvironment.isHeadless()) EventQueue.invokeLater(() -> CursorUtils.unregisterAnimated(component));
+        if (!GraphicsEnvironment.isHeadless()) EventQueue.invokeLater(() -> CursorAnimator.unregister(component));
         ContextListener listener = getContextListener();
         if (listener != null && listener.onMouseExit(this, e.getX(), e.getY(),
                 Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6))) e.consume();
@@ -266,10 +266,11 @@ public abstract class DesktopEmbeddedContext extends Context implements KeyListe
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
         int scrollType = e.getScrollType();
-        float amount = (float) switch (scrollType) {
-            case MouseWheelEvent.WHEEL_UNIT_SCROLL -> e.getScrollAmount() * e.getPreciseWheelRotation();
-            case MouseWheelEvent.WHEEL_BLOCK_SCROLL -> e.getWheelRotation() > 0 ? 1 : -1;
-            default -> 0;
+        float amount;
+        switch (scrollType) {
+            case MouseWheelEvent.WHEEL_UNIT_SCROLL: amount = (float) (e.getScrollAmount() * e.getPreciseWheelRotation()); break;
+            case MouseWheelEvent.WHEEL_BLOCK_SCROLL: amount = e.getWheelRotation() > 0 ? 1 : -1; break;
+            default: amount = 0; break;
         };
         if (amount == 0) return;
         float amountX, amountY;

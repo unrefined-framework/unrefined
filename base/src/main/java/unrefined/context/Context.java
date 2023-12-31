@@ -2,6 +2,7 @@ package unrefined.context;
 
 import unrefined.media.graphics.Cursor;
 import unrefined.media.graphics.Dimension;
+import unrefined.media.graphics.Graphics;
 import unrefined.media.graphics.Point;
 import unrefined.media.graphics.Rectangle;
 
@@ -89,5 +90,7 @@ public abstract class Context {
 
     public abstract void setCursor(Cursor cursor);
     public abstract Cursor getCursor();
+
+    public abstract Graphics getGraphics();
 
 }

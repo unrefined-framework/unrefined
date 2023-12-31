@@ -237,14 +237,14 @@ public interface PropertyMap extends Map<Object, Object> {
         return new BigDecimal(getProperty(key));
     }
 
-    Signal<EventSlot<PropertyChangedEvent>> onChanged();
+    Signal<EventSlot<PropertyChangeEvent>> onChange();
 
-    final class PropertyChangedEvent extends Event<PropertyMap> {
+    final class PropertyChangeEvent extends Event<PropertyMap> {
 
         private final Object key;
         private final Object previousValue, currentValue;
 
-        public PropertyChangedEvent(PropertyMap source, Object key, Object previousValue, Object currentValue) {
+        public PropertyChangeEvent(PropertyMap source, Object key, Object previousValue, Object currentValue) {
             super(source);
             this.key = key;
             this.previousValue = previousValue;
@@ -282,11 +282,12 @@ public interface PropertyMap extends Map<Object, Object> {
         }
 
         @Override
-        public boolean equals(Object object) {
-            if (this == object) return true;
-            if (object == null || getClass() != object.getClass()) return false;
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            if (!super.equals(o)) return false;
 
-            PropertyChangedEvent that = (PropertyChangedEvent) object;
+            PropertyChangeEvent that = (PropertyChangeEvent) o;
 
             if (!Objects.equals(key, that.key)) return false;
             if (!Objects.equals(previousValue, that.previousValue))
@@ -296,7 +297,8 @@ public interface PropertyMap extends Map<Object, Object> {
 
         @Override
         public int hashCode() {
-            int result = key != null ? key.hashCode() : 0;
+            int result = super.hashCode();
+            result = 31 * result + (key != null ? key.hashCode() : 0);
             result = 31 * result + (previousValue != null ? previousValue.hashCode() : 0);
             result = 31 * result + (currentValue != null ? currentValue.hashCode() : 0);
             return result;
@@ -306,7 +308,8 @@ public interface PropertyMap extends Map<Object, Object> {
         public String toString() {
             return getClass().getName()
                     + '{' +
-                    "key=" + key +
+                    "source=" + getSource() +
+                    ", key=" + key +
                     ", previousValue=" + previousValue +
                     ", currentValue=" + currentValue +
                     '}';
@@ -325,10 +328,10 @@ public interface PropertyMap extends Map<Object, Object> {
             this.map = Objects.requireNonNull(map);
         }
 
-        private final Signal<EventSlot<PropertyChangedEvent>> onChanged = Signal.ofSlot();
+        private final Signal<EventSlot<PropertyChangeEvent>> onChange = Signal.ofSlot();
         @Override
-        public Signal<EventSlot<PropertyChangedEvent>> onChanged() {
-            return onChanged;
+        public Signal<EventSlot<PropertyChangeEvent>> onChange() {
+            return onChange;
         }
 
         @Override
@@ -362,11 +365,11 @@ public interface PropertyMap extends Map<Object, Object> {
             if (map.containsKey(key)) {
                 ret = map.put(key, value);
                 if (ret == null && value != null || ret != null && !ret.equals(value)) {
-                    onChanged.emit(new PropertyChangedEvent(this, key, ret, value));
+                    onChange.emit(new PropertyChangeEvent(this, key, ret, value));
                 }
             } else {
                 ret = map.put(key, value);
-                onChanged.emit(new PropertyChangedEvent(this, key, ret, value));
+                onChange.emit(new PropertyChangeEvent(this, key, ret, value));
             }
             return ret;
         }
@@ -377,7 +380,7 @@ public interface PropertyMap extends Map<Object, Object> {
                 return null;
             }
             Object ret = map.remove(key);
-            onChanged.emit(new PropertyChangedEvent(this, key, ret, null));
+            onChange.emit(new PropertyChangeEvent(this, key, ret, null));
             return ret;
         }
 
@@ -395,7 +398,7 @@ public interface PropertyMap extends Map<Object, Object> {
                 Object key = e.getKey();
                 Object val = e.getValue();
                 i.remove();
-                onChanged.emit(new PropertyChangedEvent(this, key, val, null));
+                onChange.emit(new PropertyChangeEvent(this, key, val, null));
             }
         }
 
@@ -468,7 +471,7 @@ public interface PropertyMap extends Map<Object, Object> {
                     @Override
                     public void remove() {
                         iterator.remove();
-                        onChanged.emit(new PropertyChangedEvent(Wrapper.this, lastKey, lastValue, null));
+                        onChange.emit(new PropertyChangeEvent(Wrapper.this, lastKey, lastValue, null));
                     }
                 };
             }
@@ -509,7 +512,7 @@ public interface PropertyMap extends Map<Object, Object> {
                         Object key = e.getKey();
                         Object value = e.getValue();
                         i.remove();
-                        onChanged.emit(new PropertyChangedEvent(Wrapper.this, key, value, null));
+                        onChange.emit(new PropertyChangeEvent(Wrapper.this, key, value, null));
                     }
                 }
                 return removed;
@@ -569,7 +572,7 @@ public interface PropertyMap extends Map<Object, Object> {
                     @Override
                     public void remove() {
                         iterator.remove();
-                        onChanged.emit(new PropertyChangedEvent(Wrapper.this, lastKey, lastValue, null));
+                        onChange.emit(new PropertyChangeEvent(Wrapper.this, lastKey, lastValue, null));
                     }
                 };
             }
@@ -616,7 +619,7 @@ public interface PropertyMap extends Map<Object, Object> {
                         Object key = e.getKey();
                         Object value = e.getValue();
                         i.remove();
-                        onChanged.emit(new PropertyChangedEvent(Wrapper.this, key, value, null));
+                        onChange.emit(new PropertyChangeEvent(Wrapper.this, key, value, null));
                     }
                 }
                 return removed;
@@ -659,7 +662,7 @@ public interface PropertyMap extends Map<Object, Object> {
             @Override
             public Object setValue(Object value) {
                 Object oldValue = entry.setValue(value);
-                onChanged.emit(new PropertyChangedEvent(Wrapper.this, getKey(), oldValue, value));
+                onChange.emit(new PropertyChangeEvent(Wrapper.this, getKey(), oldValue, value));
                 return oldValue;
             }
             @Override
@@ -723,7 +726,7 @@ public interface PropertyMap extends Map<Object, Object> {
                     @Override
                     public void remove() {
                         iterator.remove();
-                        onChanged.emit(new PropertyChangedEvent(Wrapper.this, lastKey, lastValue, null));
+                        onChange.emit(new PropertyChangeEvent(Wrapper.this, lastKey, lastValue, null));
                     }
                 };
             }
@@ -755,7 +758,7 @@ public interface PropertyMap extends Map<Object, Object> {
                 boolean ret = map.entrySet().remove(o);
                 if (ret) {
                     Entry<Object, Object> entry = (Entry<Object, Object>) o;
-                    onChanged.emit(new PropertyChangedEvent(Wrapper.this, entry.getKey(), entry.getValue(), null));
+                    onChange.emit(new PropertyChangeEvent(Wrapper.this, entry.getKey(), entry.getValue(), null));
                 }
                 return ret;
             }
@@ -780,7 +783,7 @@ public interface PropertyMap extends Map<Object, Object> {
                         Object key = e.getKey();
                         Object value = e.getValue();
                         i.remove();
-                        onChanged.emit(new PropertyChangedEvent(Wrapper.this, key, value, null));
+                        onChange.emit(new PropertyChangeEvent(Wrapper.this, key, value, null));
                     }
                 }
                 return removed;

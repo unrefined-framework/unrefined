@@ -1,6 +1,5 @@
 package unrefined.util.signal;
 
-import unrefined.internal.BitwiseUtils;
 import unrefined.util.concurrent.ConcurrentHashSet;
 import unrefined.util.function.VarFunctor;
 import unrefined.util.function.VarSlot;
@@ -67,13 +66,13 @@ public abstract class Signal<T> {
 		this.discardReturnValue = discardReturnValue;
 	}
 
-	public static <T> Signal<T> ofMethod(Class<T> clazz, Method method) {
+	public static <T> Signal<T> of(Class<T> clazz, Method method) {
 		if (method.getDeclaringClass() != clazz) throw new IllegalArgumentException("method.getDeclaringClass() != clazz");
 		else if (isStatic(method.getModifiers())) throw new IllegalArgumentException("Illegal method modifier; expected non-static");
 		return new Signal<T>(method.getReturnType() == void.class) {
 			@Override
 			protected Object actuate(T slot, Object... args) throws Exception {
-				return Reflection.getReflection().invokeMethod(slot, method, args);
+				return Reflection.getInstance().invokeMethod(slot, method, args);
 			}
 		};
 	}
@@ -248,10 +247,10 @@ public abstract class Signal<T> {
 	 */
 	public Connection connect(T slot, Dispatcher dispatcher, int type) throws IllegalArgumentException, NullPointerException {
 		Objects.requireNonNull(slot);
-		if (dispatcher == null) dispatcher = Dispatcher.defaultDispatcher();
+		if (dispatcher == null) dispatcher = Dispatcher.defaultInstance();
 		final boolean unique = (type & UNIQUE) == UNIQUE;
 		final boolean singleShot = (type & SINGLE_SHOT) == SINGLE_SHOT;
-		type = BitwiseUtils.removeUnusedBits(type, 3);
+		type = type << 3 >>> 3;
 		boolean broken = false;
 		if (uniques.contains(slot)) broken = true;
 		else if (unique) uniques.add(slot);
@@ -280,7 +279,7 @@ public abstract class Signal<T> {
 	public boolean disconnect(Connection connection, Dispatcher dispatcher) {
 		if (connection == null) return false;
 		if (!connections.contains(connection)) return false;
-		if (dispatcher == null) dispatcher = Dispatcher.defaultDispatcher();
+		if (dispatcher == null) dispatcher = Dispatcher.defaultInstance();
 		if (connection.dispatcher == dispatcher) {
 			connection.broke();
 			connections.remove(connection);
@@ -302,7 +301,7 @@ public abstract class Signal<T> {
 	}
 
 	public boolean disconnect(Dispatcher dispatcher) {
-		if (dispatcher == null) dispatcher = Dispatcher.defaultDispatcher();
+		if (dispatcher == null) dispatcher = Dispatcher.defaultInstance();
 		for (Connection connection : connections) {
 			if (connection.dispatcher == dispatcher) {
 				connection.broke();

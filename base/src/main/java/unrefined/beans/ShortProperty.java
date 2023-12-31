@@ -24,19 +24,19 @@ public abstract class ShortProperty {
         return new FunctionBinding(getter);
     }
 
-    public static ShortProperty ofAtomicInstance(short initialValue) {
+    public static ShortProperty ofAtomic(short initialValue) {
         return new AtomicInstance(initialValue);
     }
 
-    public static ShortProperty ofAtomicInstance() {
+    public static ShortProperty ofAtomic() {
         return new AtomicInstance();
     }
 
-    public static ShortProperty ofInstance(short initialValue) {
+    public static ShortProperty of(short initialValue) {
         return new Instance(initialValue);
     }
 
-    public static ShortProperty ofInstance() {
+    public static ShortProperty ofDefault() {
         return new Instance();
     }
 
@@ -101,7 +101,7 @@ public abstract class ShortProperty {
         }
         public void set(short value) {
             short previousValue = this.value.getAndSet(value);
-            if (previousValue != value && !onChanged().isEmpty()) onChanged().emit(new ChangedEvent(this, previousValue, value));
+            if (previousValue != value && !onChange().isEmpty()) onChange().emit(new ChangeEvent(this, previousValue, value));
         }
         public short get() {
             return value.get();
@@ -122,16 +122,16 @@ public abstract class ShortProperty {
         public void set(short value) {
             short previousValue = this.value;
             this.value = value;
-            if (previousValue != value && !onChanged().isEmpty()) onChanged().emit(new ChangedEvent(this, previousValue, value));
+            if (previousValue != value && !onChange().isEmpty()) onChange().emit(new ChangeEvent(this, previousValue, value));
         }
         public short get() {
             return value;
         }
     }
 
-    private final Signal<EventSlot<ChangedEvent>> onChanged = Signal.ofSlot();
-    public Signal<EventSlot<ChangedEvent>> onChanged() {
-        return onChanged;
+    private final Signal<EventSlot<ChangeEvent>> onChange = Signal.ofSlot();
+    public Signal<EventSlot<ChangeEvent>> onChange() {
+        return onChange;
     }
 
     public abstract void set(short value);
@@ -160,11 +160,11 @@ public abstract class ShortProperty {
         return result;
     }
 
-    public static final class ChangedEvent extends Event<ShortProperty> {
+    public static final class ChangeEvent extends Event<ShortProperty> {
 
         private final short previousValue, currentValue;
 
-        public ChangedEvent(ShortProperty source, short previousValue, short currentValue) {
+        public ChangeEvent(ShortProperty source, short previousValue, short currentValue) {
             super(source);
             this.previousValue = previousValue;
             this.currentValue = currentValue;
@@ -179,11 +179,12 @@ public abstract class ShortProperty {
         }
 
         @Override
-        public boolean equals(Object object) {
-            if (this == object) return true;
-            if (object == null || getClass() != object.getClass()) return false;
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            if (!super.equals(o)) return false;
 
-            ChangedEvent that = (ChangedEvent) object;
+            ChangeEvent that = (ChangeEvent) o;
 
             if (previousValue != that.previousValue) return false;
             return currentValue == that.currentValue;
@@ -191,7 +192,8 @@ public abstract class ShortProperty {
 
         @Override
         public int hashCode() {
-            int result = previousValue;
+            int result = super.hashCode();
+            result = 31 * result + (int) previousValue;
             result = 31 * result + (int) currentValue;
             return result;
         }

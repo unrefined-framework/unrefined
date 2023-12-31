@@ -4,7 +4,7 @@ import java.io.IOException;
 
 public interface Portable {
 
-    void writePortable(PortableOutput out) throws IOException;
-    void readPortable(PortableInput in) throws IOException;
+    void writePortable(BinaryOutput out) throws IOException;
+    void readPortable(BinaryInput in) throws IOException;
 
 }

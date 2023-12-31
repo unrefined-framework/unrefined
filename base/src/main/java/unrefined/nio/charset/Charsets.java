@@ -1,6 +1,7 @@
 package unrefined.nio.charset;
 
 import unrefined.util.NotInstantiableError;
+import unrefined.util.foreign.Foreign;
 
 import java.nio.charset.Charset;
 
@@ -14,6 +15,10 @@ public final class Charsets {
     private Charsets() {
         throw new NotInstantiableError(Charsets.class);
     }
+
+    public static final Charset DEFAULT = Charset.defaultCharset();
+    public static final Charset SYSTEM  = Foreign.getInstance().systemCharset();
+    public static final Charset WIDE    = Foreign.getInstance().wideCharset();
 
     /**
      * Seven-bit ASCII, also known as ISO646-US, also known as the

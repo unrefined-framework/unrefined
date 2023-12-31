@@ -1,11 +1,40 @@
 package unrefined.media.graphics;
 
-import unrefined.io.Disposable;
 import unrefined.util.NotInstantiableError;
+import unrefined.util.function.IntBiOperator;
 
-import static unrefined.media.graphics.Composite.Mode.CUSTOM;
+public abstract class Brush {
 
-public abstract class Brush implements Disposable {
+    public static Brush ofColor(int color) {
+        return Drawing.getInstance().createBrush(color);
+    }
+    public static Brush ofLinearGradient(float x1, float y1, float x2, float y2,
+                                      float[] stops, int stopsOffset, int[] colors, int colorsOffset, int length,
+                                      int tileMode) {
+        return Drawing.getInstance().createBrush(x1, y1, x2, y2, stops, stopsOffset, colors, colorsOffset, length, tileMode);
+    }
+    public static Brush ofLinearGradient(float x1, float y1, float x2, float y2,
+                             float[] stops, int[] colors,
+                             int tileMode) {
+        return Drawing.getInstance().createBrush(x1, y1, x2, y2, stops, colors, tileMode);
+    }
+    public static Brush ofRadialGradient(float x1, float y1, float r1, float x2, float y2, float r2,
+                                      float[] stops, int stopsOffset, int[] colors, int colorsOffset, int length,
+                                      int tileMode) {
+        return Drawing.getInstance().createBrush(x1, y1, r1, x2, y2, r2, stops, stopsOffset, colors, colorsOffset, length, tileMode);
+    }
+    public static Brush ofRadialGradient(float x1, float y1, float r1, float x2, float y2, float r2,
+                             float[] stops, int[] colors,
+                             int tileMode) {
+        return Drawing.getInstance().createBrush(x1, y1, r1, x2, y2, r2, stops, colors, tileMode);
+    }
+    public static Brush ofBitmapPattern(Bitmap bitmap, Transform transform) {
+        return Drawing.getInstance().createBrush(bitmap, transform);
+    }
+
+    public static Brush of(IntBiOperator paintProc) {
+        return Drawing.getInstance().createBrush(paintProc);
+    }
 
     public static final class TileMode {
         private TileMode() {
@@ -64,23 +93,11 @@ public abstract class Brush implements Disposable {
 
     @Override
     public String toString() {
-        if (isDisposed()) return getClass().getName() + "@" + Integer.toHexString(hashCode())
+        if (getType() == Type.CUSTOM) return getClass().getName() + "@" + Integer.toHexString(hashCode())
                 + '{' +
-                "disposed=true" +
+                "type=CUSTOM" +
                 '}';
-        else {
-            int type = getType();
-            if (type == CUSTOM) return getClass().getName() + "@" + Integer.toHexString(hashCode())
-                    + '{' +
-                    "disposed=false" +
-                    ", type=CUSTOM" +
-                    '}';
-            else return getClass().getName()
-                    + '{' +
-                    "disposed=false" +
-                    ", type=" + Brush.Type.toString(type) +
-                    '}';
-        }
+        else return super.toString();
     }
 
 }

@@ -1,6 +1,5 @@
 package unrefined.io;
 
-import unrefined.internal.BitwiseUtils;
 import unrefined.util.NotInstantiableError;
 
 import java.io.File;
@@ -28,20 +27,20 @@ public class ChannelFile implements RandomAccessDataInput, RandomAccessDataOutpu
         public static final int SYNC              = 1 << 6;
         public static final int DSYNC             = 1 << 7;
         public static int removeUnusedBits(int mode) {
-            return BitwiseUtils.removeUnusedBits(mode, 8);
+            return mode << 8 >>> 8;
         }
         public static String toString(int mode) {
             mode = removeUnusedBits(mode);
             if (mode == READ) return "[READ]";
             else {
                 StringBuilder builder = new StringBuilder("[READ, WRITE");
-                if ((mode & TRUNCATE_EXISTING) == TRUNCATE_EXISTING) builder.append(", TRUNCATE_EXISTING");
-                else if ((mode & APPEND) == APPEND) builder.append(", APPEND");
-                if ((mode & CREATE_NEW) == CREATE_NEW) builder.append(", CREATE_NEW");
+                if ((mode & TRUNCATE_EXISTING) != 0) builder.append(", TRUNCATE_EXISTING");
+                else if ((mode & APPEND) != 0) builder.append(", APPEND");
+                if ((mode & CREATE_NEW) != 0) builder.append(", CREATE_NEW");
                 else builder.append(", CREATE");
-                if ((mode & DELETE_ON_CLOSE) == DELETE_ON_CLOSE) builder.append(", DELETE_ON_CLOSE");
-                if ((mode & SYNC) == SYNC) builder.append(", SYNC");
-                else if ((mode & DSYNC) == DSYNC) builder.append(", DSYNC");
+                if ((mode & DELETE_ON_CLOSE) != 0) builder.append(", DELETE_ON_CLOSE");
+                if ((mode & SYNC) != 0) builder.append(", SYNC");
+                else if ((mode & DSYNC) != 0) builder.append(", DSYNC");
                 builder.append("]");
                 return builder.toString();
             }
@@ -58,11 +57,11 @@ public class ChannelFile implements RandomAccessDataInput, RandomAccessDataOutpu
         this.mode = mode = Mode.removeUnusedBits(mode);
         randomAccessFile = new RandomAccessFile(file, toRandomAccessFileMode(mode));
         this.file = file;
-        if ((mode & TRUNCATE_EXISTING) == TRUNCATE_EXISTING && file.exists()) randomAccessFile.setLength(0);
-        if ((mode & APPEND) == APPEND) randomAccessFile.seek(randomAccessFile.length());
-        deleteOnClose = (mode & DELETE_ON_CLOSE) == DELETE_ON_CLOSE;
+        if ((mode & TRUNCATE_EXISTING) != 0 && file.exists()) randomAccessFile.setLength(0);
+        if ((mode & APPEND) != 0) randomAccessFile.seek(randomAccessFile.length());
+        deleteOnClose = (mode & DELETE_ON_CLOSE) != 0;
         if (deleteOnClose) file.deleteOnExit();
-        alreadyExists = (mode & CREATE_NEW) == CREATE_NEW && file.exists();
+        alreadyExists = (mode & CREATE_NEW) != 0 && file.exists();
     }
 
     public int getMode() {
@@ -87,8 +86,8 @@ public class ChannelFile implements RandomAccessDataInput, RandomAccessDataOutpu
 
     private static String toRandomAccessFileMode(int mode) {
         if (mode == READ) return "r";
-        else if ((mode & SYNC) == SYNC) return "rws";
-        else if ((mode & DSYNC) == DSYNC) return "rwd";
+        else if ((mode & SYNC) != 0) return "rws";
+        else if ((mode & DSYNC) != 0) return "rwd";
         else return "rw";
     }
 

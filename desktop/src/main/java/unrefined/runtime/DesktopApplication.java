@@ -6,16 +6,15 @@ import unrefined.context.ContainerListener;
 import unrefined.context.Context;
 import unrefined.context.ContextListener;
 import unrefined.context.Environment;
+import unrefined.desktop.AWTSupport;
+import unrefined.desktop.CursorAnimator;
+import unrefined.desktop.KeyEventParser;
 import unrefined.desktop.StandardDirectories;
-import unrefined.internal.AWTUtils;
-import unrefined.internal.CursorUtils;
-import unrefined.internal.GraphicsUtils;
-import unrefined.internal.KeyUtils;
-import unrefined.internal.SystemUtils;
-import unrefined.internal.X11.X11FontUtils;
-import unrefined.internal.macos.MacFontUtils;
-import unrefined.internal.windows.WindowsAWTUtils;
-import unrefined.internal.windows.WindowsFontUtils;
+import unrefined.internal.OperatingSystem;
+import unrefined.internal.X11.X11FontSupport;
+import unrefined.internal.macos.MacFontSupport;
+import unrefined.internal.windows.WindowsAWTSupport;
+import unrefined.internal.windows.WindowsFontSupport;
 import unrefined.io.asset.AssetLoader;
 import unrefined.media.graphics.Cursor;
 import unrefined.media.graphics.Dimension;
@@ -70,13 +69,13 @@ public class DesktopApplication extends unrefined.context.Container implements
     public DesktopApplication(ContainerListener containerListener) {
         super(containerListener);
 
-        local().put("unrefined.runtime.textManager", TextManager.defaultTextManager());
-        local().put("unrefined.runtime.eventBus", EventBus.defaultEventBus());
+        local().put("unrefined.runtime.textManager", TextManager.defaultInstance());
+        local().put("unrefined.runtime.eventBus", EventBus.defaultInstance());
 
-        local().put("unrefined.runtime.dispatcher", Dispatcher.defaultDispatcher());
-        local().put("unrefined.runtime.logger", Logger.defaultLogger());
-        local().put("unrefined.runtime.assetLoader", AssetLoader.defaultAssetLoader());
-        local().put("unrefined.runtime.allocator", Allocator.defaultAllocator());
+        local().put("unrefined.runtime.dispatcher", Dispatcher.defaultInstance());
+        local().put("unrefined.runtime.logger", Logger.defaultInstance());
+        local().put("unrefined.runtime.assetLoader", AssetLoader.defaultInstance());
+        local().put("unrefined.runtime.allocator", Allocator.defaultInstance());
 
         properties().setProperty("unrefined.app.vendor", Environment.properties().getProperty("unrefined.app.vendor"));
         properties().setProperty("unrefined.app.name", Environment.properties().getProperty("unrefined.app.name"));
@@ -131,8 +130,8 @@ public class DesktopApplication extends unrefined.context.Container implements
     private class InputMethodIndicator extends TextField implements InputMethodListener, FocusListener {
         public InputMethodIndicator() {
             super();
-            setBackground(AWTUtils.TRANSPARENT);
-            setForeground(AWTUtils.TRANSPARENT);
+            setBackground(AWTSupport.TRANSPARENT);
+            setForeground(AWTSupport.TRANSPARENT);
             setSize(0, 0);
             addInputMethodListener(this);
             addFocusListener(this);
@@ -217,7 +216,7 @@ public class DesktopApplication extends unrefined.context.Container implements
 
     private String getNormalizedApplicationName() {
         if (NORMALIZED_APP_NAME == null) synchronized (NORMALIZED_APP_NAME_LOCK) {
-            if (NORMALIZED_APP_NAME == null) NORMALIZED_APP_NAME = SystemUtils.normalize(getApplicationName());
+            if (NORMALIZED_APP_NAME == null) NORMALIZED_APP_NAME = OperatingSystem.normalize(getApplicationName());
         }
         return NORMALIZED_APP_NAME;
     }
@@ -282,33 +281,33 @@ public class DesktopApplication extends unrefined.context.Container implements
     @Override
     public int getDotsPerInch() {
         if (GraphicsEnvironment.isHeadless()) return 96;
-        else if (SystemUtils.IS_WINDOWS) return WindowsAWTUtils.getDotsPerInch(container);
-        else if (SystemUtils.IS_MAC) return 96 * MacFontUtils.getScaleFactor(container.getGraphicsConfiguration().getDevice());
-        else return X11FontUtils.getDPI();
+        else if (OperatingSystem.IS_WINDOWS) return WindowsAWTSupport.getDotsPerInch(container);
+        else if (OperatingSystem.IS_MAC) return 96 * MacFontSupport.getScaleFactor(container.getGraphicsConfiguration().getDevice());
+        else return X11FontSupport.getDPI();
     }
 
     @Override
     public float getFontScale() {
         if (GraphicsEnvironment.isHeadless()) return 1;
-        else if (SystemUtils.IS_WINDOWS) return WindowsFontUtils.getFontScale();
-        else if (SystemUtils.IS_MAC) return MacFontUtils.FONT_SCALE;
-        else return X11FontUtils.getFontScale();
+        else if (OperatingSystem.IS_WINDOWS) return WindowsFontSupport.getFontScale();
+        else if (OperatingSystem.IS_MAC) return MacFontSupport.FONT_SCALE;
+        else return X11FontSupport.getFontScale();
     }
 
     @Override
     public float getDensity() {
         if (GraphicsEnvironment.isHeadless()) return 1;
-        else if (SystemUtils.IS_WINDOWS) return WindowsAWTUtils.getDotsPerInch(container) / 96f;
-        else if (SystemUtils.IS_MAC) return MacFontUtils.getScaleFactor(container.getGraphicsConfiguration().getDevice());
-        else return X11FontUtils.getDensity();
+        else if (OperatingSystem.IS_WINDOWS) return WindowsAWTSupport.getDotsPerInch(container) / 96f;
+        else if (OperatingSystem.IS_MAC) return MacFontSupport.getScaleFactor(container.getGraphicsConfiguration().getDevice());
+        else return X11FontSupport.getDensity();
     }
 
     @Override
     public float getScaledDensity() {
         if (GraphicsEnvironment.isHeadless()) return 1;
-        else if (SystemUtils.IS_WINDOWS) return WindowsAWTUtils.getDotsPerInch(container) / 96f * WindowsFontUtils.getFontScale();
-        else if (SystemUtils.IS_MAC) return MacFontUtils.FONT_SCALE * MacFontUtils.getScaleFactor(container.getGraphicsConfiguration().getDevice());
-        else return X11FontUtils.getScaledDensity();
+        else if (OperatingSystem.IS_WINDOWS) return WindowsAWTSupport.getDotsPerInch(container) / 96f * WindowsFontSupport.getFontScale();
+        else if (OperatingSystem.IS_MAC) return MacFontSupport.FONT_SCALE * MacFontSupport.getScaleFactor(container.getGraphicsConfiguration().getDevice());
+        else return X11FontSupport.getScaledDensity();
     }
 
     @Override
@@ -410,7 +409,7 @@ public class DesktopApplication extends unrefined.context.Container implements
 
     @Override
     public void setBackgroundColor(int color) {
-        if (container instanceof Window) GraphicsUtils.setBackgroundColor((Window) container, new Color(color, true));
+        if (container instanceof Window) AWTSupport.setBackgroundColor((Window) container, new Color(color, true));
         else container.setBackground(new Color(color, true));
     }
 
@@ -596,7 +595,7 @@ public class DesktopApplication extends unrefined.context.Container implements
     public void setCursor(Cursor cursor) {
         this.cursor = cursor == null ? DesktopCursor.getDefaultCursor() : cursor;
         if (!GraphicsEnvironment.isHeadless() && cursor instanceof AnimatedCursor)
-            EventQueue.invokeLater(() -> CursorUtils.registerAnimated(container, (AnimatedCursor) cursor));
+            EventQueue.invokeLater(() -> CursorAnimator.register(container, (AnimatedCursor) cursor));
         else container.setCursor(((DesktopCursor) this.cursor).getCursor());
     }
 
@@ -680,7 +679,8 @@ public class DesktopApplication extends unrefined.context.Container implements
 
     @Override
     public void setFullscreen(boolean fullscreen) {
-        if (container instanceof Window window) {
+        if (container instanceof Window) {
+            Window window = (Window) container;
             GraphicsDevice graphicsDevice = window.getGraphicsConfiguration().getDevice();
             if (fullscreen) graphicsDevice.setFullScreenWindow(window);
             else if (graphicsDevice.getFullScreenWindow() == window) graphicsDevice.setFullScreenWindow(null);
@@ -689,8 +689,10 @@ public class DesktopApplication extends unrefined.context.Container implements
 
     @Override
     public boolean isFullscreen() {
-        if (container instanceof Window window)
+        if (container instanceof Window) {
+            Window window = (Window) container;
             return window.getGraphicsConfiguration().getDevice().getFullScreenWindow() == window;
+        }
         else return false;
     }
 
@@ -775,17 +777,17 @@ public class DesktopApplication extends unrefined.context.Container implements
     public void keyTyped(KeyEvent e) {
         ContainerListener listener = getContainerListener();
         if (listener != null) listener.onKeyTyped(this, e.getKeyChar(),
-                pressedCode.contains(KeyUtils.parseCode(e)));
+                pressedCode.contains(KeyEventParser.parseCode(e)));
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        String code = KeyUtils.parseCode(e);
+        String code = KeyEventParser.parseCode(e);
         boolean repeat = pressedCode.contains(code);
         pressedCode.add(code);
         ContainerListener listener = getContainerListener();
         if (listener != null) listener.onKeyDown(this,
-                KeyUtils.parseKey(e),
+                KeyEventParser.parseKey(e),
                 code,
                 e.getKeyLocation() - 1,
                 Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6), repeat);
@@ -793,12 +795,12 @@ public class DesktopApplication extends unrefined.context.Container implements
 
     @Override
     public void keyReleased(KeyEvent e) {
-        String code = KeyUtils.parseCode(e);
+        String code = KeyEventParser.parseCode(e);
         if (pressedCode.contains(code)) {
             ContainerListener listener = getContainerListener();
             if (listener != null) listener.onKeyUp(this,
-                    KeyUtils.parseKey(e),
-                    KeyUtils.parseCode(e),
+                    KeyEventParser.parseKey(e),
+                    KeyEventParser.parseCode(e),
                     e.getKeyLocation() - 1,
                     Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6));
         }
@@ -827,7 +829,7 @@ public class DesktopApplication extends unrefined.context.Container implements
     @Override
     public void mouseEntered(MouseEvent e) {
         if (!GraphicsEnvironment.isHeadless() && cursor instanceof AnimatedCursor)
-            EventQueue.invokeLater(() -> CursorUtils.registerAnimated(container, (AnimatedCursor) cursor));
+            EventQueue.invokeLater(() -> CursorAnimator.register(container, (AnimatedCursor) cursor));
         ContainerListener listener = getContainerListener();
         if (listener != null) listener.onMouseEnter(this, e.getX(), e.getY(),
                 Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6));
@@ -835,7 +837,7 @@ public class DesktopApplication extends unrefined.context.Container implements
 
     @Override
     public void mouseExited(MouseEvent e) {
-        if (!GraphicsEnvironment.isHeadless()) EventQueue.invokeLater(() -> CursorUtils.unregisterAnimated(container));
+        if (!GraphicsEnvironment.isHeadless()) EventQueue.invokeLater(() -> CursorAnimator.unregister(container));
         ContainerListener listener = getContainerListener();
         if (listener != null) listener.onMouseExit(this, e.getX(), e.getY(),
                 Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6));
@@ -859,11 +861,12 @@ public class DesktopApplication extends unrefined.context.Container implements
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
         int scrollType = e.getScrollType();
-        float amount = (float) switch (scrollType) {
-            case MouseWheelEvent.WHEEL_UNIT_SCROLL -> e.getScrollAmount() * e.getPreciseWheelRotation();
-            case MouseWheelEvent.WHEEL_BLOCK_SCROLL -> e.getWheelRotation() > 0 ? 1 : -1;
-            default -> 0;
-        };
+        float amount;
+        switch (scrollType) {
+            case MouseWheelEvent.WHEEL_UNIT_SCROLL: amount = (float) (e.getScrollAmount() * e.getPreciseWheelRotation()); break;
+            case MouseWheelEvent.WHEEL_BLOCK_SCROLL: amount = e.getWheelRotation() > 0 ? 1 : -1; break;
+            default: amount = 0; break;
+        }
         if (amount == 0) return;
         float amountX, amountY;
         if (e.getComponent().getComponentOrientation().isHorizontal()) {

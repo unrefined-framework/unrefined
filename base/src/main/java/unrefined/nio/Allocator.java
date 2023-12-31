@@ -1,7 +1,8 @@
 package unrefined.nio;
 
 import unrefined.context.Environment;
-import unrefined.internal.NumberUtils;
+import unrefined.math.FastMath;
+import unrefined.util.foreign.Foreign;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -22,13 +23,13 @@ import java.nio.charset.Charset;
  */
 public abstract class Allocator {
 
-    private static volatile Allocator DEFAULT_INSTANCE;
-    private static final Object DEFAULT_INSTANCE_LOCK = new Object();
-    public static Allocator defaultAllocator() {
-        if (DEFAULT_INSTANCE == null) synchronized (DEFAULT_INSTANCE_LOCK) {
-            if (DEFAULT_INSTANCE == null) DEFAULT_INSTANCE = Environment.global().get("unrefined.runtime.allocator", Allocator.class);
+    private static volatile Allocator INSTANCE;
+    private static final Object INSTANCE_LOCK = new Object();
+    public static Allocator defaultInstance() {
+        if (INSTANCE == null) synchronized (INSTANCE_LOCK) {
+            if (INSTANCE == null) INSTANCE = Environment.global().get("unrefined.runtime.allocator", Allocator.class);
         }
-        return DEFAULT_INSTANCE;
+        return INSTANCE;
     }
 
     public static final long       NULL                = 0L;
@@ -47,7 +48,10 @@ public abstract class Allocator {
     public static final long       INT64_MIN           = Long.MIN_VALUE;
     public static final long       INT64_MAX           = Long.MAX_VALUE;
     public static final long       UINT64_MAX          = 0xFFFFFFFFL;
-    public static final BigInteger UINT64_MAX_UNSIGNED = NumberUtils.toUnsignedBigInteger(UINT64_MAX);
+    public static final BigInteger UINT64_MAX_UNSIGNED = FastMath.unsign(UINT64_MAX);
+    public static final long       SIZE_MAX            = Foreign.getInstance().addressSize() == 8 ? UINT64_MAX : UINT32_MAX;
+    public static final BigInteger SIZE_MAX_UNSIGNED   = Foreign.getInstance().addressSize() == 8 ? UINT64_MAX_UNSIGNED :
+            BigInteger.valueOf(UINT32_MAX_UNSIGNED);
 
     private interface NativeTypeAdapter {
         long get(long address);
@@ -112,11 +116,9 @@ public abstract class Allocator {
         }
     };
 
-    private final long SIZE_MAX = addressSize() == 8 ? UINT64_MAX : UINT32_MAX;
-
-    private final NativeTypeAdapter NATIVE_INT_ADAPTER = nativeIntSize() == 8 ? NATIVE_TYPE_ADAPTER_64 : NATIVE_TYPE_ADAPTER_32;
-    private final NativeTypeAdapter NATIVE_LONG_ADAPTER = nativeLongSize() == 8 ? NATIVE_TYPE_ADAPTER_64 : NATIVE_TYPE_ADAPTER_32;
-    private final NativeTypeAdapter ADDRESS_ADAPTER = addressSize() == 8 ? NATIVE_TYPE_ADAPTER_64 : NATIVE_TYPE_ADAPTER_32;
+    private final NativeTypeAdapter NATIVE_INT_ADAPTER = Foreign.getInstance().nativeIntSize() == 8 ? NATIVE_TYPE_ADAPTER_64 : NATIVE_TYPE_ADAPTER_32;
+    private final NativeTypeAdapter NATIVE_LONG_ADAPTER = Foreign.getInstance().nativeLongSize() == 8 ? NATIVE_TYPE_ADAPTER_64 : NATIVE_TYPE_ADAPTER_32;
+    private final NativeTypeAdapter ADDRESS_ADAPTER = Foreign.getInstance().addressSize() == 8 ? NATIVE_TYPE_ADAPTER_64 : NATIVE_TYPE_ADAPTER_32;
 
     /**
      * Reads a {@code byte} from a native memory location.
@@ -197,7 +199,7 @@ public abstract class Allocator {
      * @return A {@link BigInteger} containing the value.
      */
     public BigInteger getUnsignedLong(long address) {
-        return NumberUtils.toUnsignedBigInteger(getLong(address));
+        return FastMath.unsign(getLong(address));
     }
 
     /**
@@ -602,6 +604,54 @@ public abstract class Allocator {
      public long searchMemory(long address, int value) {
          return searchMemory(address, (byte) value);
      }
+
+    /**
+     * Gets the address of a {@code byte} array in a native memory region.
+     *
+     * @param address The native memory address to start searching.
+     * @param value The value array to search for.
+     * @param valueOffset The value array offset.
+     * @param valueLength The value array length.
+     * @param size The size of the native memory region being searched.
+     * @return The address of the value, or 0 (zero) if not found.
+     */
+    public abstract long searchMemory(long address, byte[] value, int valueOffset, int valueLength, long size);
+
+    /**
+     * Gets the address of a {@code byte} value array in a native memory region.
+     *
+     * @param address The native memory address to start searching.
+     * @param value The value array to search for.
+     * @param size The size of the native memory region being searched.
+     * @return The address of the value, or 0 (zero) if not found.
+     */
+    public long searchMemory(long address, byte[] value, long size) {
+        return searchMemory(address, value, 0, value.length, size);
+    }
+
+    /**
+     * Gets the address of a {@code byte} value array in a native memory region.
+     *
+     * @param address The native memory address to start searching.
+     * @param value The value array to search for.
+     * @param valueOffset The value array offset.
+     * @param valueLength The value array length.
+     * @return The address of the value, or 0 (zero) if not found.
+     */
+    public long searchMemory(long address, byte[] value, int valueOffset, int valueLength) {
+        return searchMemory(address, value, valueOffset, valueLength, SIZE_MAX);
+    }
+
+    /**
+     * Gets the address of a {@code byte} value array in a native memory region.
+     *
+     * @param address The native memory address to start searching.
+     * @param value The value array to search for.
+     * @return The address of the value, or 0 (zero) if not found.
+     */
+    public long searchMemory(long address, byte[] value) {
+        return searchMemory(address, value, 0, value.length, SIZE_MAX);
+    }
 
     /**
      * Writes a {@code byte} array to native memory.
@@ -1019,27 +1069,71 @@ public abstract class Allocator {
     public abstract void freeMemory(long address);
 
     /**
-     * Gets the length of a native ascii or utf-8 string.
+     * Gets the length of a native string depends on the default charset.
      *
      * @param address The native address of the string.
-     * @return The length of the string, in bytes.
+     * @return The length of the string, in characters.
      */
     public long getZeroTerminatedStringLength(long address) {
-        return getZeroTerminatedStringLength(address, SIZE_MAX);
+        return getZeroTerminatedStringLength(address, SIZE_MAX, null);
     }
 
     /**
-     * Gets the length of a native ascii or utf-8 string.
+     * Gets the length of a native wide char string depends on the default charset.
      *
      * @param address The native address of the string.
      * @param maxLength The limit of the memory area to scan for a zero byte.
-     * @return The length of the string, in bytes.
+     * @return The length of the string, in characters.
      */
-    public abstract long getZeroTerminatedStringLength(long address, long maxLength);
+    public long getZeroTerminatedWideCharStringLength(long address, long maxLength) {
+        return getZeroTerminatedStringLength(address, maxLength, Foreign.getInstance().wideCharset());
+    }
 
     /**
-     * Reads a {@code byte} array from native memory, stopping when a '\0' {@code byte} is found.
-     * This can be used to read ascii or utf-8 strings from native memory.
+     * Gets the length of a native wide char string depends on the default charset.
+     *
+     * @param address The native address of the string.
+     * @return The length of the string, in characters.
+     */
+    public long getZeroTerminatedWideCharStringLength(long address) {
+        return getZeroTerminatedStringLength(address, SIZE_MAX, Foreign.getInstance().wideCharset());
+    }
+
+    /**
+     * Gets the length of a native string depends on the default charset.
+     *
+     * @param address The native address of the string.
+     * @param maxLength The limit of the memory area to scan for a zero byte.
+     * @return The length of the string, in characters.
+     */
+    public long getZeroTerminatedStringLength(long address, long maxLength) {
+        return getZeroTerminatedStringLength(address, maxLength, null);
+    }
+
+    /**
+     * Gets the length of a native string depends on the charset.
+     *
+     * @param address The native address of the string.
+     * @param charset The charset of the string.
+     * @return The length of the string, in characters.
+     */
+    public long getZeroTerminatedStringLength(long address, Charset charset) {
+        return getZeroTerminatedStringLength(address, SIZE_MAX, charset);
+    }
+
+    /**
+     * Gets the length of a native string depends on the charset.
+     *
+     * @param address The native address of the string.
+     * @param charset The charset of the string.
+     * @param maxLength The limit of the memory area to scan for the zero terminator.
+     * @return The length of the string, in characters.
+     */
+    public abstract long getZeroTerminatedStringLength(long address, long maxLength, Charset charset);
+
+    /**
+     * Reads a {@code byte} array from native memory depends on the default charset,
+     * stopping when a '\0' {@code byte} is found.
      *
      * @param address The address to read the data from.
      * @return The {@code byte} array containing a copy of the native data. Any '\0'
@@ -1050,9 +1144,8 @@ public abstract class Allocator {
     }
 
     /**
-     * Reads a {@code byte} array from native memory, stopping when a zero {@code byte} is found,
-     * or the maximum length is reached.
-     * This can be used to read ascii or utf-8 strings from native memory.
+     * Reads a {@code byte} array from native memory depends on the default charset,
+     * stopping when a '\0' {@code byte} is found, or the maximum length is reached.
      *
      * @param address The address to read the data from.
      * @param maxLength The limit of the memory area to scan for a zero byte.
@@ -1060,7 +1153,60 @@ public abstract class Allocator {
      * {@code byte} is stripped from the end.
      */
     public byte[] getZeroTerminatedByteArray(long address, int maxLength) {
-        long stringLength = getZeroTerminatedStringLength(address, maxLength);
+        return getZeroTerminatedByteArray(address, maxLength, null);
+    }
+
+    /**
+     * Reads a {@code byte} array from native memory depends on the wide charset,
+     * stopping when a '\0' {@code byte} is found.
+     *
+     * @param address The address to read the data from.
+     * @return The {@code byte} array containing a copy of the native data. Any '\0'
+     * {@code byte} is stripped from the end.
+     */
+    public byte[] getZeroTerminatedWideCharByteArray(long address) {
+        return getZeroTerminatedWideCharByteArray(address, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads a {@code byte} array from native memory depends on the wide charset,
+     * stopping when a '\0' {@code byte} is found, or the maximum length is reached.
+     *
+     * @param address The address to read the data from.
+     * @param maxLength The limit of the memory area to scan for a zero byte.
+     * @return The {@code byte} array containing a copy of the native data.  Any '\0'
+     * {@code byte} is stripped from the end.
+     */
+    public byte[] getZeroTerminatedWideCharByteArray(long address, int maxLength) {
+        return getZeroTerminatedByteArray(address, maxLength, Foreign.getInstance().wideCharset());
+    }
+
+    /**
+     * Reads a {@code byte} array from native memory depends on the specific charset,
+     * stopping when a '\0' character is found.
+     *
+     * @param address The address to read the data from.
+     * @param charset The charset to decode the data.
+     * @return The {@code byte} array containing a copy of the native data.  Any '\0'
+     * {@code byte} is stripped from the end.
+     */
+    public byte[] getZeroTerminatedByteArray(long address, Charset charset) {
+        return getZeroTerminatedByteArray(address, Integer.MAX_VALUE, charset);
+    }
+
+    /**
+     * Reads a {@code byte} array from native memory with the specific charset,
+     * stopping when a '\0' character is found, or the maximum length is reached.
+     *
+     * @param address The address to read the data from.
+     * @param maxLength The limit of the memory area to scan for a zero byte.
+     * @param charset The charset to decode the data.
+     * @return The {@code byte} array containing a copy of the native data.  Any '\0'
+     * {@code byte} is stripped from the end.
+     */
+    public byte[] getZeroTerminatedByteArray(long address, int maxLength, Charset charset) {
+        if (charset == null) charset = Charset.defaultCharset();
+        long stringLength = getZeroTerminatedStringLength(address, maxLength, charset) * "\0".getBytes(charset).length;
         if (stringLength < 0 || stringLength > Integer.MAX_VALUE) stringLength = Integer.MAX_VALUE;
         byte[] array = new byte[(int) stringLength];
         getByteArray(address, array);
@@ -1068,33 +1214,86 @@ public abstract class Allocator {
     }
 
     /**
-     * Reads a {@link String} from native memory, stopping when a zero {@code byte} is found.
+     * Reads a {@link String} from native memory depends on the default charset,
+     * stopping when a '\0' {@code byte} is found.
      *
      * @param address The address to read the data from.
-     * @param charset The charset to decode the data.
-     * @return The {@code String} containing a copy of the native data. Any '\0'
+     * @return The {@link String} containing a copy of the native data. Any '\0'
      * {@code byte} is stripped from the end.
      */
-    public String getZeroTerminatedString(long address, Charset charset) {
-        return new String(getZeroTerminatedByteArray(address), charset);
+    public String getZeroTerminatedString(long address) {
+        return getZeroTerminatedString(address, Integer.MAX_VALUE);
     }
 
     /**
-     * Reads a {@link String} from native memory, stopping when a zero {@code byte} is found.
+     * Reads a {@link String} from native memory depends on the default charset,
+     * stopping when a '\0' {@code byte} is found, or the maximum length is reached.
+     *
+     * @param address The address to read the data from.
+     * @param maxLength The limit of the memory area to scan for a zero byte.
+     * @return The {@link String} containing a copy of the native data.  Any '\0'
+     * {@code byte} is stripped from the end.
+     */
+    public String getZeroTerminatedString(long address, int maxLength) {
+        return getZeroTerminatedString(address, maxLength, null);
+    }
+
+    /**
+     * Reads a {@link String} from native memory depends on the wide charset,
+     * stopping when a '\0' {@code byte} is found.
+     *
+     * @param address The address to read the data from.
+     * @return The {@link String} containing a copy of the native data. Any '\0'
+     * {@code byte} is stripped from the end.
+     */
+    public String getZeroTerminatedWideCharString(long address) {
+        return getZeroTerminatedWideCharString(address, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads a {@link String} from native memory depends on the wide charset,
+     * stopping when a '\0' {@code byte} is found, or the maximum length is reached.
+     *
+     * @param address The address to read the data from.
+     * @param maxLength The limit of the memory area to scan for a zero byte.
+     * @return The {@link String} containing a copy of the native data.  Any '\0'
+     * {@code byte} is stripped from the end.
+     */
+    public String getZeroTerminatedWideCharString(long address, int maxLength) {
+        return getZeroTerminatedString(address, maxLength, Foreign.getInstance().wideCharset());
+    }
+
+    /**
+     * Reads a {@link String} from native memory depends on the specific charset,
+     * stopping when a '\0' character is found.
+     *
+     * @param address The address to read the data from.
+     * @param charset The charset to decode the data.
+     * @return The {@link String} containing a copy of the native data.  Any '\0'
+     * {@code byte} is stripped from the end.
+     */
+    public String getZeroTerminatedString(long address, Charset charset) {
+        return getZeroTerminatedString(address, Integer.MAX_VALUE, charset);
+    }
+
+    /**
+     * Reads a {@link String} from native memory with the specific charset,
+     * stopping when a '\0' character is found, or the maximum length is reached.
      *
      * @param address The address to read the data from.
      * @param maxLength The limit of the memory area to scan for a zero byte.
      * @param charset The charset to decode the data.
-     * @return The {@code String} containing a copy of the native data. Any '\0'
+     * @return The {@link String} containing a copy of the native data.  Any '\0'
      * {@code byte} is stripped from the end.
      */
     public String getZeroTerminatedString(long address, int maxLength, Charset charset) {
-        return new String(getZeroTerminatedByteArray(address, maxLength), charset);
+        return new String(getZeroTerminatedByteArray(address, maxLength, charset), charset == null ? Charset.defaultCharset() : charset);
     }
 
     /**
-     * Copies a {@code byte} array to native memory and appends a NUL terminating byte.
-     * <b>Note</b> A total of length + 1 bytes is written to native memory.
+     * Copies a {@code byte} array to native memory and appends a '\0' terminating character 
+     * depends on the default charset.
+     * <b>Note</b> A total of length + (character size) bytes is written to native memory.
      *
      * @param address The address to copy to.
      * @param array The {@code byte} array to copy to native memory
@@ -1102,13 +1301,13 @@ public abstract class Allocator {
      * @param length The number of bytes to copy to native memory
      */
     public void putZeroTerminatedByteArray(long address, byte[] array, int offset, int length) {
-        putByteArray(address, array, offset, length);
-        putByte(address + length, '\0');
+        putZeroTerminatedByteArray(address, array, offset, length, null);
     }
 
     /**
-     * Copies a {@code byte} array to native memory and appends a NUL terminating byte.
-     * <b>Note</b> A total of length + 1 bytes is written to native memory.
+     * Copies a {@code byte} array to native memory and appends a '\0' terminating character
+     * depends on the default charset.
+     * <b>Note</b> A total of length + (character size) bytes is written to native memory.
      *
      * @param address The address to copy to.
      * @param array The {@code byte} array to copy to native memory
@@ -1118,16 +1317,98 @@ public abstract class Allocator {
     }
 
     /**
-     * Copies a {@link String} to native memory and appends a NUL terminating byte.
-     * <b>Note</b> A total of length + 1 bytes is written to native memory.
+     * Copies a {@code byte} array to native memory and appends a '\0' terminating character 
+     * depends on the wide charset.
+     * <b>Note</b> A total of length + (character size) bytes is written to native memory.
      *
      * @param address The address to copy to.
-     * @param data The {@code String} to copy to native memory.
-     * @param charset The charset to encode the data.
+     * @param array The {@code byte} array to copy to native memory
+     * @param offset The offset within the {@code byte} array to begin copying from
+     * @param length The number of bytes to copy to native memory
      */
-    public void putZeroTerminatedString(long address, String data, Charset charset) {
-        byte[] bytes = data.getBytes(charset);
-        putZeroTerminatedByteArray(address, bytes, 0, bytes.length);
+    public void putZeroTerminatedWideCharByteArray(long address, byte[] array, int offset, int length) {
+        putZeroTerminatedByteArray(address, array, offset, length, Foreign.getInstance().wideCharset());
+    }
+
+    /**
+     * Copies a {@code byte} array to native memory and appends a '\0' terminating character
+     * depends on the wide charset.
+     * <b>Note</b> A total of length + (character size) bytes is written to native memory.
+     *
+     * @param address The address to copy to.
+     * @param array The {@code byte} array to copy to native memory
+     */
+    public void putZeroTerminatedWideCharByteArray(long address, byte[] array) {
+        putZeroTerminatedByteArray(address, array, Foreign.getInstance().wideCharset());
+    }
+
+    /**
+     * Copies a {@code byte} array to native memory and appends a '\0' terminating character 
+     * depends on the specific charset.
+     * <b>Note</b> A total of length + (character size) bytes is written to native memory.
+     *
+     * @param address The address to copy to.
+     * @param array The {@code byte} array to copy to native memory
+     * @param offset The offset within the {@code byte} array to begin copying from
+     * @param length The number of bytes to copy to native memory
+     */
+    public void putZeroTerminatedByteArray(long address, byte[] array, int offset, int length, Charset charset) {
+        if (charset == null) charset = Charset.defaultCharset();
+        byte[] terminator = "\0".getBytes(charset);
+        putByteArray(address + length, terminator);
+        putByteArray(address, array, offset, length);
+    }
+
+    /**
+     * Copies a {@code byte} array to native memory and appends a '\0' terminating character
+     * depends on the specific charset.
+     * <b>Note</b> A total of length + (character size) bytes is written to native memory.
+     *
+     * @param address The address to copy to.
+     * @param array The {@code byte} array to copy to native memory
+     */
+    public void putZeroTerminatedByteArray(long address, byte[] array, Charset charset) {
+        putZeroTerminatedByteArray(address, array, 0, array.length, charset);
+    }
+
+    /**
+     * Copies a {@link String} to native memory and appends a '\0' terminating character
+     * depends on the default charset.
+     * <b>Note</b> A total of length + (character size) bytes is written to native memory.
+     *
+     * @param address The address to copy to.
+     * @param string The {@link String} to copy to native memory.
+     */
+    public void putZeroTerminatedString(long address, String string) {
+        putZeroTerminatedString(address, string, Charset.defaultCharset());
+    }
+
+    /**
+     * Copies a {@link String} to native memory and appends a '\0' terminating character
+     * depends on the wide charset.
+     * <b>Note</b> A total of length + (character size) bytes is written to native memory.
+     *
+     * @param address The address to copy to.
+     * @param string The {@link String} to copy to native memory.
+     */
+    public void putZeroTerminatedWideCharString(long address, String string) {
+        putZeroTerminatedString(address, string, Foreign.getInstance().wideCharset());
+    }
+
+    /**
+     * Copies a {@link String} to native memory and appends a '\0' terminating character
+     * depends on the specific charset.
+     * <b>Note</b> A total of length + (character size) bytes is written to native memory.
+     *
+     * @param address The address to copy to.
+     * @param string The {@link String} to copy to native memory.
+     * @param charset The charset to encode the string.
+     */
+    public void putZeroTerminatedString(long address, String string, Charset charset) {
+        byte[] bytes = string.getBytes(charset);
+        byte[] terminator = "\0".getBytes(charset);
+        putByteArray(address + bytes.length, terminator);
+        putByteArray(address, bytes);
     }
 
     /**
@@ -1179,13 +1460,54 @@ public abstract class Allocator {
     }
 
     /**
-     * Creates a new direct {@link ByteBuffer} for a native memory region.
+     * Finds the location of a {@code byte} array in a native memory region.
      *
-     * @param address The start of the native memory region.
-     * @param capacity The size of the native memory region.
-     * @return A direct {@link ByteBuffer} representing the native memory region.
+     * @param address The native memory address to start searching from.
+     * @param value The value to search for.
+     * @return The offset from the memory address of the value, if found, else -1 (minus one).
      */
-    protected abstract ByteBuffer createDirectByteBuffer(long address, long capacity);
+    public long indexOf(long address, byte[] value) {
+        long location = searchMemory(address, value);
+        return location != 0 ? location - address : -1;
+    }
+
+    /**
+     * Finds the location of a {@code byte} array in a native memory region.
+     *
+     * @param address The native memory address to start searching from.
+     * @param value The value to search for.
+     * @return The offset from the memory address of the value, if found, else -1 (minus one).
+     */
+    public long indexOf(long address, byte[] value, int valueOffset, int valueLength) {
+        long location = searchMemory(address, value, valueOffset, valueLength);
+        return location != 0 ? location - address : -1;
+    }
+
+    /**
+     * Finds the location of a {@code byte} array in a native memory region.
+     *
+     * @param address The native memory address to start searching from.
+     * @param value The value to search for.
+     * @param maxLength The maximum number of bytes to search.
+     * @return The offset from the memory address of the value, if found, else -1 (minus one).
+     */
+    public long indexOf(long address, byte[] value, long maxLength) {
+        long location = searchMemory(address, value, maxLength);
+        return location != 0 ? location - address : -1;
+    }
+
+    /**
+     * Finds the location of a {@code byte} array in a native memory region.
+     *
+     * @param address The native memory address to start searching from.
+     * @param value The value to search for.
+     * @param maxLength The maximum number of bytes to search.
+     * @return The offset from the memory address of the value, if found, else -1 (minus one).
+     */
+    public long indexOf(long address, byte[] value, int valueOffset, int valueLength, long maxLength) {
+        long location = searchMemory(address, value, valueOffset, valueLength, maxLength);
+        return location != 0 ? location - address : -1;
+    }
 
     /**
      * Gets the native memory address of a direct {@link Buffer}
@@ -1217,9 +1539,7 @@ public abstract class Allocator {
         return ByteBuffer.wrap(array);
     }
 
-    public ByteBuffer wrapBytes(long address, int capacity) {
-        return createDirectByteBuffer(address, capacity);
-    }
+    public abstract ByteBuffer wrapBytes(long address, int capacity);
 
     public ByteBuffer reallocateBytes(ByteBuffer buffer, int capacity) {
         if (buffer.isDirect()) return wrapBytes(getDirectBufferAddress(buffer.position(capacity)), capacity);
@@ -1251,7 +1571,7 @@ public abstract class Allocator {
     }
 
     public CharBuffer reallocateChars(CharBuffer buffer, int capacity) {
-        if (buffer.isDirect()) return createDirectByteBuffer(getDirectBufferAddress(buffer.position(capacity)), (long) capacity << 1).asCharBuffer();
+        if (buffer.isDirect()) return wrapBytes(getDirectBufferAddress(buffer.position(capacity)), capacity << 1).asCharBuffer();
         else return CharBuffer.allocate(capacity).put(buffer.clear()).clear();
     }
 
@@ -1268,7 +1588,7 @@ public abstract class Allocator {
     }
 
     public ShortBuffer reallocateShorts(ShortBuffer buffer, int capacity) {
-        if (buffer.isDirect()) return createDirectByteBuffer(getDirectBufferAddress(buffer.position(capacity)), (long) capacity << 1).asShortBuffer();
+        if (buffer.isDirect()) return wrapBytes(getDirectBufferAddress(buffer.position(capacity)), capacity << 1).asShortBuffer();
         else return ShortBuffer.allocate(capacity).put(buffer.clear()).clear();
     }
 
@@ -1285,7 +1605,7 @@ public abstract class Allocator {
     }
 
     public IntBuffer reallocateInts(IntBuffer buffer, int capacity) {
-        if (buffer.isDirect()) return createDirectByteBuffer(getDirectBufferAddress(buffer.position(capacity)), (long) capacity << 2).asIntBuffer();
+        if (buffer.isDirect()) return wrapBytes(getDirectBufferAddress(buffer.position(capacity)), capacity << 2).asIntBuffer();
         else return IntBuffer.allocate(capacity).put(buffer.clear()).clear();
     }
 
@@ -1302,7 +1622,7 @@ public abstract class Allocator {
     }
 
     public LongBuffer reallocateLongs(LongBuffer buffer, int capacity) {
-        if (buffer.isDirect()) return createDirectByteBuffer(getDirectBufferAddress(buffer.position(capacity)), (long) capacity << 3).asLongBuffer();
+        if (buffer.isDirect()) return wrapBytes(getDirectBufferAddress(buffer.position(capacity)), capacity << 3).asLongBuffer();
         else return LongBuffer.allocate(capacity).put(buffer.clear()).clear();
     }
 
@@ -1319,7 +1639,7 @@ public abstract class Allocator {
     }
 
     public FloatBuffer reallocateFloats(FloatBuffer buffer, int capacity) {
-        if (buffer.isDirect()) return createDirectByteBuffer(getDirectBufferAddress(buffer.position(capacity)), (long) capacity << 2).asFloatBuffer();
+        if (buffer.isDirect()) return wrapBytes(getDirectBufferAddress(buffer.position(capacity)), capacity << 2).asFloatBuffer();
         else return FloatBuffer.allocate(capacity).put(buffer.clear()).clear();
     }
 
@@ -1336,7 +1656,7 @@ public abstract class Allocator {
     }
 
     public DoubleBuffer reallocateDoubles(DoubleBuffer buffer, int capacity) {
-        if (buffer.isDirect()) return createDirectByteBuffer(getDirectBufferAddress(buffer.position(capacity)), (long) capacity << 3).asDoubleBuffer();
+        if (buffer.isDirect()) return wrapBytes(getDirectBufferAddress(buffer.position(capacity)), capacity << 3).asDoubleBuffer();
         else return DoubleBuffer.allocate(capacity).put(buffer.clear()).clear();
     }
 
@@ -1366,7 +1686,7 @@ public abstract class Allocator {
 
     private static DirectPointer allocateDirectPointer(Allocator allocator, long size) throws IOException {
         long address = allocator.allocateMemory(size);
-        if (address == 0) throw new IOException("Unable to allocate native memory, size: " + NumberUtils.toUnsignedBigInteger(size));
+        if (address == 0) throw new IOException("Unable to allocate native memory, size: " + FastMath.unsign(size));
         else return new DirectPointer(allocator, address, size, true);
     }
 
@@ -1389,24 +1709,6 @@ public abstract class Allocator {
     public void freePointer(Pointer pointer) throws IOException {
         pointer.close();
     }
-
-    /**
-     * Gets the native {@code int} size in bytes.
-     * @return the native {@code int} size
-     */
-    public abstract int nativeIntSize();
-
-    /**
-     * Gets the native {@code long} size in bytes.
-     * @return the native {@code long} size
-     */
-    public abstract int nativeLongSize();
-
-    /**
-     * Gets the native address size in bytes.
-     * @return the native address size
-     */
-    public abstract int addressSize();
 
     /**
      * Gets the size in bytes of a native memory page (whatever that is).

@@ -6,6 +6,7 @@ import unrefined.util.reflect.Reflection;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -257,6 +258,11 @@ public class DesktopReflection extends Reflection {
     }
 
     @Override
+    public Object invokeMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        return ReflectionSupport.invokeMethod(object, method, args);
+    }
+
+    @Override
     public void invokeNonVirtualVoidMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
         ReflectionSupport.invokeNonVirtualVoidMethod(object, method, args);
     }
@@ -304,6 +310,101 @@ public class DesktopReflection extends Reflection {
     @Override
     public double invokeNonVirtualDoubleMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
         return ReflectionSupport.invokeNonVirtualDoubleMethod(object, method, args);
+    }
+
+    @Override
+    public Object invokeNonVirtualMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        return ReflectionSupport.invokeNonVirtualMethod(object, method, args);
+    }
+
+    @Override
+    public Object newProxyInstance(ClassLoader classLoader, InvocationHandler handler, Class<?>... interfaces) {
+        return ReflectionSupport.newProxyInstance(classLoader, handler, interfaces);
+    }
+
+    @Override
+    public <T> T newProxyInstance(ClassLoader classLoader, InvocationHandler handler, Class<T> theInterface) {
+        return ReflectionSupport.newProxyInstance(classLoader, handler, theInterface);
+    }
+
+    @Override
+    public boolean isProxyClass(Class<?> clazz) {
+        return ReflectionSupport.isProxyClass(clazz);
+    }
+
+    @Override
+    public boolean isProxyObject(Object object) {
+        return ReflectionSupport.isProxyObject(object);
+    }
+
+    @Override
+    public InvocationHandler getInvocationHandler(Object object) {
+        return ReflectionSupport.getInvocationHandler(object);
+    }
+
+    @Override
+    public void invokeDefaultVoidMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        ReflectionSupport.invokeDefaultVoidMethod(object, method, args);
+    }
+
+    @Override
+    public boolean invokeDefaultBooleanMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        return ReflectionSupport.invokeDefaultBooleanMethod(object, method, args);
+    }
+
+    @Override
+    public byte invokeDefaultByteMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        return ReflectionSupport.invokeDefaultByteMethod(object, method, args);
+    }
+
+    @Override
+    public char invokeDefaultCharMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        return ReflectionSupport.invokeDefaultCharMethod(object, method, args);
+    }
+
+    @Override
+    public short invokeDefaultShortMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        return ReflectionSupport.invokeDefaultShortMethod(object, method, args);
+    }
+
+    @Override
+    public int invokeDefaultIntMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        return ReflectionSupport.invokeDefaultIntMethod(object, method, args);
+    }
+
+    @Override
+    public long invokeDefaultLongMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        return ReflectionSupport.invokeDefaultLongMethod(object, method, args);
+    }
+
+    @Override
+    public float invokeDefaultFloatMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        return ReflectionSupport.invokeDefaultFloatMethod(object, method, args);
+    }
+
+    @Override
+    public double invokeDefaultDoubleMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        return ReflectionSupport.invokeDefaultDoubleMethod(object, method, args);
+    }
+
+    @Override
+    public Object invokeDefaultObjectMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        return ReflectionSupport.invokeDefaultObjectMethod(object, method, args);
+    }
+
+    @Override
+    public Object invokeDefaultMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        return ReflectionSupport.invokeDefaultMethod(object, method, args);
+    }
+
+    @Override
+    public Class<?> getCallerClass() {
+        return ReflectionSupport.getCallerClass();
+    }
+
+    @Override
+    public String getCallerMethod() {
+        return ReflectionSupport.getCallerMethod();
     }
 
 }

@@ -24,19 +24,19 @@ public abstract class FloatProperty {
         return new FunctionBinding(getter);
     }
 
-    public static FloatProperty ofAtomicInstance(float initialValue) {
+    public static FloatProperty ofAtomic(float initialValue) {
         return new AtomicInstance(initialValue);
     }
 
-    public static FloatProperty ofAtomicInstance() {
+    public static FloatProperty ofAtomic() {
         return new AtomicInstance();
     }
 
-    public static FloatProperty ofInstance(float initialValue) {
+    public static FloatProperty of(float initialValue) {
         return new Instance(initialValue);
     }
 
-    public static FloatProperty ofInstance() {
+    public static FloatProperty ofDefault() {
         return new Instance();
     }
 
@@ -101,7 +101,7 @@ public abstract class FloatProperty {
         }
         public void set(float value) {
             float previousValue = this.value.getAndSet(value);
-            if (previousValue != value && !onChanged().isEmpty()) onChanged().emit(new ChangedEvent(this, previousValue, value));
+            if (previousValue != value && !onChange().isEmpty()) onChange().emit(new ChangeEvent(this, previousValue, value));
         }
         public float get() {
             return value.get();
@@ -122,16 +122,16 @@ public abstract class FloatProperty {
         public void set(float value) {
             float previousValue = this.value;
             this.value = value;
-            if (previousValue != value && !onChanged().isEmpty()) onChanged().emit(new ChangedEvent(this, previousValue, value));
+            if (previousValue != value && !onChange().isEmpty()) onChange().emit(new ChangeEvent(this, previousValue, value));
         }
         public float get() {
             return value;
         }
     }
 
-    private final Signal<EventSlot<ChangedEvent>> onChanged = Signal.ofSlot();
-    public Signal<EventSlot<ChangedEvent>> onChanged() {
-        return onChanged;
+    private final Signal<EventSlot<ChangeEvent>> onChange = Signal.ofSlot();
+    public Signal<EventSlot<ChangeEvent>> onChange() {
+        return onChange;
     }
 
     public abstract void set(float value);
@@ -159,11 +159,11 @@ public abstract class FloatProperty {
         return (temp != +0.0f ? Float.floatToIntBits(temp) : 0);
     }
 
-    public static final class ChangedEvent extends Event<FloatProperty> {
+    public static final class ChangeEvent extends Event<FloatProperty> {
 
         private final float previousValue, currentValue;
 
-        public ChangedEvent(FloatProperty source, float previousValue, float currentValue) {
+        public ChangeEvent(FloatProperty source, float previousValue, float currentValue) {
             super(source);
             this.previousValue = previousValue;
             this.currentValue = currentValue;
@@ -178,11 +178,12 @@ public abstract class FloatProperty {
         }
 
         @Override
-        public boolean equals(Object object) {
-            if (this == object) return true;
-            if (object == null || getClass() != object.getClass()) return false;
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            if (!super.equals(o)) return false;
 
-            ChangedEvent that = (ChangedEvent) object;
+            ChangeEvent that = (ChangeEvent) o;
 
             if (Float.compare(previousValue, that.previousValue) != 0) return false;
             return Float.compare(currentValue, that.currentValue) == 0;
@@ -190,7 +191,8 @@ public abstract class FloatProperty {
 
         @Override
         public int hashCode() {
-            int result = (previousValue != 0.0f ? Float.floatToIntBits(previousValue) : 0);
+            int result = super.hashCode();
+            result = 31 * result + (previousValue != 0.0f ? Float.floatToIntBits(previousValue) : 0);
             result = 31 * result + (currentValue != 0.0f ? Float.floatToIntBits(currentValue) : 0);
             return result;
         }

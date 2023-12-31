@@ -17,8 +17,9 @@
 package unrefined.util;
 
 import unrefined.util.event.Event;
-import unrefined.util.function.Slot;
+import unrefined.util.event.EventSlot;
 import unrefined.util.signal.Signal;
+import unrefined.util.signal.SignalSlot;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -56,8 +57,8 @@ public class ScheduledTimer {
             timer.setTimeUnit(timeUnit);
             return this;
         }
-        public Builder onPerformed(Slot<Signal<Slot<PerformedEvent>>> consumer) {
-            consumer.accept(timer.onPerformed);
+        public Builder onPerform(SignalSlot<EventSlot<PerformEvent>> consumer) {
+            consumer.accept(timer.onPerform());
             return this;
         }
         public ScheduledTimer start() {
@@ -111,9 +112,9 @@ public class ScheduledTimer {
         setTimeUnit(timeUnit);
     }
 
-    private final Signal<Slot<PerformedEvent>> onPerformed = Signal.ofSlot();
-    public Signal<Slot<PerformedEvent>> onPerformed() {
-        return onPerformed;
+    private final Signal<EventSlot<PerformEvent>> onPerform = Signal.ofSlot();
+    public Signal<EventSlot<PerformEvent>> onPerform() {
+        return onPerform;
     }
 
     public void setRepeat(boolean repeat) {
@@ -166,7 +167,7 @@ public class ScheduledTimer {
             public void run() {
                 if (!coalesce || queuedCounter <= 0) {
                     queuedCounter ++;
-                    onPerformed().emit(new PerformedEvent(ScheduledTimer.this, System.currentTimeMillis()));
+                    onPerform().emit(new PerformEvent(ScheduledTimer.this, System.currentTimeMillis()));
                     if (repeat) queuedCounter --;
                     else stop();
                 }
@@ -184,11 +185,11 @@ public class ScheduledTimer {
         return scheduledFuture != null;
     }
 
-    public static final class PerformedEvent extends Event<ScheduledTimer> {
+    public static final class PerformEvent extends Event<ScheduledTimer> {
 
         private final long scheduledTime;
 
-        public PerformedEvent(ScheduledTimer source, long scheduledTime) {
+        public PerformEvent(ScheduledTimer source, long scheduledTime) {
             super(source);
             this.scheduledTime = scheduledTime;
         }
@@ -201,23 +202,26 @@ public class ScheduledTimer {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
+            if (!super.equals(o)) return false;
 
-            PerformedEvent that = (PerformedEvent) o;
+            PerformEvent that = (PerformEvent) o;
 
-            if (getSource() != that.getSource()) return false;
             return scheduledTime == that.scheduledTime;
         }
 
         @Override
         public int hashCode() {
-            return (int) (scheduledTime ^ (scheduledTime >>> 32));
+            int result = super.hashCode();
+            result = 31 * result + (int) (scheduledTime ^ (scheduledTime >>> 32));
+            return result;
         }
 
         @Override
         public String toString() {
             return getClass().getName()
                     + '{' +
-                    "scheduledTime=" + scheduledTime +
+                    "source=" + getSource() +
+                    ", scheduledTime=" + scheduledTime +
                     '}';
         }
 

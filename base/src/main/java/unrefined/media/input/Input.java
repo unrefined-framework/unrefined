@@ -1,6 +1,5 @@
 package unrefined.media.input;
 
-import unrefined.internal.BitwiseUtils;
 import unrefined.util.NotInstantiableError;
 
 public final class Input {
@@ -18,15 +17,15 @@ public final class Input {
         public static final int META  = 1 << 2;
         public static final int ALT   = 1 << 3;
         public static int removeUnusedBits(int modifiers) {
-            return BitwiseUtils.removeUnusedBits(modifiers, 4);
+            return modifiers << 4 >>> 4;
         }
         public static String toString(int modifiers) {
             modifiers = removeUnusedBits(modifiers);
             StringBuilder builder = new StringBuilder("[");
-            if ((modifiers & SHIFT) == SHIFT) builder.append("SHIFT, ");
-            if ((modifiers & CTRL) == CTRL) builder.append("CTRL, ");
-            if ((modifiers & META) == META) builder.append("META, ");
-            if ((modifiers & ALT) == ALT) builder.append("ALT, ");
+            if ((modifiers & SHIFT) != 0) builder.append("SHIFT, ");
+            if ((modifiers & CTRL) != 0) builder.append("CTRL, ");
+            if ((modifiers & META) != 0) builder.append("META, ");
+            if ((modifiers & ALT) != 0) builder.append("ALT, ");
             int length = builder.length();
             if (length > 1) builder.setLength(length - 2);
             builder.append("]");

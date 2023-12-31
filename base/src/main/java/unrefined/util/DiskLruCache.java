@@ -16,8 +16,6 @@
 
 package unrefined.util;
 
-import unrefined.internal.FileUtils;
-import unrefined.internal.IOUtils;
 import unrefined.nio.charset.Charsets;
 
 import java.io.BufferedWriter;
@@ -284,7 +282,11 @@ public class DiskLruCache implements Closeable {
             }
             redundantOpCount = lineCount - lruEntries.size();
         } finally {
-            IOUtils.closeQuietly(reader);
+            try {
+                reader.close();
+            }
+            catch (IOException ignored) {
+            }
         }
     }
 
@@ -435,7 +437,11 @@ public class DiskLruCache implements Closeable {
             // A file must have been deleted manually!
             for (int i = 0; i < valueCount; i++) {
                 if (ins[i] != null) {
-                    IOUtils.closeQuietly(ins[i]);
+                    try {
+                        ins[i].close();
+                    }
+                    catch (IOException ignored) {
+                    }
                 } else {
                     break;
                 }
@@ -669,7 +675,20 @@ public class DiskLruCache implements Closeable {
      */
     public void delete() throws IOException {
         close();
-        FileUtils.deleteContents(directory);
+        deleteContents(directory);
+    }
+
+    /**
+     * Deletes the contents of {@code directory}. Throws an IOException if any file
+     * could not be deleted, or if {@code directory} is not a readable directory.
+     */
+    private static void deleteContents(File directory) throws IOException {
+        File[] files = directory.listFiles();
+        if (files == null) throw new IOException("not a readable directory: " + directory);
+        for (File file : files) {
+            if (file.isDirectory()) deleteContents(file);
+            if (!file.delete()) throw new IOException("failed to delete file: " + file);
+        }
     }
 
     private void validateKey(String key) {
@@ -731,9 +750,14 @@ public class DiskLruCache implements Closeable {
 
         public void close() {
             for (InputStream in : ins) {
-                IOUtils.closeQuietly(in);
+                try {
+                    in.close();
+                }
+                catch (IOException ignored) {
+                }
             }
         }
+
     }
 
     private static final OutputStream NULL_OUTPUT_STREAM = new OutputStream() {
@@ -824,12 +848,8 @@ public class DiskLruCache implements Closeable {
          * Sets the value at {@code index} to {@code value}.
          */
         public void set(int index, String value) throws IOException {
-            Writer writer = null;
-            try {
-                writer = new OutputStreamWriter(newOutputStream(index), Charsets.UTF_8);
+            try (Writer writer = new OutputStreamWriter(newOutputStream(index), Charsets.UTF_8)) {
                 writer.write(value);
-            } finally {
-                IOUtils.closeQuietly(writer);
             }
         }
 

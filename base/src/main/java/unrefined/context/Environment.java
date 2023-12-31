@@ -1,6 +1,6 @@
 package unrefined.context;
 
-import unrefined.util.ProducerThreadLocal;
+import unrefined.util.ThreadLocalStorage;
 import unrefined.util.concurrent.Producer;
 import unrefined.util.function.Functor;
 
@@ -17,7 +17,7 @@ public class Environment implements Map<Object, Object> {
     private static final Environment system = new Environment(() -> new ConcurrentHashMap<>(System.getenv()), "SYSTEM ENVIRONMENT VARIABLES");
     private static final Environment properties = new Environment(System::getProperties, "JAVA VIRTUAL MACHINE PROPERTIES");
     private static final Environment global = new Environment(new ConcurrentHashMap<>(), "APPLICATION GLOBAL ENVIRONMENT");
-    private static final Environment threadLocal = new Environment(new ProducerThreadLocal<>(HashMap::new)::get, "THREAD LOCAL ENVIRONMENT");
+    private static final Environment threadLocal = new Environment(ThreadLocalStorage.allocateWithInitial(HashMap::new)::get, "THREAD LOCAL ENVIRONMENT");
 
     public static Environment system() {
         return system;

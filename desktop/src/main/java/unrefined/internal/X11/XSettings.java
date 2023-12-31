@@ -1,8 +1,9 @@
 package unrefined.internal.X11;
 
 import unrefined.desktop.StandardDirectories;
-import unrefined.internal.SystemUtils;
+import unrefined.internal.OperatingSystem;
 import unrefined.util.NotInstantiableError;
+import unrefined.util.StringCompat;
 
 import java.awt.Color;
 import java.awt.Toolkit;
@@ -61,10 +62,10 @@ public final class XSettings {
                     reader.lines().forEach(line -> {
                         int comment = line.indexOf('#');
                         if (comment != -1) line = line.substring(0, comment);
-                        if (!line.isBlank()) {
+                        if (!StringCompat.isBlank(line)) {
                             String key = line.substring(0, line.indexOf(' '));
                             String value = line.substring(line.indexOf(' ')).trim();
-                            if (value.isBlank()) return;
+                            if (StringCompat.isBlank(value)) return;
                             Object current = null;
                             if (value.startsWith("\"") && value.endsWith("\"")) {
                                 // String value
@@ -116,7 +117,7 @@ public final class XSettings {
     }
 
     private static void daemon() {
-        if (!SystemUtils.IS_X11) return;
+        if (!OperatingSystem.IS_X11) return;
         reload(false);
         Thread thread = new Thread(() -> {
             FileSystem fileSystem = FileSystems.getDefault();
@@ -169,7 +170,7 @@ public final class XSettings {
 
     static {
         PROPERTY_CHANGE_SUPPORT = new PropertyChangeSupport(Toolkit.getDefaultToolkit());
-        if (SystemUtils.IS_X11) {
+        if (OperatingSystem.IS_X11) {
             XSETTINGS_HOME = new File(StandardDirectories.CONFIG_HOME, "xsettingsd");
             XSETTINGS_NAME = "xsettingsd.conf";
             XSETTINGS_FILE = new File(XSETTINGS_HOME, XSETTINGS_NAME);

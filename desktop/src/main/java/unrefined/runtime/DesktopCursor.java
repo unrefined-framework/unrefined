@@ -1,9 +1,8 @@
 package unrefined.runtime;
 
-import unrefined.desktop.CursorFactory;
+import unrefined.desktop.CursorSupport;
 import unrefined.media.graphics.Bitmap;
 import unrefined.media.graphics.CursorNotFoundException;
-import unrefined.util.AlreadyDisposedException;
 import unrefined.util.UnexpectedError;
 
 import java.awt.Cursor;
@@ -11,11 +10,10 @@ import java.awt.Point;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DesktopCursor extends unrefined.media.graphics.Cursor {
 
-    private volatile Cursor cursor;
+    private final Cursor cursor;
     private final int type;
     private final int hotSpotX;
     private final int hotSpotY;
@@ -52,52 +50,36 @@ public class DesktopCursor extends unrefined.media.graphics.Cursor {
     }
     
     private DesktopCursor(int type) throws CursorNotFoundException {
-        this.cursor = CursorFactory.getSystemCursor(type);
+        this.cursor = CursorSupport.getSystemCursor(type);
         this.type = type;
         this.hotSpotX = -1;
         this.hotSpotY = -1;
     }
 
     public DesktopCursor(Bitmap bitmap, Point hotSpot) {
-        this.cursor = CursorFactory.createCustomCursor(((DesktopBitmap) bitmap).getBufferedImage(), hotSpot, "UXGL Image Cursor");
+        this.cursor = CursorSupport.createCustomCursor(((DesktopBitmap) bitmap).getBufferedImage(), hotSpot, "UXGL Image Cursor");
         this.type = Type.CUSTOM;
         this.hotSpotX = hotSpot.x;
         this.hotSpotY = hotSpot.y;
     }
 
     public Cursor getCursor() {
-        if (isDisposed()) throw new AlreadyDisposedException();
         return cursor;
     }
 
     @Override
     public int getType() {
-        if (isDisposed()) throw new AlreadyDisposedException();
         return type;
     }
 
     @Override
     public int getHotSpotX() {
-        if (isDisposed()) throw new AlreadyDisposedException();
         return hotSpotX;
     }
 
     @Override
     public int getHotSpotY() {
-        if (isDisposed()) throw new AlreadyDisposedException();
         return hotSpotY;
-    }
-
-    private final AtomicBoolean disposed = new AtomicBoolean(false);
-
-    @Override
-    public void dispose() {
-        if (disposed.compareAndSet(false, true)) cursor = null;
-    }
-
-    @Override
-    public boolean isDisposed() {
-        return disposed.get();
     }
 
     @Override

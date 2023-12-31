@@ -1,6 +1,5 @@
 package unrefined.util.animation;
 
-import unrefined.internal.BitwiseUtils;
 import unrefined.util.NotInstantiableError;
 import unrefined.util.Resettable;
 import unrefined.util.event.Event;
@@ -41,20 +40,20 @@ public abstract class Animation implements Resettable {
 		public static final int ANY_FORWARD = 0x0F;
 		public static final int ANY_BACKWARD = 0xF0;
 		public static final int ANY = 0xFF;
-		public static int removeUnusedBits(int flag) {
-			return BitwiseUtils.removeUnusedBits(flag, 8);
+		public static int removeUnusedBits(int flags) {
+			return flags << 8 >>> 8;
 		}
-		public static String toString(int flag) {
-			flag = removeUnusedBits(flag);
+		public static String toString(int flags) {
+			flags = removeUnusedBits(flags);
 			StringBuilder builder = new StringBuilder("[");
-			if ((flag & BEGIN) == BEGIN) builder.append("BEGIN, ");
-			if ((flag & START) == START) builder.append("START, ");
-			if ((flag & END) == END) builder.append("END, ");
-			if ((flag & COMPLETE) == COMPLETE) builder.append(", COMPLETE, ");
-			if ((flag & BACK_BEGIN) == BACK_BEGIN) builder.append("BACK_BEGIN, ");
-			if ((flag & BACK_START) == BACK_START) builder.append("BACK_START, ");
-			if ((flag & BACK_END) == BACK_END) builder.append("BACK_END, ");
-			if ((flag & BACK_COMPLETE) == BACK_COMPLETE) builder.append("BACK_COMPLETE, ");
+			if ((flags & BEGIN) != 0) builder.append("BEGIN, ");
+			if ((flags & START) != 0) builder.append("START, ");
+			if ((flags & END) != 0) builder.append("END, ");
+			if ((flags & COMPLETE) != 0) builder.append(", COMPLETE, ");
+			if ((flags & BACK_BEGIN) != 0) builder.append("BACK_BEGIN, ");
+			if ((flags & BACK_START) != 0) builder.append("BACK_START, ");
+			if ((flags & BACK_END) != 0) builder.append("BACK_END, ");
+			if ((flags & BACK_COMPLETE) != 0) builder.append("BACK_COMPLETE, ");
 			int length = builder.length();
 			if (length > 1) builder.setLength(length - 2);
 			builder.append("]");
@@ -62,37 +61,43 @@ public abstract class Animation implements Resettable {
 		}
 	}
 
-	public static final class StateChangedEvent extends Event<Animation> {
+	public static final class StateChangeEvent extends Event<Animation> {
 
 		private final int flags;
-		public StateChangedEvent(Animation source, int flags) {
+
+		public StateChangeEvent(Animation source, int flags) {
 			super(source);
 			this.flags = flags;
 		}
+
 		public int getFlags() {
 			return flags;
 		}
 
 		@Override
-		public boolean equals(Object object) {
-			if (this == object) return true;
-			if (object == null || getClass() != object.getClass()) return false;
+		public boolean equals(Object o) {
+			if (this == o) return true;
+			if (o == null || getClass() != o.getClass()) return false;
+			if (!super.equals(o)) return false;
 
-			StateChangedEvent that = (StateChangedEvent) object;
+			StateChangeEvent that = (StateChangeEvent) o;
 
             return flags == that.flags;
         }
 
 		@Override
 		public int hashCode() {
-			return flags;
+			int result = super.hashCode();
+			result = 31 * result + flags;
+			return result;
 		}
 
 		@Override
 		public String toString() {
 			return getClass().getName()
 					+ '{' +
-					"flags=" + flags +
+					"source=" + getSource() +
+					", flags=" + Flag.toString(flags) +
 					'}';
 		}
 
@@ -117,11 +122,11 @@ public abstract class Animation implements Resettable {
 	private boolean paused; // true if pause() was called
 
 	// Misc
-	private final Signal<EventSlot<StateChangedEvent>> onStateChanged = Signal.ofSlot();
-	public Signal<EventSlot<StateChangedEvent>> onStateChanged() {
-		return onStateChanged;
+	private final Signal<EventSlot<StateChangeEvent>> onStateChange = Signal.ofSlot();
+	public Signal<EventSlot<StateChangeEvent>> onStateChange() {
+		return onStateChange;
 	}
-	private int stateChangedTriggers;
+	private int stateChangeTriggers;
 
 	// Package access
 	boolean autoRemoveEnabled;
@@ -181,8 +186,8 @@ public abstract class Animation implements Resettable {
 		delay = duration = repeatDelay = currentTime = deltaTime = 0;
 		started = initialized = finished = cancelled = paused = false;
 
-		onStateChanged.clear();
-		stateChangedTriggers = COMPLETE;
+		onStateChange.clear();
+		stateChangeTriggers = COMPLETE;
 
 		autoRemoveEnabled = autoStartEnabled = true;
 	}
@@ -192,7 +197,7 @@ public abstract class Animation implements Resettable {
 		return step == -2 && repeatCount == 0 && !iterationStep && !yoyo &&
 				delay == 0 && duration == 0 && repeatDelay == 0 && currentTime == 0 && deltaTime == 0 &&
 				!started && !initialized && !finished && !cancelled && !paused &&
-				onStateChanged.isEmpty() && stateChangedTriggers == COMPLETE &&
+				onStateChange.isEmpty() && stateChangeTriggers == COMPLETE &&
 				autoRemoveEnabled && autoStartEnabled;
 	}
 
@@ -281,8 +286,8 @@ public abstract class Animation implements Resettable {
 	 * @param flags one or more triggers, separated by the '|' operator.
 	 * @see Flag
 	 */
-	public void setStateChangedTriggers(int flags) {
-		this.stateChangedTriggers = flags;
+	public void setStateChangeTriggers(int flags) {
+		this.stateChangeTriggers = flags;
 	}
 
 	// -------------------------------------------------------------------------
@@ -432,9 +437,9 @@ public abstract class Animation implements Resettable {
 		else forceEndValues();
 	}
 
-	protected void onStateChangedEvent(int flags) {
-		if ((stateChangedTriggers & flags) > 0 && !onStateChanged.isEmpty()) {
-			onStateChanged.emit(new StateChangedEvent(this, flags));
+	protected void onStateChangeEvent(int flags) {
+		if ((stateChangeTriggers & flags) > 0 && !onStateChange.isEmpty()) {
+			onStateChange.emit(new StateChangeEvent(this, flags));
 		}
 	}
 
@@ -495,8 +500,8 @@ public abstract class Animation implements Resettable {
 			step = 0;
 			deltaTime -= delay-currentTime;
 			currentTime = 0;
-			onStateChangedEvent(BEGIN);
-			onStateChangedEvent(START);
+			onStateChangeEvent(BEGIN);
+			onStateChangeEvent(START);
 		}
 	}
 
@@ -508,8 +513,8 @@ public abstract class Animation implements Resettable {
 			float delta = 0-currentTime;
 			deltaTime -= delta;
 			currentTime = 0;
-			onStateChangedEvent(BEGIN);
-			onStateChangedEvent(START);
+			onStateChangeEvent(BEGIN);
+			onStateChangeEvent(START);
 			updateOverride(step, step-1, iterationStep, delta);
 
 		} else if (!iterationStep && repeatCount >= 0 && step > repeatCount *2 && currentTime+deltaTime < 0) {
@@ -519,8 +524,8 @@ public abstract class Animation implements Resettable {
 			float delta = 0-currentTime;
 			deltaTime -= delta;
 			currentTime = duration;
-			onStateChangedEvent(BACK_BEGIN);
-			onStateChangedEvent(BACK_START);
+			onStateChangeEvent(BACK_BEGIN);
+			onStateChangeEvent(BACK_START);
 			updateOverride(step, step+1, iterationStep, delta);
 		}
 	}
@@ -536,7 +541,7 @@ public abstract class Animation implements Resettable {
 				currentTime = duration;
 
 				if (isReverse(step)) forceStartValues(); else forceEndValues();
-				onStateChangedEvent(BACK_START);
+				onStateChangeEvent(BACK_START);
 				updateOverride(step, step+1, iterationStep, delta);
 
 			} else if (!iterationStep && currentTime+deltaTime >= repeatDelay) {
@@ -548,7 +553,7 @@ public abstract class Animation implements Resettable {
 				currentTime = 0;
 
 				if (isReverse(step)) forceEndValues(); else forceStartValues();
-				onStateChangedEvent(START);
+				onStateChangeEvent(START);
 				updateOverride(step, step-1, iterationStep, delta);
 
 			} else if (iterationStep && currentTime+deltaTime < 0) {
@@ -560,9 +565,9 @@ public abstract class Animation implements Resettable {
 				currentTime = 0;
 
 				updateOverride(step, step+1, iterationStep, delta);
-				onStateChangedEvent(BACK_END);
+				onStateChangeEvent(BACK_END);
 
-				if (step < 0 && repeatCount >= 0) onStateChangedEvent(BACK_COMPLETE);
+				if (step < 0 && repeatCount >= 0) onStateChangeEvent(BACK_COMPLETE);
 				else currentTime = repeatDelay;
 
 			} else if (iterationStep && currentTime+deltaTime > duration) {
@@ -574,9 +579,9 @@ public abstract class Animation implements Resettable {
 				currentTime = duration;
 
 				updateOverride(step, step-1, iterationStep, delta);
-				onStateChangedEvent(END);
+				onStateChangeEvent(END);
 
-				if (step > repeatCount *2 && repeatCount >= 0) onStateChangedEvent(COMPLETE);
+				if (step > repeatCount *2 && repeatCount >= 0) onStateChangeEvent(COMPLETE);
 				currentTime = 0;
 
 			} else if (iterationStep) {

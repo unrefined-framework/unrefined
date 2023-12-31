@@ -5,6 +5,7 @@ import unrefined.context.Environment;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -14,7 +15,7 @@ public abstract class Reflection {
 
     private static volatile Reflection INSTANCE;
     private static final Object INSTANCE_LOCK = new Object();
-    public static Reflection getReflection() {
+    public static Reflection getInstance() {
         if (INSTANCE == null) synchronized (INSTANCE_LOCK) {
             if (INSTANCE == null) INSTANCE = Environment.global().get("unrefined.runtime.reflection", Reflection.class);
         }
@@ -1575,5 +1576,67 @@ public abstract class Reflection {
             throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
         return virtual ? invokeMethod(object, method, args) : invokeNonVirtualMethod(object, method, args);
     }
+
+    public abstract Object newProxyInstance(ClassLoader classLoader, InvocationHandler handler, Class<?>... interfaces);
+
+    public abstract <T> T newProxyInstance(ClassLoader classLoader, InvocationHandler handler, Class<T> theInterface);
+
+    public abstract boolean isProxyClass(Class<?> clazz);
+
+    public abstract boolean isProxyObject(Object object);
+
+    public abstract InvocationHandler getInvocationHandler(Object object);
+
+    public abstract void invokeDefaultVoidMethod(Object object, Method method, Object... args)
+            throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError;
+
+    public abstract boolean invokeDefaultBooleanMethod(Object object, Method method, Object... args)
+            throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError;
+
+    public abstract byte invokeDefaultByteMethod(Object object, Method method, Object... args)
+            throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError;
+
+    public abstract char invokeDefaultCharMethod(Object object, Method method, Object... args)
+            throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError;
+
+    public abstract short invokeDefaultShortMethod(Object object, Method method, Object... args)
+            throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError;
+
+    public abstract int invokeDefaultIntMethod(Object object, Method method, Object... args)
+            throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError;
+
+    public abstract long invokeDefaultLongMethod(Object object, Method method, Object... args)
+            throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError;
+
+    public abstract float invokeDefaultFloatMethod(Object object, Method method, Object... args)
+            throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError;
+
+    public abstract double invokeDefaultDoubleMethod(Object object, Method method, Object... args)
+            throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError;
+
+    public abstract Object invokeDefaultObjectMethod(Object object, Method method, Object... args)
+            throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError;
+
+    public Object invokeDefaultMethod(Object object, Method method, Object... args)
+            throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        if (isStatic(method.getModifiers())) object = method.getDeclaringClass();
+        Class<?> returnType = method.getReturnType();
+        if (returnType == void.class) {
+            invokeDefaultVoidMethod(object, method, args);
+            return null;
+        }
+        else if (returnType == boolean.class) return invokeDefaultBooleanMethod(object, method, args);
+        else if (returnType == byte.class) return invokeDefaultByteMethod(object, method, args);
+        else if (returnType == char.class) return invokeDefaultCharMethod(object, method, args);
+        else if (returnType == short.class) return invokeDefaultShortMethod(object, method, args);
+        else if (returnType == int.class) return invokeDefaultIntMethod(object, method, args);
+        else if (returnType == long.class) return invokeDefaultLongMethod(object, method, args);
+        else if (returnType == float.class) return invokeDefaultFloatMethod(object, method, args);
+        else if (returnType == double.class) return invokeDefaultDoubleMethod(object, method, args);
+        else return invokeDefaultObjectMethod(object, method, args);
+    }
+
+    public abstract Class<?> getCallerClass();
+    public abstract String getCallerMethod();
 
 }

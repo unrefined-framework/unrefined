@@ -24,19 +24,19 @@ public abstract class DoubleProperty {
         return new FunctionBinding(getter);
     }
 
-    public static DoubleProperty ofAtomicInstance(double initialValue) {
+    public static DoubleProperty ofAtomic(double initialValue) {
         return new AtomicInstance(initialValue);
     }
 
-    public static DoubleProperty ofAtomicInstance() {
+    public static DoubleProperty ofAtomic() {
         return new AtomicInstance();
     }
 
-    public static DoubleProperty ofInstance(double initialValue) {
+    public static DoubleProperty of(double initialValue) {
         return new Instance(initialValue);
     }
 
-    public static DoubleProperty ofInstance() {
+    public static DoubleProperty ofDefault() {
         return new Instance();
     }
 
@@ -101,7 +101,7 @@ public abstract class DoubleProperty {
         }
         public void set(double value) {
             double previousValue = this.value.getAndSet(value);
-            if (previousValue != value && !onChanged().isEmpty()) onChanged().emit(new ChangedEvent(this, previousValue, value));
+            if (previousValue != value && !onChange().isEmpty()) onChange().emit(new ChangeEvent(this, previousValue, value));
         }
         public double get() {
             return value.get();
@@ -122,16 +122,16 @@ public abstract class DoubleProperty {
         public void set(double value) {
             double previousValue = this.value;
             this.value = value;
-            if (previousValue != value && !onChanged().isEmpty()) onChanged().emit(new ChangedEvent(this, previousValue, value));
+            if (previousValue != value && !onChange().isEmpty()) onChange().emit(new ChangeEvent(this, previousValue, value));
         }
         public double get() {
             return value;
         }
     }
 
-    private final Signal<EventSlot<ChangedEvent>> onChanged = Signal.ofSlot();
-    public Signal<EventSlot<ChangedEvent>> onChanged() {
-        return onChanged;
+    private final Signal<EventSlot<ChangeEvent>> onChange = Signal.ofSlot();
+    public Signal<EventSlot<ChangeEvent>> onChange() {
+        return onChange;
     }
 
     public abstract void set(double value);
@@ -163,11 +163,11 @@ public abstract class DoubleProperty {
         return result;
     }
 
-    public static final class ChangedEvent extends Event<DoubleProperty> {
+    public static final class ChangeEvent extends Event<DoubleProperty> {
 
         private final double previousValue, currentValue;
 
-        public ChangedEvent(DoubleProperty source, double previousValue, double currentValue) {
+        public ChangeEvent(DoubleProperty source, double previousValue, double currentValue) {
             super(source);
             this.previousValue = previousValue;
             this.currentValue = currentValue;
@@ -182,11 +182,12 @@ public abstract class DoubleProperty {
         }
 
         @Override
-        public boolean equals(Object object) {
-            if (this == object) return true;
-            if (object == null || getClass() != object.getClass()) return false;
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            if (!super.equals(o)) return false;
 
-            ChangedEvent that = (ChangedEvent) object;
+            ChangeEvent that = (ChangeEvent) o;
 
             if (Double.compare(previousValue, that.previousValue) != 0) return false;
             return Double.compare(currentValue, that.currentValue) == 0;
@@ -194,10 +195,10 @@ public abstract class DoubleProperty {
 
         @Override
         public int hashCode() {
-            int result;
+            int result = super.hashCode();
             long temp;
             temp = Double.doubleToLongBits(previousValue);
-            result = (int) (temp ^ (temp >>> 32));
+            result = 31 * result + (int) (temp ^ (temp >>> 32));
             temp = Double.doubleToLongBits(currentValue);
             result = 31 * result + (int) (temp ^ (temp >>> 32));
             return result;

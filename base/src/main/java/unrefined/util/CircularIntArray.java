@@ -15,12 +15,15 @@
  */
 package unrefined.util;
 
+import java.util.Iterator;
+import java.util.RandomAccess;
+
 /**
  * CircularIntArray is a circular integer array data structure that provides O(1) random read, O(1)
  * prepend and O(1) append. The CircularIntArray automatically grows its capacity when number of
  * added integers is over its capacity.
  */
-public class CircularIntArray {
+public class CircularIntArray implements Cloneable, Iterable<Integer>, RandomAccess {
 
     private int[] elements;
     private int head;
@@ -75,6 +78,22 @@ public class CircularIntArray {
 
         capacityBitmask = arrayCapacity - 1;
         elements = new int[arrayCapacity];
+    }
+
+    @Override
+    public CircularIntArray clone() {
+        CircularIntArray clone;
+        try {
+            clone = (CircularIntArray) super.clone();
+        }
+        catch (CloneNotSupportedException e) {
+            clone = new CircularIntArray();
+            clone.head = head;
+            clone.tail = tail;
+            clone.capacityBitmask = capacityBitmask;
+        }
+        clone.elements = elements.clone();
+        return clone;
     }
 
     /**
@@ -254,6 +273,22 @@ public class CircularIntArray {
         }
         buffer.append(']');
         return buffer.toString();
+    }
+
+    @Override
+    public Iterator<Integer> iterator() {
+        return new Iterator<Integer>() {
+            private int index = -1;
+            @Override
+            public boolean hasNext() {
+                return index + 1 < size();
+            }
+            @Override
+            public Integer next() {
+                index ++;
+                return get(index);
+            }
+        };
     }
 
 }

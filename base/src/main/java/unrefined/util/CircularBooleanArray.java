@@ -15,12 +15,15 @@
  */
 package unrefined.util;
 
+import java.util.Iterator;
+import java.util.RandomAccess;
+
 /**
  * CircularBooleanArray is a circular boolean array data structure that provides O(1) random read, O(1)
  * prepend and O(1) append. The CircularBooleanArray automatically grows its capacity when number of
  * added booleans is over its capacity.
  */
-public class CircularBooleanArray {
+public class CircularBooleanArray implements Cloneable, Iterable<Boolean>, RandomAccess {
 
     private boolean[] elements;
     private int head;
@@ -75,6 +78,22 @@ public class CircularBooleanArray {
 
         capacityBitmask = arrayCapacity - 1;
         elements = new boolean[arrayCapacity];
+    }
+
+    @Override
+    public CircularBooleanArray clone() {
+        CircularBooleanArray clone;
+        try {
+            clone = (CircularBooleanArray) super.clone();
+        }
+        catch (CloneNotSupportedException e) {
+            clone = new CircularBooleanArray();
+            clone.head = head;
+            clone.tail = tail;
+            clone.capacityBitmask = capacityBitmask;
+        }
+        clone.elements = elements.clone();
+        return clone;
     }
 
     /**
@@ -254,6 +273,22 @@ public class CircularBooleanArray {
         }
         buffer.append(']');
         return buffer.toString();
+    }
+
+    @Override
+    public Iterator<Boolean> iterator() {
+        return new Iterator<Boolean>() {
+            private int index = -1;
+            @Override
+            public boolean hasNext() {
+                return index + 1 < size();
+            }
+            @Override
+            public Boolean next() {
+                index ++;
+                return get(index);
+            }
+        };
     }
 
 }

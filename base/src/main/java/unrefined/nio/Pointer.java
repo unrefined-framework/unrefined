@@ -1,6 +1,7 @@
 package unrefined.nio;
 
 import unrefined.util.Duplicatable;
+import unrefined.util.foreign.Foreign;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -34,7 +35,7 @@ public abstract class Pointer implements Closeable, Duplicatable {
      * @return a {@code Pointer} instance.
      */
     public static Pointer wrap(Allocator allocator, byte[] array) {
-        if (allocator == null) allocator = Allocator.defaultAllocator();
+        if (allocator == null) allocator = Allocator.defaultInstance();
         return allocator.wrapPointer(array);
     }
 
@@ -53,7 +54,7 @@ public abstract class Pointer implements Closeable, Duplicatable {
      * @return a {@code Pointer} instance.
      */
     public static Pointer wrap(Allocator allocator, byte[] array, int offset, int length) {
-        if (allocator == null) allocator = Allocator.defaultAllocator();
+        if (allocator == null) allocator = Allocator.defaultInstance();
         return allocator.wrapPointer(array, offset, length);
     }
 
@@ -70,7 +71,7 @@ public abstract class Pointer implements Closeable, Duplicatable {
      * @return a {@code Pointer} instance.
      */
     public static Pointer wrap(Allocator allocator, long address) {
-        if (allocator == null) allocator = Allocator.defaultAllocator();
+        if (allocator == null) allocator = Allocator.defaultInstance();
         return allocator.wrapPointer(address);
     }
 
@@ -88,7 +89,7 @@ public abstract class Pointer implements Closeable, Duplicatable {
      * @return a {@code Pointer} instance.
      */
     public static Pointer wrap(Allocator allocator, long address, long size) {
-        if (allocator == null) allocator = Allocator.defaultAllocator();
+        if (allocator == null) allocator = Allocator.defaultInstance();
         return allocator.wrapPointer(address, size);
     }
 
@@ -112,7 +113,7 @@ public abstract class Pointer implements Closeable, Duplicatable {
      * @return a {@code Pointer} instance that will proxy all accesses to the ByteBuffer contents.
      */
     public static Pointer wrap(Allocator allocator, ByteBuffer buffer) {
-        if (allocator == null) allocator = Allocator.defaultAllocator();
+        if (allocator == null) allocator = Allocator.defaultInstance();
         return allocator.wrapPointer(buffer);
     }
 
@@ -121,7 +122,7 @@ public abstract class Pointer implements Closeable, Duplicatable {
     }
 
     public static Pointer allocate(Allocator allocator, long size) throws IOException {
-        if (allocator == null) allocator = Allocator.defaultAllocator();
+        if (allocator == null) allocator = Allocator.defaultInstance();
         return allocator.allocatePointer(size, false);
     }
 
@@ -130,12 +131,39 @@ public abstract class Pointer implements Closeable, Duplicatable {
     }
 
     public static Pointer allocateDirect(Allocator allocator, long size) throws IOException {
-        if (allocator == null) allocator = Allocator.defaultAllocator();
+        if (allocator == null) allocator = Allocator.defaultInstance();
         return allocator.allocatePointer(size, true);
     }
 
     public static Pointer allocateDirect(long size) throws IOException {
         return allocateDirect(null, size);
+    }
+
+    public static Pointer allocateDirect(String string) throws IOException {
+        return allocateDirect(string, null);
+    }
+
+    public static Pointer allocateDirect(String string, Charset charset) throws IOException {
+        if (charset == null) charset = Charset.defaultCharset();
+        byte[] bytes = string.getBytes(charset);
+        byte[] terminator = "\0".getBytes(charset);
+        Pointer pointer = allocateDirect(bytes.length + terminator.length);
+        pointer.putByteArray(bytes.length, terminator);
+        pointer.putByteArray(0, bytes);
+        return pointer;
+    }
+
+    public static Pointer allocateDirect(Allocator allocator, String string) throws IOException {
+        return allocateDirect(allocator, string, null);
+    }
+
+    public static Pointer allocateDirect(Allocator allocator, String string, Charset charset) throws IOException {
+        byte[] bytes = string.getBytes(charset);
+        byte[] terminator = "\0".getBytes(charset);
+        Pointer pointer = allocateDirect(allocator, bytes.length + terminator.length);
+        pointer.putByteArray(bytes.length, terminator);
+        pointer.putByteArray(0, bytes);
+        return pointer;
     }
 
     protected Pointer(Allocator allocator) {
@@ -880,9 +908,65 @@ public abstract class Pointer implements Closeable, Duplicatable {
         putAddress(offset, value.address());
     }
 
+    public abstract long getZeroTerminatedStringLength(long offset);
+
+    public abstract long getZeroTerminatedStringLength(long offset, long maxLength);
+
+    public abstract long getZeroTerminatedWideCharStringLength(long offset);
+
+    public abstract long getZeroTerminatedWideCharStringLength(long offset, long maxLength);
+
+
+    public abstract long getZeroTerminatedStringLength(long offset, Charset charset);
+
+    public abstract long getZeroTerminatedStringLength(long offset, long maxLength, Charset charset);
+
+
     public abstract byte[] getZeroTerminatedByteArray(long offset);
 
     public abstract byte[] getZeroTerminatedByteArray(long offset, int maxLength);
+
+    public abstract byte[] getZeroTerminatedWideCharByteArray(long offset);
+
+    public abstract byte[] getZeroTerminatedWideCharByteArray(long offset, int maxLength);
+
+    public abstract byte[] getZeroTerminatedByteArray(long offset, Charset charset);
+
+    public abstract byte[] getZeroTerminatedByteArray(long offset, int maxLength, Charset charset);
+
+    /**
+     * Reads an {@code String} value at the given offset.
+     *
+     * @param offset the offset from the start of the memory this {@code Pointer} represents at which the value will be read.
+     * @return the {@code String} value read from memory.
+     */
+    public abstract String getZeroTerminatedString(long offset);
+
+    /**
+     * Reads a {@code String} value at the given offset, using a specific {@code Charset}
+     *
+     * @param offset the offset from the start of the memory this {@code Pointer} represents at which the value will be read.
+     * @param maxLength the maximum size of memory to search for a '\0' character.
+     * @return the {@code String} value read from memory.
+     */
+    public abstract String getZeroTerminatedString(long offset, int maxLength);
+
+    /**
+     * Reads an {@code String} value at the given offset.
+     *
+     * @param offset the offset from the start of the memory this {@code Pointer} represents at which the value will be read.
+     * @return the {@code String} value read from memory.
+     */
+    public abstract String getZeroTerminatedWideCharString(long offset);
+
+    /**
+     * Reads a {@code String} value at the given offset, using a specific {@code Charset}
+     *
+     * @param offset the offset from the start of the memory this {@code Pointer} represents at which the value will be read.
+     * @param maxLength the maximum size of memory to search for a '\0' character.
+     * @return the {@code String} value read from memory.
+     */
+    public abstract String getZeroTerminatedWideCharString(long offset, int maxLength);
 
     /**
      * Reads an {@code String} value at the given offset.
@@ -896,7 +980,7 @@ public abstract class Pointer implements Closeable, Duplicatable {
      * Reads a {@code String} value at the given offset, using a specific {@code Charset}
      *
      * @param offset the offset from the start of the memory this {@code Pointer} represents at which the value will be read.
-     * @param maxLength the maximum size of memory to search for a NUL byte.
+     * @param maxLength the maximum size of memory to search for a '\0' character.
      * @param charset the {@code Charset} to use to decode the string.
      * @return the {@code String} value read from memory.
      */
@@ -905,6 +989,30 @@ public abstract class Pointer implements Closeable, Duplicatable {
     public abstract void putZeroTerminatedByteArray(long offset, byte[] array);
 
     public abstract void putZeroTerminatedByteArray(long offset, byte[] array, int index, int length);
+
+    public abstract void putZeroTerminatedWideCharByteArray(long offset, byte[] array);
+
+    public abstract void putZeroTerminatedWideCharByteArray(long offset, byte[] array, int index, int length);
+
+    public abstract void putZeroTerminatedByteArray(long offset, byte[] array, Charset charset);
+
+    public abstract void putZeroTerminatedByteArray(long offset, byte[] array, int index, int length, Charset charset);
+
+    /**
+     * Writes a {@code String} value at the given offset, using the default {@code Charset}
+     *
+     * @param offset the offset from the start of the memory this {@code Pointer} represents at which the value will be written.
+     * @param string the string to be written.
+     */
+    public abstract void putZeroTerminatedString(long offset, String string);
+
+    /**
+     * Writes a {@code String} value at the given offset, using the wide {@code Charset}
+     *
+     * @param offset the offset from the start of the memory this {@code Pointer} represents at which the value will be written.
+     * @param string the string to be written.
+     */
+    public abstract void putZeroTerminatedWideCharString(long offset, String string);
 
     /**
      * Writes a {@code String} value at the given offset, using a specific {@code Charset}
@@ -1043,6 +1151,14 @@ public abstract class Pointer implements Closeable, Duplicatable {
      */
     public abstract long indexOf(long offset, int value, long maxLength);
 
+    public abstract long indexOf(long offset, byte[] value);
+
+    public abstract long indexOf(long offset, byte[] value, int valueOffset, int valueLength);
+
+    public abstract long indexOf(long offset, byte[] value, long maxLength);
+
+    public abstract long indexOf(long offset, byte[] value, int valueOffset, int valueLength, long maxLength);
+
     /**
      * Bulk get method for multiple unbounded {@code Pointer} values.
      *
@@ -1055,7 +1171,7 @@ public abstract class Pointer implements Closeable, Duplicatable {
      * @param length the number of values to be read.
      */
     public void getPointerArray(long offset, Pointer[] array, int index, int length) {
-        int pointerSize = allocator.addressSize();
+        int pointerSize = Foreign.getInstance().addressSize();
         for (int i = 0; i < length; i ++) {
             array[index + i] = getPointer(offset + (long) i * pointerSize);
         }
@@ -1087,7 +1203,7 @@ public abstract class Pointer implements Closeable, Duplicatable {
      * @param length the number of values to be read.
      */
     public void getPointerArray(long offset, Pointer[] array, long size, int index, int length) {
-        int pointerSize = allocator.addressSize();
+        int pointerSize = Foreign.getInstance().addressSize();
         for (int i = 0; i < length; i ++) {
             array[index + i] = getPointer(offset + (long) i * pointerSize, size);
         }
@@ -1121,7 +1237,7 @@ public abstract class Pointer implements Closeable, Duplicatable {
      * @param length the number of values to be read.
      */
     public void getPointerArray(long offset, Pointer[] array, int arrayIndex, long[] size, int sizeIndex, int length) {
-        int pointerSize = allocator.addressSize();
+        int pointerSize = Foreign.getInstance().addressSize();
         for (int i = 0; i < length; i ++) {
             array[arrayIndex + i] = getPointer(offset + (long) i * pointerSize, size[sizeIndex + i]);
         }
@@ -1169,7 +1285,7 @@ public abstract class Pointer implements Closeable, Duplicatable {
      * @param length the number of values to be written.
      */
     public void putPointerArray(long offset, Pointer[] array, int index, int length) {
-        int pointerSize = allocator.addressSize();
+        int pointerSize = Foreign.getInstance().addressSize();
         for (int i = 0; i < length; i ++) {
             putPointer(offset + (long) i * pointerSize, array[index + i]);
         }

@@ -2,8 +2,9 @@ package unrefined.runtime;
 
 import unrefined.context.Container;
 import unrefined.context.ContextListener;
-import unrefined.desktop.BitmapImageFactory;
+import unrefined.desktop.BitmapSupport;
 import unrefined.media.graphics.Bitmap;
+import unrefined.media.graphics.Graphics;
 
 import java.awt.Canvas;
 import java.awt.EventQueue;
@@ -141,7 +142,7 @@ public class DesktopContext extends DesktopEmbeddedContext {
         EventQueue.invokeLater(() -> {
             synchronized (graphicsLock) {
                 if (graphics == null) return;
-                BufferedImage image = BitmapImageFactory.createImage(graphics.getWidth(), graphics.getHeight(), Bitmap.Type.RGBA_8888);
+                BufferedImage image = BitmapSupport.createImage(graphics.getWidth(), graphics.getHeight(), Bitmap.Type.RGBA_8888);
                 Graphics2D graphics2D = image.createGraphics();
                 try {
                     graphics2D.setBackground(getComponent().getBackground());
@@ -160,6 +161,11 @@ public class DesktopContext extends DesktopEmbeddedContext {
                 });
             }
         });
+    }
+
+    @Override
+    public Graphics getGraphics() {
+        return graphics;
     }
 
     private static final class GraphicsComponent extends Canvas {

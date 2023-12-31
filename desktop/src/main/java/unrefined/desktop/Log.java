@@ -131,7 +131,7 @@ public final class Log {
     private static final String IDENTIFIER;
     static {
         StringBuilder builder = new StringBuilder();
-        builder.append(ProcessHandle.current().pid());
+        builder.append(ProcessIdentifier.CURRENT);
         builder.append('@');
         try {
             builder.append(InetAddress.getLocalHost().getHostName());
@@ -147,13 +147,13 @@ public final class Log {
         builder.append(IDENTIFIER);
         builder.append(' ');
         switch (priority) {
-            case VERBOSE -> builder.append('V');
-            case DEBUG -> builder.append('D');
-            case INFO -> builder.append('I');
-            case WARN -> builder.append('W');
-            case ERROR -> builder.append('E');
-            case ASSERT -> builder.append('A');
-            default -> throw new IllegalArgumentException("Illegal priority: " + priority);
+            case VERBOSE: builder.append('V'); break;
+            case DEBUG: builder.append('D'); break;
+            case INFO: builder.append('I'); break;
+            case WARN: builder.append('W'); break;
+            case ERROR: builder.append('E'); break;
+            case ASSERT: builder.append('A'); break;
+            default: throw new IllegalArgumentException("Illegal priority: " + priority);
         }
         builder.append('/');
         builder.append(tag);

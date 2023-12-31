@@ -3,17 +3,15 @@ package unrefined.runtime;
 import unrefined.desktop.BiRadialGradientPaint;
 import unrefined.desktop.TransformedTexturePaint;
 import unrefined.media.graphics.Brush;
-import unrefined.util.AlreadyDisposedException;
 
 import java.awt.Color;
 import java.awt.LinearGradientPaint;
 import java.awt.Paint;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DesktopBrush extends Brush {
 
-    private volatile Paint paint;
+    private final Paint paint;
     private final int type;
 
     public DesktopBrush(Paint paint) {
@@ -31,26 +29,22 @@ public class DesktopBrush extends Brush {
     }
 
     public Paint getPaint() {
-        if (isDisposed()) throw new AlreadyDisposedException();
         return paint;
     }
 
     @Override
     public int getType() {
-        if (isDisposed()) throw new AlreadyDisposedException();
         return type;
     }
 
-    private final AtomicBoolean disposed = new AtomicBoolean(false);
-
     @Override
-    public void dispose() {
-        if (disposed.compareAndSet(false, true)) paint = null;
-    }
-
-    @Override
-    public boolean isDisposed() {
-        return disposed.get();
+    public String toString() {
+        if (getType() == Type.COLOR) return getClass().getName() +
+                '{' +
+                "type=COLOR" +
+                ", color=" + unrefined.media.graphics.Color.toString(((Color) paint).getRGB()) +
+                '}';
+        else return super.toString();
     }
 
     @Override

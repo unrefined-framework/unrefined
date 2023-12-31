@@ -1,5 +1,6 @@
 package unrefined.desktop;
 
+import unrefined.math.FastMath;
 import unrefined.util.function.IntBiOperator;
 
 import java.awt.AlphaComposite;
@@ -19,8 +20,9 @@ import static unrefined.media.graphics.Composite.Mode.*;
 public class ExtendedComposite implements Composite {
 
     private static boolean isIntRGB(ColorModel model) {
-        if (model instanceof DirectColorModel directColorModel &&
+        if (model instanceof DirectColorModel &&
                 model.getTransferType() == DataBuffer.TYPE_INT) {
+            DirectColorModel directColorModel = (DirectColorModel) model;
             return directColorModel.getRedMask() == 0x00FF0000 &&
                     directColorModel.getGreenMask() == 0x0000FF00 &&
                     directColorModel.getBlueMask() == 0x000000FF &&
@@ -32,8 +34,9 @@ public class ExtendedComposite implements Composite {
     }
 
     private static boolean isIntBGR(ColorModel model) {
-        if (model instanceof DirectColorModel directColorModel &&
+        if (model instanceof DirectColorModel &&
                 model.getTransferType() == DataBuffer.TYPE_INT) {
+            DirectColorModel directColorModel = (DirectColorModel) model;
             return directColorModel.getRedMask() == 0x000000FF &&
                     directColorModel.getGreenMask() == 0x0000FF00 &&
                     directColorModel.getBlueMask() == 0x00FF0000 &&
@@ -165,25 +168,25 @@ public class ExtendedComposite implements Composite {
     }
 
     private static IntBiOperator getComposeProc(int mode) {
-        return switch (mode) {
-            case PLUS -> PlusProc;
-            case MULTIPLY -> MultiplyProc;
-            case SCREEN -> ScreenProc;
-            case OVERLAY -> OverlayProc;
-            case DARKEN -> DarkenProc;
-            case LIGHTEN -> LightenProc;
-            case COLOR_DODGE -> ColorDodgeProc;
-            case COLOR_BURN -> ColorBurnProc;
-            case HARD_LIGHT -> HardlightProc;
-            case SOFT_LIGHT -> SoftlightProc;
-            case DIFFERENCE -> DifferenceProc;
-            case EXCLUSION -> ExclusionProc;
-            case HUE -> HueProc;
-            case SATURATION -> SaturationProc;
-            case COLOR -> ColorProc;
-            case LUMINOSITY -> LuminosityProc;
-            default -> throw new IllegalArgumentException("Illegal composite mode: " + mode);
-        };
+        switch (mode) {
+            case PLUS: return PlusProc;
+            case MULTIPLY: return MultiplyProc;
+            case SCREEN: return ScreenProc;
+            case OVERLAY: return OverlayProc;
+            case DARKEN: return DarkenProc;
+            case LIGHTEN: return LightenProc;
+            case COLOR_DODGE: return ColorDodgeProc;
+            case COLOR_BURN: return ColorBurnProc;
+            case HARD_LIGHT: return HardlightProc;
+            case SOFT_LIGHT: return SoftlightProc;
+            case DIFFERENCE: return DifferenceProc;
+            case EXCLUSION: return ExclusionProc;
+            case HUE: return HueProc;
+            case SATURATION: return SaturationProc;
+            case COLOR: return ColorProc;
+            case LUMINOSITY: return LuminosityProc;
+            default: throw new IllegalArgumentException("Illegal composite mode: " + mode);
+        }
     }
 
     private static final IntBiOperator PlusProc = (a, b) -> {
@@ -474,77 +477,77 @@ public class ExtendedComposite implements Composite {
     public static final ExtendedComposite Luminosity = new ExtendedComposite(LUMINOSITY);
 
     public static Composite getInstance(int mode) {
-        return switch (mode) {
-            case SRC_OVER -> AlphaComposite.getInstance(AlphaComposite.SRC_OVER);
-            case SRC_IN -> AlphaComposite.getInstance(AlphaComposite.SRC_IN);
-            case SRC_OUT -> AlphaComposite.getInstance(AlphaComposite.SRC_OUT);
-            case SRC_ATOP -> AlphaComposite.getInstance(AlphaComposite.SRC_ATOP);
-            case DST_OVER -> AlphaComposite.getInstance(AlphaComposite.DST_OVER);
-            case DST_IN -> AlphaComposite.getInstance(AlphaComposite.DST_IN);
-            case DST_OUT -> AlphaComposite.getInstance(AlphaComposite.DST_OUT);
-            case DST_ATOP -> AlphaComposite.getInstance(AlphaComposite.DST_ATOP);
-            case PLUS -> Plus;
-            case COPY -> AlphaComposite.getInstance(AlphaComposite.DST);
-            case XOR -> AlphaComposite.getInstance(AlphaComposite.XOR);
-            case MULTIPLY -> Multiply;
-            case SCREEN -> Screen;
-            case OVERLAY -> Overlay;
-            case DARKEN -> Darken;
-            case LIGHTEN -> Lighten;
-            case COLOR_DODGE -> ColorDodge;
-            case COLOR_BURN -> ColorBurn;
-            case HARD_LIGHT -> HardLight;
-            case SOFT_LIGHT -> SoftLight;
-            case DIFFERENCE -> Difference;
-            case EXCLUSION -> Exclusion;
-            case HUE -> Hue;
-            case SATURATION -> Saturation;
-            case COLOR -> Color;
-            case LUMINOSITY -> Luminosity;
-            case DISCARD -> AlphaComposite.getInstance(AlphaComposite.SRC);
-            case CLEAR -> AlphaComposite.getInstance(AlphaComposite.CLEAR);
-            default -> throw new IllegalArgumentException("Illegal composite mode: " + mode);
-        };
+        switch (mode) {
+            case SRC_OVER: return AlphaComposite.getInstance(AlphaComposite.SRC_OVER);
+            case SRC_IN: return AlphaComposite.getInstance(AlphaComposite.SRC_IN);
+            case SRC_OUT: return AlphaComposite.getInstance(AlphaComposite.SRC_OUT);
+            case SRC_ATOP: return AlphaComposite.getInstance(AlphaComposite.SRC_ATOP);
+            case DST_OVER: return AlphaComposite.getInstance(AlphaComposite.DST_OVER);
+            case DST_IN: return AlphaComposite.getInstance(AlphaComposite.DST_IN);
+            case DST_OUT: return AlphaComposite.getInstance(AlphaComposite.DST_OUT);
+            case DST_ATOP: return AlphaComposite.getInstance(AlphaComposite.DST_ATOP);
+            case PLUS: return Plus;
+            case COPY: return AlphaComposite.getInstance(AlphaComposite.DST);
+            case XOR: return AlphaComposite.getInstance(AlphaComposite.XOR);
+            case MULTIPLY: return Multiply;
+            case SCREEN: return Screen;
+            case OVERLAY: return Overlay;
+            case DARKEN: return Darken;
+            case LIGHTEN: return Lighten;
+            case COLOR_DODGE: return ColorDodge;
+            case COLOR_BURN: return ColorBurn;
+            case HARD_LIGHT: return HardLight;
+            case SOFT_LIGHT: return SoftLight;
+            case DIFFERENCE: return Difference;
+            case EXCLUSION: return Exclusion;
+            case HUE: return Hue;
+            case SATURATION: return Saturation;
+            case COLOR: return Color;
+            case LUMINOSITY: return Luminosity;
+            case DISCARD: return AlphaComposite.getInstance(AlphaComposite.SRC);
+            case CLEAR: return AlphaComposite.getInstance(AlphaComposite.CLEAR);
+            default: throw new IllegalArgumentException("Illegal composite mode: " + mode);
+        }
     }
 
     public static Composite getInstance(int mode, float alpha) {
-        alpha = Math.clamp(alpha, 0, 1);
+        alpha = FastMath.clamp(alpha, 0, 1);
         if (alpha == 1.0f) return getInstance(mode);
-        else return switch (mode) {
-            case SRC_OVER -> AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha);
-            case SRC_IN -> AlphaComposite.getInstance(AlphaComposite.SRC_IN, alpha);
-            case SRC_OUT -> AlphaComposite.getInstance(AlphaComposite.SRC_OUT, alpha);
-            case SRC_ATOP -> AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, alpha);
-            case DST_OVER -> AlphaComposite.getInstance(AlphaComposite.DST_OVER, alpha);
-            case DST_IN -> AlphaComposite.getInstance(AlphaComposite.DST_IN, alpha);
-            case DST_OUT -> AlphaComposite.getInstance(AlphaComposite.DST_OUT, alpha);
-            case DST_ATOP -> AlphaComposite.getInstance(AlphaComposite.DST_ATOP, alpha);
-            case PLUS -> new ExtendedComposite(PLUS, alpha);
-            case COPY -> AlphaComposite.getInstance(AlphaComposite.DST, alpha);
-            case XOR -> AlphaComposite.getInstance(AlphaComposite.XOR, alpha);
-            case MULTIPLY -> new ExtendedComposite(MULTIPLY, alpha);
-            case SCREEN -> new ExtendedComposite(SCREEN, alpha);
-            case OVERLAY -> new ExtendedComposite(OVERLAY, alpha);
-            case DARKEN -> new ExtendedComposite(DARKEN, alpha);
-            case LIGHTEN -> new ExtendedComposite(LIGHTEN, alpha);
-            case COLOR_DODGE -> new ExtendedComposite(COLOR_DODGE, alpha);
-            case COLOR_BURN -> new ExtendedComposite(COLOR_BURN, alpha);
-            case HARD_LIGHT -> new ExtendedComposite(HARD_LIGHT, alpha);
-            case SOFT_LIGHT -> new ExtendedComposite(SOFT_LIGHT, alpha);
-            case DIFFERENCE -> new ExtendedComposite(DIFFERENCE, alpha);
-            case EXCLUSION -> new ExtendedComposite(EXCLUSION, alpha);
-            case HUE -> new ExtendedComposite(HUE, alpha);
-            case SATURATION -> new ExtendedComposite(SATURATION, alpha);
-            case COLOR -> new ExtendedComposite(COLOR, alpha);
-            case LUMINOSITY -> new ExtendedComposite(LUMINOSITY, alpha);
-            case DISCARD -> AlphaComposite.getInstance(AlphaComposite.SRC, alpha);
-            case CLEAR -> AlphaComposite.getInstance(AlphaComposite.CLEAR, alpha);
-            default -> throw new IllegalArgumentException("Illegal composite mode: " + mode);
-        };
+        else switch (mode) {
+            case SRC_OVER: return AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha);
+            case SRC_IN: return AlphaComposite.getInstance(AlphaComposite.SRC_IN, alpha);
+            case SRC_OUT: return AlphaComposite.getInstance(AlphaComposite.SRC_OUT, alpha);
+            case SRC_ATOP: return AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, alpha);
+            case DST_OVER: return AlphaComposite.getInstance(AlphaComposite.DST_OVER, alpha);
+            case DST_IN: return AlphaComposite.getInstance(AlphaComposite.DST_IN, alpha);
+            case DST_OUT: return AlphaComposite.getInstance(AlphaComposite.DST_OUT, alpha);
+            case DST_ATOP: return AlphaComposite.getInstance(AlphaComposite.DST_ATOP, alpha);
+            case PLUS: return new ExtendedComposite(PLUS, alpha);
+            case COPY: return AlphaComposite.getInstance(AlphaComposite.DST, alpha);
+            case XOR: return AlphaComposite.getInstance(AlphaComposite.XOR, alpha);
+            case MULTIPLY: return new ExtendedComposite(MULTIPLY, alpha);
+            case SCREEN: return new ExtendedComposite(SCREEN, alpha);
+            case OVERLAY: return new ExtendedComposite(OVERLAY, alpha);
+            case DARKEN: return new ExtendedComposite(DARKEN, alpha);
+            case LIGHTEN: return new ExtendedComposite(LIGHTEN, alpha);
+            case COLOR_DODGE: return new ExtendedComposite(COLOR_DODGE, alpha);
+            case COLOR_BURN: return new ExtendedComposite(COLOR_BURN, alpha);
+            case HARD_LIGHT: return new ExtendedComposite(HARD_LIGHT, alpha);
+            case SOFT_LIGHT: return new ExtendedComposite(SOFT_LIGHT, alpha);
+            case DIFFERENCE: return new ExtendedComposite(DIFFERENCE, alpha);
+            case EXCLUSION: return new ExtendedComposite(EXCLUSION, alpha);
+            case HUE: return new ExtendedComposite(HUE, alpha);
+            case SATURATION: return new ExtendedComposite(SATURATION, alpha);
+            case COLOR: return new ExtendedComposite(COLOR, alpha);
+            case LUMINOSITY: return new ExtendedComposite(LUMINOSITY, alpha);
+            case DISCARD: return AlphaComposite.getInstance(AlphaComposite.SRC, alpha);
+            case CLEAR: return AlphaComposite.getInstance(AlphaComposite.CLEAR, alpha);
+            default: throw new IllegalArgumentException("Illegal composite mode: " + mode);
+        }
     }
 
     public static ExtendedComposite getInstance(IntBiOperator composeProc, float alpha) {
-        return new ExtendedComposite(composeProc, Math.clamp(alpha, 0, 1));
+        return new ExtendedComposite(composeProc, FastMath.clamp(alpha, 0, 1));
     }
 
     @Override
