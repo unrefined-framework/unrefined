@@ -46,6 +46,7 @@ public final class DesktopRuntime {
             Environment.global().put("unrefined.runtime.platform", new DesktopPlatform());
             Environment.global().put("unrefined.runtime.base64", new DesktopBase64());
             Environment.global().put("unrefined.runtime.reflection", new DesktopReflection());
+            Environment.global().put("unrefined.runtime.atomic", new DesktopAtomic());
             Environment.global().put("unrefined.runtime.cleaner", new DesktopCleaner());
             Environment.global().put("unrefined.runtime.console", new DesktopConsole());
             Environment.global().put("unrefined.runtime.drawing", new DesktopDrawing());

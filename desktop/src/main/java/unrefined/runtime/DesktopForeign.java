@@ -153,6 +153,16 @@ public class DesktopForeign extends Foreign {
     }
 
     @Override
+    public int memoryPageSize() {
+        return ForeignSupport.memoryPageSize();
+    }
+
+    @Override
+    public int arrayIndexScale(Class<?> clazz) {
+        return ForeignSupport.arrayIndexScale(clazz);
+    }
+
+    @Override
     public Charset systemCharset() {
         return ForeignSupport.systemCharset();
     }

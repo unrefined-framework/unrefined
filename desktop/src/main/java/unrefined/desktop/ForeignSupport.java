@@ -37,6 +37,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import static unrefined.desktop.UnsafeSupport.UNSAFE;
+
 public final class ForeignSupport {
 
     public static final Invoker INVOKER = Invoker.getInstance();
@@ -547,6 +549,14 @@ public final class ForeignSupport {
 
     public static Class<?> addressClass() {
         return ABI.P_TYPE;
+    }
+
+    public static int memoryPageSize() {
+        return UNSAFE.pageSize();
+    }
+
+    public static int arrayIndexScale(Class<?> clazz) {
+        return UNSAFE.arrayIndexScale(clazz);
     }
 
     public static Charset systemCharset() {

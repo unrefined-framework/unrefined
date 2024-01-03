@@ -118,96 +118,6 @@ public class DesktopReflection extends Reflection {
     }
 
     @Override
-    public Object getObjectFieldVolatile(Object object, Field field) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        return ReflectionSupport.getObjectFieldVolatile(object, field);
-    }
-
-    @Override
-    public boolean getBooleanFieldVolatile(Object object, Field field) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        return ReflectionSupport.getBooleanFieldVolatile(object, field);
-    }
-
-    @Override
-    public byte getByteFieldVolatile(Object object, Field field) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        return ReflectionSupport.getByteFieldVolatile(object, field);
-    }
-
-    @Override
-    public char getCharFieldVolatile(Object object, Field field) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        return ReflectionSupport.getCharFieldVolatile(object, field);
-    }
-
-    @Override
-    public short getShortFieldVolatile(Object object, Field field) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        return ReflectionSupport.getShortFieldVolatile(object, field);
-    }
-
-    @Override
-    public int getIntFieldVolatile(Object object, Field field) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        return ReflectionSupport.getIntFieldVolatile(object, field);
-    }
-
-    @Override
-    public long getLongFieldVolatile(Object object, Field field) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        return ReflectionSupport.getLongFieldVolatile(object, field);
-    }
-
-    @Override
-    public float getFloatFieldVolatile(Object object, Field field) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        return ReflectionSupport.getFloatFieldVolatile(object, field);
-    }
-
-    @Override
-    public double getDoubleFieldVolatile(Object object, Field field) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        return ReflectionSupport.getDoubleFieldVolatile(object, field);
-    }
-
-    @Override
-    public void setObjectFieldVolatile(Object object, Field field, Object value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        ReflectionSupport.setObjectFieldVolatile(object, field, value);
-    }
-
-    @Override
-    public void setBooleanFieldVolatile(Object object, Field field, boolean value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        ReflectionSupport.setBooleanFieldVolatile(object, field, value);
-    }
-
-    @Override
-    public void setByteFieldVolatile(Object object, Field field, byte value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        ReflectionSupport.setByteFieldVolatile(object, field, value);
-    }
-
-    @Override
-    public void setCharFieldVolatile(Object object, Field field, char value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        ReflectionSupport.setCharFieldVolatile(object, field, value);
-    }
-
-    @Override
-    public void setShortFieldVolatile(Object object, Field field, short value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        ReflectionSupport.setShortFieldVolatile(object, field, value);
-    }
-
-    @Override
-    public void setIntFieldVolatile(Object object, Field field, int value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        ReflectionSupport.setIntFieldVolatile(object, field, value);
-    }
-
-    @Override
-    public void setLongFieldVolatile(Object object, Field field, long value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        ReflectionSupport.setLongFieldVolatile(object, field, value);
-    }
-
-    @Override
-    public void setFloatFieldVolatile(Object object, Field field, float value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        ReflectionSupport.setFloatFieldVolatile(object, field, value);
-    }
-
-    @Override
-    public void setDoubleFieldVolatile(Object object, Field field, double value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        ReflectionSupport.setDoubleFieldVolatile(object, field, value);
-    }
-
-    @Override
     public void invokeVoidMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
         ReflectionSupport.invokeVoidMethod(object, method, args);
     }
@@ -405,6 +315,11 @@ public class DesktopReflection extends Reflection {
     @Override
     public String getCallerMethod() {
         return ReflectionSupport.getCallerMethod();
+    }
+
+    @Override
+    public void sneakyThrows(Throwable throwable) {
+        ReflectionSupport.sneakyThrows(throwable);
     }
 
 }

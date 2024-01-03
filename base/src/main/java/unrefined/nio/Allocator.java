@@ -19,7 +19,7 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 
 /**
- * Provides facilities to access off-heap memory from Java.
+ * Provides facilities to directly access memory from Java.
  */
 public abstract class Allocator {
 
@@ -1709,11 +1709,5 @@ public abstract class Allocator {
     public void freePointer(Pointer pointer) throws IOException {
         pointer.close();
     }
-
-    /**
-     * Gets the size in bytes of a native memory page (whatever that is).
-     * This value will always be a power of two.
-     */
-    public abstract int memoryPageSize();
 
 }

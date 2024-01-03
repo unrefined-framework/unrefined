@@ -67,8 +67,8 @@ public class ReflectionSupport {
         }
     }
 
-    private static Object checkObject(Object object, Field field) {
-        // NOTE: will throw NullPointerException, as specified, if object is null
+    public static Object checkObject(Object object, Field field) {
+        // NOTE: will throw NullPointerException, as specified, if the object is null
         if (!field.getDeclaringClass().isAssignableFrom(object.getClass())) {
             StringBuilder builder = new StringBuilder("Can not set ");
             builder.append(field.getType().getName())
@@ -297,123 +297,6 @@ public class ReflectionSupport {
         }
         if (isStatic(field.getModifiers())) UNSAFE.putDouble(field.getDeclaringClass(), UNSAFE.staticFieldOffset(field), value);
         else UNSAFE.putDouble(checkObject(object, field), UNSAFE.objectFieldOffset(field), value);
-    }
-    
-    public static Object getObjectFieldVolatile(Object object, Field field) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        if (field.getType().isPrimitive()) throw new IllegalArgumentException("Illegal field type; expected non-primitive");
-        return isStatic(field.getModifiers()) ?
-                UNSAFE.getObjectVolatile(field.getDeclaringClass(), UNSAFE.staticFieldOffset(field)) :
-                UNSAFE.getObjectVolatile(checkObject(object, field), UNSAFE.objectFieldOffset(field));
-    }
-    
-    public static boolean getBooleanFieldVolatile(Object object, Field field) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        if (field.getType() != boolean.class) throw new IllegalArgumentException("Illegal field type; expected boolean");
-        return isStatic(field.getModifiers()) ?
-                UNSAFE.getBooleanVolatile(field.getDeclaringClass(), UNSAFE.staticFieldOffset(field)) :
-                UNSAFE.getBooleanVolatile(checkObject(object, field), UNSAFE.objectFieldOffset(field));
-    }
-    
-    public static byte getByteFieldVolatile(Object object, Field field) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        if (field.getType() != byte.class) throw new IllegalArgumentException("Illegal field type; expected byte");
-        return isStatic(field.getModifiers()) ?
-                UNSAFE.getByteVolatile(field.getDeclaringClass(), UNSAFE.staticFieldOffset(field)) :
-                UNSAFE.getByteVolatile(checkObject(object, field), UNSAFE.objectFieldOffset(field));
-    }
-    
-    public static char getCharFieldVolatile(Object object, Field field) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        if (field.getType() != char.class) throw new IllegalArgumentException("Illegal field type; expected char");
-        return isStatic(field.getModifiers()) ?
-                UNSAFE.getCharVolatile(field.getDeclaringClass(), UNSAFE.staticFieldOffset(field)) :
-                UNSAFE.getCharVolatile(checkObject(object, field), UNSAFE.objectFieldOffset(field));
-    }
-    
-    public static short getShortFieldVolatile(Object object, Field field) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        if (field.getType() != short.class) throw new IllegalArgumentException("Illegal field type; expected short");
-        return isStatic(field.getModifiers()) ?
-                UNSAFE.getShortVolatile(field.getDeclaringClass(), UNSAFE.staticFieldOffset(field)) :
-                UNSAFE.getShortVolatile(checkObject(object, field), UNSAFE.objectFieldOffset(field));
-    }
-    
-    public static int getIntFieldVolatile(Object object, Field field) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        if (field.getType() != int.class) throw new IllegalArgumentException("Illegal field type; expected int");
-        return isStatic(field.getModifiers()) ?
-                UNSAFE.getIntVolatile(field.getDeclaringClass(), UNSAFE.staticFieldOffset(field)) :
-                UNSAFE.getIntVolatile(checkObject(object, field), UNSAFE.objectFieldOffset(field));
-    }
-    
-    public static long getLongFieldVolatile(Object object, Field field) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        if (field.getType() != long.class) throw new IllegalArgumentException("Illegal field type; expected long");
-        return isStatic(field.getModifiers()) ?
-                UNSAFE.getLongVolatile(field.getDeclaringClass(), UNSAFE.staticFieldOffset(field)) :
-                UNSAFE.getLongVolatile(checkObject(object, field), UNSAFE.objectFieldOffset(field));
-    }
-    
-    public static float getFloatFieldVolatile(Object object, Field field) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        if (field.getType() != float.class) throw new IllegalArgumentException("Illegal field type; expected float");
-        return isStatic(field.getModifiers()) ?
-                UNSAFE.getFloatVolatile(field.getDeclaringClass(), UNSAFE.staticFieldOffset(field)) :
-                UNSAFE.getFloatVolatile(checkObject(object, field), UNSAFE.objectFieldOffset(field));
-    }
-    
-    public static double getDoubleFieldVolatile(Object object, Field field) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        if (field.getType() != double.class) throw new IllegalArgumentException("Illegal field type; expected double");
-        return isStatic(field.getModifiers()) ?
-                UNSAFE.getDoubleVolatile(field.getDeclaringClass(), UNSAFE.staticFieldOffset(field)) :
-                UNSAFE.getDoubleVolatile(checkObject(object, field), UNSAFE.objectFieldOffset(field));
-    }
-    
-    public static void setObjectFieldVolatile(Object object, Field field, Object value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        if (field.getType().isPrimitive()) throw new IllegalArgumentException("Illegal field type; expected non-primitive");
-        if (isStatic(field.getModifiers())) UNSAFE.putObjectVolatile(field.getDeclaringClass(), UNSAFE.staticFieldOffset(field), value);
-        else UNSAFE.putObjectVolatile(checkObject(object, field), UNSAFE.objectFieldOffset(field), value);
-    }
-    
-    public static void setBooleanFieldVolatile(Object object, Field field, boolean value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        if (field.getType() != boolean.class) throw new IllegalArgumentException("Illegal field type; expected boolean");
-        if (isStatic(field.getModifiers())) UNSAFE.putBooleanVolatile(field.getDeclaringClass(), UNSAFE.staticFieldOffset(field), value);
-        else UNSAFE.putBooleanVolatile(checkObject(object, field), UNSAFE.objectFieldOffset(field), value);
-    }
-    
-    public static void setByteFieldVolatile(Object object, Field field, byte value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        if (field.getType() != byte.class) throw new IllegalArgumentException("Illegal field type; expected byte");
-        if (isStatic(field.getModifiers())) UNSAFE.putByteVolatile(field.getDeclaringClass(), UNSAFE.staticFieldOffset(field), value);
-        else UNSAFE.putByteVolatile(checkObject(object, field), UNSAFE.objectFieldOffset(field), value);
-    }
-    
-    public static void setCharFieldVolatile(Object object, Field field, char value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        if (field.getType() != char.class) throw new IllegalArgumentException("Illegal field type; expected char");
-        if (isStatic(field.getModifiers())) UNSAFE.putCharVolatile(field.getDeclaringClass(), UNSAFE.staticFieldOffset(field), value);
-        else UNSAFE.putCharVolatile(checkObject(object, field), UNSAFE.objectFieldOffset(field), value);
-    }
-    
-    public static void setShortFieldVolatile(Object object, Field field, short value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        if (field.getType() != short.class) throw new IllegalArgumentException("Illegal field type; expected short");
-        if (isStatic(field.getModifiers())) UNSAFE.putShortVolatile(field.getDeclaringClass(), UNSAFE.staticFieldOffset(field), value);
-        else UNSAFE.putShortVolatile(checkObject(object, field), UNSAFE.objectFieldOffset(field), value);
-    }
-    
-    public static void setIntFieldVolatile(Object object, Field field, int value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        if (field.getType() != int.class) throw new IllegalArgumentException("Illegal field type; expected int");
-        if (isStatic(field.getModifiers())) UNSAFE.putIntVolatile(field.getDeclaringClass(), UNSAFE.staticFieldOffset(field), value);
-        else UNSAFE.putIntVolatile(checkObject(object, field), UNSAFE.objectFieldOffset(field), value);
-    }
-    
-    public static void setLongFieldVolatile(Object object, Field field, long value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        if (field.getType() != long.class) throw new IllegalArgumentException("Illegal field type; expected long");
-        if (isStatic(field.getModifiers())) UNSAFE.putLongVolatile(field.getDeclaringClass(), UNSAFE.staticFieldOffset(field), value);
-        else UNSAFE.putLongVolatile(checkObject(object, field), UNSAFE.objectFieldOffset(field), value);
-    }
-    
-    public static void setFloatFieldVolatile(Object object, Field field, float value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        if (field.getType() != float.class) throw new IllegalArgumentException("Illegal field type; expected float");
-        if (isStatic(field.getModifiers())) UNSAFE.putFloatVolatile(field.getDeclaringClass(), UNSAFE.staticFieldOffset(field), value);
-        else UNSAFE.putFloatVolatile(checkObject(object, field), UNSAFE.objectFieldOffset(field), value);
-    }
-    
-    public static void setDoubleFieldVolatile(Object object, Field field, double value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        if (field.getType() != double.class) throw new IllegalArgumentException("Illegal field type; expected double");
-        if (isStatic(field.getModifiers())) UNSAFE.putDoubleVolatile(field.getDeclaringClass(), UNSAFE.staticFieldOffset(field), value);
-        else UNSAFE.putDoubleVolatile(checkObject(object, field), UNSAFE.objectFieldOffset(field), value);
     }
     
     public static void invokeVoidMethod(Object object, Method method, Object... args) throws InvocationTargetException, IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
@@ -1096,6 +979,10 @@ public class ReflectionSupport {
     public static String getCallerMethod() {
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
         return stackTrace[stackTrace.length - 1].getMethodName();
+    }
+
+    public static void sneakyThrows(Throwable throwable) {
+        UNSAFE.throwException(throwable);
     }
 
 }

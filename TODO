@@ -27,7 +27,7 @@ JavaScript Engine [macOS/iOS JavaScriptCore (JIT disabled), other QuickJS]
 --------------------------------
 Utilities
 --------------------------------
-Atomic [Single-instance factory]
+Thread Worker API
 FFI Types API [Struct/Union Mapping Required]
 File Monitor
 Array Utilities

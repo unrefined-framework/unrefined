@@ -106,6 +106,14 @@ public abstract class Foreign {
         return addressSize() == 8 ? long.class : int.class;
     }
 
+    /**
+     * Gets the size in bytes of a native memory page (whatever that is).
+     * This value will always be a power of two.
+     */
+    public abstract int memoryPageSize();
+
+    public abstract int arrayIndexScale(Class<?> clazz);
+
     public abstract Charset systemCharset();
     public abstract int systemCharSize();
 

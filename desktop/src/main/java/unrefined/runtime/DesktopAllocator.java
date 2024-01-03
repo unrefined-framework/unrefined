@@ -310,9 +310,4 @@ public class DesktopAllocator extends Allocator {
         UnsafeSupport.invokeCleaner(buffer);
     }
 
-    @Override
-    public int memoryPageSize() {
-        return UNSAFE.pageSize();
-    }
-
 }
