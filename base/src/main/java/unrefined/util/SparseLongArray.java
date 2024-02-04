@@ -17,7 +17,6 @@
 package unrefined.util;
 
 import java.util.Iterator;
-import java.util.RandomAccess;
 
 /**
  * SparseLongArrays map integers to longs.  Unlike a normal array of longs,
@@ -40,7 +39,7 @@ import java.util.RandomAccess;
  * keys in ascending order, or the values corresponding to the keys in ascending
  * order in the case of <code>valueAt(int)</code>.</p>
  */
-public class SparseLongArray implements Cloneable, Iterable<Long>, RandomAccess {
+public class SparseLongArray implements Cloneable, Iterable<Long> {
 
     private int[] keys;
     private long[] values;

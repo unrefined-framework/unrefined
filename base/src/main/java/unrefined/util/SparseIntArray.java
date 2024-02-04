@@ -17,7 +17,6 @@
 package unrefined.util;
 
 import java.util.Iterator;
-import java.util.RandomAccess;
 
 /**
  * SparseIntArrays map integers to integers.  Unlike a normal array of integers,
@@ -40,7 +39,7 @@ import java.util.RandomAccess;
  * keys in ascending order, or the values corresponding to the keys in ascending
  * order in the case of <code>valueAt(int)</code>.</p>
  */
-public class SparseIntArray implements Cloneable, Iterable<Integer>, RandomAccess {
+public class SparseIntArray implements Cloneable, Iterable<Integer> {
 
     private int[] keys;
     private int[] values;

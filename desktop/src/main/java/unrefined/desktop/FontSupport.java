@@ -1,6 +1,5 @@
 package unrefined.desktop;
 
-import unrefined.internal.OperatingSystem;
 import unrefined.internal.X11.X11FontSupport;
 import unrefined.internal.macos.MacFontSupport;
 import unrefined.internal.windows.WindowsFontSupport;
@@ -31,8 +30,8 @@ public final class FontSupport {
     public static final Font MONOSPACED_FONT = Font.decode(Font.MONOSPACED);
 
     public static Font getDefaultFont() {
-        if (OperatingSystem.IS_WINDOWS) return WindowsFontSupport.ICONTITLELOGFONT;
-        else if (OperatingSystem.IS_MAC) return MacFontSupport.SYSTEM_FONT;
+        if (OSInfo.IS_WINDOWS) return WindowsFontSupport.ICONTITLELOGFONT;
+        else if (OSInfo.IS_MAC) return MacFontSupport.SYSTEM_FONT;
         else return X11FontSupport.getDefaultFont();
     }
 

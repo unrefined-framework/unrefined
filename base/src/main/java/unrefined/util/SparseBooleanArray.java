@@ -17,7 +17,6 @@
 package unrefined.util;
 
 import java.util.Iterator;
-import java.util.RandomAccess;
 
 /**
  * SparseBooleanArrays map integers to booleans.
@@ -41,7 +40,7 @@ import java.util.RandomAccess;
  * keys in ascending order, or the values corresponding to the keys in ascending
  * order in the case of <code>valueAt(int)</code>.</p>
  */
-public class SparseBooleanArray implements Cloneable, Iterable<Boolean>, RandomAccess {
+public class SparseBooleanArray implements Cloneable, Iterable<Boolean> {
 
     private int[] keys;
     private boolean[] values;

@@ -29,7 +29,7 @@ public final class CursorAnimator {
             synchronized (TIMER_LOCK) {
                 CursorAnimator.COMPONENT = component;
                 if (TIMER != null) TIMER.cancel();
-                TIMER = new Timer("UXGL Cursor Animator", true);
+                TIMER = new Timer("Unrefined Cursor Animator", true);
                 CURSORS = cursor.getCursors().clone();
                 DURATIONS = cursor.getDurations().clone();
                 INDEX = 0;

@@ -1,7 +1,8 @@
-package unrefined.internal;
+package unrefined.desktop;
 
 import unrefined.util.NotInstantiableError;
 
+import java.io.File;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -10,22 +11,22 @@ import java.util.Locale;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
-public final class OperatingSystem {
+public final class OSInfo {
 
-    private OperatingSystem() {
-        throw new NotInstantiableError(OperatingSystem.class);
+    private OSInfo() {
+        throw new NotInstantiableError(OSInfo.class);
     }
 
     private static final String OS_NAME = System.getProperty("os.name");
     private static final String OS_VERSION = System.getProperty("os.version");
-    private static final long OS_VERSION_LONG;
+    public static final long OS_VERSION_LONG;
     static {
         int major = 1;
         int minor = 0;
         int micro = 0;
         int patch = 0;
         try {
-            StringTokenizer st = new StringTokenizer(OperatingSystem.OS_VERSION, "._-+");
+            StringTokenizer st = new StringTokenizer(OSInfo.OS_VERSION, "._-+");
             major = Integer.parseInt(st.nextToken());
             minor = Integer.parseInt(st.nextToken());
             micro = Integer.parseInt(st.nextToken());
@@ -39,9 +40,16 @@ public final class OperatingSystem {
     public static final boolean IS_WINDOWS = OS_NAME.startsWith("Windows");
     public static final boolean IS_WINDOWS_PE = IS_WINDOWS && "X:\\Windows\\System32".equalsIgnoreCase(System.getProperty("user.dir"));
     public static final boolean IS_MAC = OS_NAME.startsWith("Mac") || OS_NAME.startsWith("Darwin");
+    public static final boolean IS_LINUX = OS_NAME.startsWith("Linux");
+    public static final boolean IS_SOLARIS = OS_NAME.startsWith("Solaris") || OS_NAME.startsWith("SunOS");
+    public static final boolean IS_AIX = OS_NAME.startsWith("AIX");
+    public static final boolean IS_FREEBSD = OS_NAME.startsWith("FreeBSD");
+    public static final boolean IS_OPENBSD = OS_NAME.startsWith("OpenBSD");
+    public static final boolean IS_NETBSD = OS_NAME.startsWith("NetBSD");
+    public static final boolean IS_HP_UX = OS_NAME.startsWith("HP-UX");
     public static final boolean IS_X11 = !IS_WINDOWS && !IS_MAC; // Currently Wayland isn't supported
 
-    public static final Charset NATIVE_CHARSET = Charset.forName(System.getProperty("sun.jnu.encoding", System.getProperty("native.encoding")));
+    public static final Charset NATIVE_CHARSET = Charset.forName(System.getProperty("native.encoding", System.getProperty("sun.jnu.encoding")));
     private static final byte[] NATIVE_STRING_TERMINATOR = "\0".getBytes(NATIVE_CHARSET);
     public static final int NATIVE_CHAR_SIZE = NATIVE_STRING_TERMINATOR.length;
     public static final Charset WIDE_CHARSET = IS_WINDOWS ? StandardCharsets.UTF_16LE : Charset.forName(ByteOrder.nativeOrder().equals(ByteOrder.BIG_ENDIAN) ? "UTF-32BE" : "UTF-32LE");
@@ -57,7 +65,7 @@ public final class OperatingSystem {
     }
 
     public static String normalize(String pathname) {
-        return (OperatingSystem.IS_WINDOWS || OperatingSystem.IS_MAC) ? pathname : normalizeToUNIXStyle(pathname);
+        return (OSInfo.IS_WINDOWS || OSInfo.IS_MAC) ? pathname : normalizeToUNIXStyle(pathname);
     }
 
     private static String normalizeToUNIXStyle(String pathname) {
@@ -72,5 +80,7 @@ public final class OperatingSystem {
     private static long toVersionLong(int major, int minor, int micro, int patch) {
         return ((long) major << 48) | ((long) minor << 32) | ((long) micro << 16) | patch;
     }
+
+    public static final File NULL_FILE = IS_WINDOWS ? new File("NUL") : new File("/dev/null");
 
 }

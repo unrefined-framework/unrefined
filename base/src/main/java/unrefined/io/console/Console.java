@@ -2,12 +2,14 @@ package unrefined.io.console;
 
 import unrefined.context.Environment;
 import unrefined.io.AlreadyUsedException;
+import unrefined.media.graphics.Dimension;
 import unrefined.util.event.Event;
 import unrefined.util.event.EventSlot;
 import unrefined.util.signal.Signal;
 
 import java.io.FileDescriptor;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.Objects;
 
 public abstract class Console {
@@ -16,7 +18,7 @@ public abstract class Console {
     private static final Object INSTANCE_LOCK = new Object();
     public static Console getInstance() {
         if (INSTANCE == null) synchronized (INSTANCE_LOCK) {
-            if (INSTANCE == null) INSTANCE = Environment.global().get("unrefined.runtime.console", Console.class);
+            if (INSTANCE == null) INSTANCE = Environment.global.get("unrefined.runtime.console", Console.class);
         }
         return INSTANCE;
     }
@@ -46,6 +48,18 @@ public abstract class Console {
     public ConsoleStream stderr() {
         return stderr;
     }
+
+    public abstract boolean isTerminal();
+    public abstract int getTerminalWidth();
+    public abstract int getTerminalHeight();
+    public abstract void getTerminalSize(Dimension dimension);
+
+    public abstract int getAnsiType();
+    public abstract int getMaximumColors();
+    public abstract Charset getCharset();
+
+    public abstract void setAnsiMode(int mode);
+    public abstract int getAnsiMode();
 
     public static class SignalEvent extends Event<Console> {
         private final String signal;

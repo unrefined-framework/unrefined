@@ -17,7 +17,7 @@ public class RandomAccessAsset implements RandomAccessDataInput {
         this.asset = Objects.requireNonNull(asset);
     }
 
-    public void ensureStreamOpen() throws IOException {
+    private void ensureStreamOpen() throws IOException {
         if (readerStream == null) readerStream = new DataInputStream(stream = new AssetOffsetCountInputStream(asset));
     }
 

@@ -1,9 +1,45 @@
 package unrefined.util;
 
+import unrefined.nio.charset.Charsets;
+
+import java.util.Arrays;
+
 public final class StringCompat {
 
     private StringCompat() {
         throw new NotInstantiableError(StringCompat.class);
+    }
+
+    public static String repeat(String s, int count) {
+        if (count < 0) throw new IllegalArgumentException("count is negative: " + count);
+        else if (count == 0) return "";
+        else if (count == 1) return s;
+        final byte[] value = s.getBytes(Charsets.UTF_8);
+        final int len = value.length;
+        if (len == 0) return "";
+        if (Integer.MAX_VALUE / count < len) {
+            throw new OutOfMemoryError("Required length exceeds implementation limit");
+        }
+        if (len == 1) {
+            final byte[] single = new byte[count];
+            Arrays.fill(single, value[0]);
+            return new String(single, Charsets.UTF_8);
+        }
+        final int limit = len * count;
+        final byte[] multiple = new byte[limit];
+        System.arraycopy(value, 0, multiple, 0, len);
+        repeatCopyRest(multiple, 0, limit, len);
+        return new String(multiple, Charsets.UTF_8);
+    }
+
+    private static void repeatCopyRest(byte[] buffer, int offset, int limit, int copied) {
+        // Initial copy is in the buffer.
+        for (; copied < limit - copied; copied <<= 1) {
+            // Power of two duplicate.
+            System.arraycopy(buffer, offset, buffer, offset + copied, copied);
+        }
+        // Duplicate remainder.
+        System.arraycopy(buffer, offset, buffer, offset + copied, limit - copied);
     }
 
     public static int indexOfNonWhitespace(String s) {

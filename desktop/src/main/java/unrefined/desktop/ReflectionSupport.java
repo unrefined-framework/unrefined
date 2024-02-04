@@ -709,7 +709,7 @@ public class ReflectionSupport {
     }
 
     public static boolean isProxyObject(Object object) {
-        return Proxy.isProxyClass(object.getClass());
+        return object != null && Proxy.isProxyClass(object.getClass());
     }
 
     public static InvocationHandler getInvocationHandler(Object object) {
@@ -970,7 +970,7 @@ public class ReflectionSupport {
     public static Class<?> getCallerClass() {
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
         try {
-            return Class.forName(stackTrace[stackTrace.length - 1].getClassName());
+            return Class.forName(stackTrace[stackTrace.length - 2].getClassName());
         } catch (ClassNotFoundException e) {
             throw new UnexpectedError(e);
         }
@@ -978,11 +978,15 @@ public class ReflectionSupport {
 
     public static String getCallerMethod() {
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-        return stackTrace[stackTrace.length - 1].getMethodName();
+        return stackTrace[stackTrace.length - 2].getMethodName();
     }
 
-    public static void sneakyThrows(Throwable throwable) {
-        UNSAFE.throwException(throwable);
+    public static void ensureInitialized(Class<?> clazz) {
+        UNSAFE.ensureClassInitialized(clazz);
+    }
+
+    public static boolean shouldBeInitialized(Class<?> clazz) {
+        return UNSAFE.shouldBeInitialized(clazz);
     }
 
 }

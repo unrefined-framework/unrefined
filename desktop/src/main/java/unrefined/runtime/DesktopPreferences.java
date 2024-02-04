@@ -36,10 +36,7 @@ public class DesktopPreferences extends Preferences {
     private final Object cacheLock = new Object();
 
     private final Signal<Runnable> onApply = Signal.ofRunnable();
-    private static final BaseDispatcher DISPATCHER = new BaseDispatcher("UXGL Desktop Preferences");
-    static {
-        DISPATCHER.start();
-    }
+    private static final BaseDispatcher DISPATCHER = new BaseDispatcher("Unrefined Desktop Preferences");
 
     private final Editor editor;
 

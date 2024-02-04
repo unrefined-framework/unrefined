@@ -1,8 +1,11 @@
 package unrefined.util.concurrent;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class SingletonReference<V> {
+public class SingletonReference<V> implements Serializable {
+
+    private static final long serialVersionUID = 4454797889195124053L;
 
     private volatile V instance = null;
     private final Producer<V> producer;

@@ -27,7 +27,7 @@ public class ChannelFile implements RandomAccessDataInput, RandomAccessDataOutpu
         public static final int SYNC              = 1 << 6;
         public static final int DSYNC             = 1 << 7;
         public static int removeUnusedBits(int mode) {
-            return mode << 8 >>> 8;
+            return mode << 24 >>> 24;
         }
         public static String toString(int mode) {
             mode = removeUnusedBits(mode);
@@ -308,6 +308,30 @@ public class ChannelFile implements RandomAccessDataInput, RandomAccessDataOutpu
     @Override
     public String readUTF() throws IOException {
         return randomAccessFile.readUTF();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ChannelFile that = (ChannelFile) o;
+
+        if (mode != that.mode) return false;
+        if (alreadyExists != that.alreadyExists) return false;
+        if (deleteOnClose != that.deleteOnClose) return false;
+        if (!randomAccessFile.equals(that.randomAccessFile)) return false;
+        return file.equals(that.file);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = randomAccessFile.hashCode();
+        result = 31 * result + file.hashCode();
+        result = 31 * result + mode;
+        result = 31 * result + (alreadyExists ? 1 : 0);
+        result = 31 * result + (deleteOnClose ? 1 : 0);
+        return result;
     }
 
     @Override

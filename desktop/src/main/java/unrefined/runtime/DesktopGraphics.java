@@ -16,6 +16,7 @@ import unrefined.media.graphics.RectangleF;
 import unrefined.media.graphics.Text;
 import unrefined.media.graphics.Transform;
 import unrefined.util.AlreadyDisposedException;
+import unrefined.util.CharFactory;
 import unrefined.util.PhantomString;
 
 import java.awt.AlphaComposite;
@@ -302,7 +303,7 @@ public class DesktopGraphics extends Graphics {
 
     @Override
     public void drawTextOnPath(CharSequence text, int start, int end, Path path, float startOffset, int x, int y) {
-        drawTextOnPath(Text.toCharArray(text, start, end), path, startOffset, x, y);
+        drawTextOnPath(CharFactory.toCharArray(text, start, end), path, startOffset, x, y);
     }
 
     @Override
@@ -322,7 +323,7 @@ public class DesktopGraphics extends Graphics {
 
     @Override
     public void drawTextOnPath(CharSequence text, int start, int end, Path path, float startOffset, Transform transform) {
-        drawTextOnPath(Text.toCharArray(text, start, end), path, startOffset, transform);
+        drawTextOnPath(CharFactory.toCharArray(text, start, end), path, startOffset, transform);
     }
 
     @Override

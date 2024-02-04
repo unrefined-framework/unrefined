@@ -16,14 +16,13 @@
 package unrefined.util;
 
 import java.util.Iterator;
-import java.util.RandomAccess;
 
 /**
  * CircularLongArray is a circular long array data structure that provides O(1) random read, O(1)
  * prepend and O(1) append. The CircularLongArray automatically grows its capacity when number of
  * added longs is over its capacity.
  */
-public class CircularLongArray implements Cloneable, Iterable<Long>, RandomAccess {
+public class CircularLongArray implements Cloneable, Iterable<Long> {
 
     private long[] elements;
     private int head;

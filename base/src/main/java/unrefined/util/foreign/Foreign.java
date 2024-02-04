@@ -1,10 +1,13 @@
 package unrefined.util.foreign;
 
 import unrefined.context.Environment;
+import unrefined.nio.Pointer;
+import unrefined.util.UnexpectedError;
 import unrefined.util.reflect.Reflection;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
@@ -15,40 +18,113 @@ public abstract class Foreign {
     private static final Object INSTANCE_LOCK = new Object();
     public static Foreign getInstance() {
         if (INSTANCE == null) synchronized (INSTANCE_LOCK) {
-            if (INSTANCE == null) INSTANCE = Environment.global().get("unrefined.runtime.foreign", Foreign.class);
+            if (INSTANCE == null) INSTANCE = Environment.global.get("unrefined.runtime.foreign", Foreign.class);
         }
         return INSTANCE;
     }
 
-    public abstract void register(Class<?> clazz);
-    public abstract void unregister(Class<?> clazz);
+    public <T extends Aggregate> T newAggregateInstance(Class<T> clazz, Pointer memory) {
+        try {
+            return Reflection.getInstance().newInstance(clazz.getDeclaredConstructor(Pointer.class), memory);
+        } catch (InstantiationException | InvocationTargetException | NoSuchMethodException e) {
+            throw new UnexpectedError(e);
+        }
+    }
 
-    public abstract <T extends Library> T downcallProxy(ClassLoader loader, Class<T> clazz);
+    public Aggregate.Descriptor descriptorOf(Class<? extends Aggregate> clazz) {
+        return Aggregate.descriptorOf(clazz);
+    }
+    public long sizeOfType(Class<? extends Aggregate> clazz) {
+        return Aggregate.sizeOfType(clazz);
+    }
+    public long sizeOf(Aggregate aggregate) {
+        return Aggregate.sizeOf(aggregate);
+    }
+
+    public abstract <T extends Library> T downcallProxy(int options, Class<T> clazz, ClassLoader loader);
+    public <T extends Library> T downcallProxy(Class<T> clazz, ClassLoader loader) {
+        return downcallProxy(Symbol.Option.DEFAULT, clazz, loader);
+    }
+    public <T extends Library> T downcallProxy(int options, Class<T> clazz) {
+        return downcallProxy(options, clazz, Reflection.getInstance().getCallerClass().getClassLoader());
+    }
     public <T extends Library> T downcallProxy(Class<T> clazz) {
-        return downcallProxy(Reflection.getInstance().getCallerClass().getClassLoader(), clazz);
+        return downcallProxy(Symbol.Option.DEFAULT, clazz);
     }
 
-    public abstract Symbol downcallHandle(long function, Class<?> returnType, Class<?>... parameterTypes);
+    public abstract Symbol downcallHandle(int options, long function, Class<?> returnType, Class<?>... parameterTypes);
+    public Symbol downcallHandle(long function, Class<?> returnType, Class<?>... parameterTypes) {
+        return downcallHandle(Symbol.Option.DEFAULT, function, returnType, parameterTypes);
+    }
 
-    public abstract Symbol upcallStub(Object object, Method method, Class<?> returnType, Class<?>... parameterTypes);
-    public Symbol upcallStub(Method method, Class<?> returnType, Class<?>... parameterTypes) {
+    public abstract Symbol upcallStub(int options, Object object, Method method, Class<?> returnType, Class<?>... parameterTypes);
+    public Symbol upcallStub(Object object, Method method, Class<?> returnType, Class<?>... parameterTypes) {
+        return upcallStub(Symbol.Option.DEFAULT, object, method, returnType, parameterTypes);
+    }
+    public Symbol upcallStub(int options, Method method, Class<?> returnType, Class<?>... parameterTypes) {
         if (!Modifier.isStatic(method.getModifiers())) throw new IllegalArgumentException("Illegal method modifier; expected static");
-        return upcallStub(null, method, returnType, parameterTypes);
+        return upcallStub(options, null, method, returnType, parameterTypes);
+    }
+    public Symbol upcallStub(Method method, Class<?> returnType, Class<?>... parameterTypes) {
+        return upcallStub(Symbol.Option.DEFAULT, method, returnType, parameterTypes);
     }
 
-    public abstract void invokeVoidFunction(long address, Object... args);
-    public abstract boolean invokeBooleanFunction(long address, Object... args);
-    public abstract byte invokeByteFunction(long address, Object... args);
-    public abstract char invokeCharFunction(long address, Object... args);
-    public abstract short invokeShortFunction(long address, Object... args);
-    public abstract int invokeIntFunction(long address, Object... args);
-    public abstract long invokeNativeIntFunction(long address, Object... args);
-    public abstract long invokeLongFunction(long address, Object... args);
-    public abstract long invokeNativeLongFunction(long address, Object... args);
-    public abstract float invokeFloatFunction(long address, Object... args);
-    public abstract double invokeDoubleFunction(long address, Object... args);
-    public abstract long invokeAddressFunction(long address, Object... args);
-    public abstract <T> T invokeFunction(long address, Class<T> returnType, Object... args);
+    public abstract void invokeVoidFunction(int options, long address, Object... args);
+    public void invokeVoidFunction(long address, Object... args) {
+        invokeVoidFunction(Symbol.Option.DEFAULT, address, args);
+    }
+    public abstract boolean invokeBooleanFunction(int options, long address, Object... args);
+    public boolean invokeBooleanFunction(long address, Object... args) {
+        return invokeBooleanFunction(Symbol.Option.DEFAULT, address, args);
+    }
+    public abstract byte invokeByteFunction(int options, long address, Object... args);
+    public byte invokeByteFunction(long address, Object... args) {
+        return invokeByteFunction(Symbol.Option.DEFAULT, address, args);
+    }
+    public abstract char invokeCharFunction(int options, long address, Object... args);
+    public char invokeCharFunction(long address, Object... args) {
+        return invokeCharFunction(Symbol.Option.DEFAULT, address, args);
+    }
+    public abstract short invokeShortFunction(int options, long address, Object... args);
+    public short invokeShortFunction(long address, Object... args) {
+        return invokeShortFunction(Symbol.Option.DEFAULT, address, args);
+    }
+    public abstract int invokeIntFunction(int options, long address, Object... args);
+    public int invokeIntFunction(long address, Object... args) {
+        return invokeIntFunction(Symbol.Option.DEFAULT, address, args);
+    }
+    public abstract long invokeNativeIntFunction(int options, long address, Object... args);
+    public long invokeNativeIntFunction(long address, Object... args) {
+        return invokeNativeIntFunction(Symbol.Option.DEFAULT, address, args);
+    }
+    public abstract long invokeLongFunction(int options, long address, Object... args);
+    public long invokeLongFunction(long address, Object... args) {
+        return invokeLongFunction(Symbol.Option.DEFAULT, address, args);
+    }
+    public abstract long invokeNativeLongFunction(int options, long address, Object... args);
+    public long invokeNativeLongFunction(long address, Object... args) {
+        return invokeNativeLongFunction(Symbol.Option.DEFAULT, address, args);
+    }
+    public abstract float invokeFloatFunction(int options, long address, Object... args);
+    public float invokeFloatFunction(long address, Object... args) {
+        return invokeFloatFunction(Symbol.Option.DEFAULT, address, args);
+    }
+    public abstract double invokeDoubleFunction(int options, long address, Object... args);
+    public double invokeDoubleFunction(long address, Object... args) {
+        return invokeDoubleFunction(Symbol.Option.DEFAULT, address, args);
+    }
+    public abstract long invokeAddressFunction(int options, long address, Object... args);
+    public long invokeAddressFunction(long address, Object... args) {
+        return invokeAddressFunction(Symbol.Option.DEFAULT, address, args);
+    }
+    public abstract <T extends Aggregate> T invokeAggregateFunction(int options, long address, Class<T> returnType, Object... args);
+    public <T extends Aggregate> T invokeAggregateFunction(long address, Class<T> returnType, Object... args) {
+        return invokeAggregateFunction(Symbol.Option.DEFAULT, address, returnType, args);
+    }
+    public abstract <T> T invokeFunction(int options, long address, Class<T> returnType, Object... args);
+    public <T> T invokeFunction(long address, Class<T> returnType, Object... args) {
+        return invokeFunction(Symbol.Option.DEFAULT, address, returnType, args);
+    }
 
     public static final class Loader {
         public static final int CLASS  = 0;
@@ -106,14 +182,6 @@ public abstract class Foreign {
         return addressSize() == 8 ? long.class : int.class;
     }
 
-    /**
-     * Gets the size in bytes of a native memory page (whatever that is).
-     * This value will always be a power of two.
-     */
-    public abstract int memoryPageSize();
-
-    public abstract int arrayIndexScale(Class<?> clazz);
-
     public abstract Charset systemCharset();
     public abstract int systemCharSize();
 
@@ -122,5 +190,7 @@ public abstract class Foreign {
 
     public abstract int getLastError();
     public abstract void setLastError(int errno);
+
+    public abstract String getErrorString(int errno);
 
 }

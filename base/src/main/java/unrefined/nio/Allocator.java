@@ -25,38 +25,47 @@ public abstract class Allocator {
 
     private static volatile Allocator INSTANCE;
     private static final Object INSTANCE_LOCK = new Object();
-    public static Allocator defaultInstance() {
+    public static Allocator getInstance() {
         if (INSTANCE == null) synchronized (INSTANCE_LOCK) {
-            if (INSTANCE == null) INSTANCE = Environment.global().get("unrefined.runtime.allocator", Allocator.class);
+            if (INSTANCE == null) INSTANCE = Environment.global.get("unrefined.runtime.allocator", Allocator.class);
         }
         return INSTANCE;
     }
 
-    public static final long       NULL                = 0L;
-    public static final byte       INT8_MIN            = Byte.MIN_VALUE;
-    public static final byte       INT8_MAX            = Byte.MAX_VALUE;
-    public static final byte       UINT8_MAX           = -1;
-    public static final short      UINT8_MAX_UNSIGNED  = (short) Byte.toUnsignedInt(UINT8_MAX);
-    public static final short      INT16_MIN           = Short.MIN_VALUE;
-    public static final short      INT16_MAX           = Short.MAX_VALUE;
-    public static final short      UINT16_MAX          = -1;
-    public static final int        UINT16_MAX_UNSIGNED = Short.toUnsignedInt(UINT16_MAX);
-    public static final int        INT32_MIN           = Integer.MIN_VALUE;
-    public static final int        INT32_MAX           = Integer.MAX_VALUE;
-    public static final int        UINT32_MAX          = 0xFFFFFF;
-    public static final long       UINT32_MAX_UNSIGNED = Integer.toUnsignedLong(UINT32_MAX);
-    public static final long       INT64_MIN           = Long.MIN_VALUE;
-    public static final long       INT64_MAX           = Long.MAX_VALUE;
-    public static final long       UINT64_MAX          = 0xFFFFFFFFL;
-    public static final BigInteger UINT64_MAX_UNSIGNED = FastMath.unsign(UINT64_MAX);
-    public static final long       SIZE_MAX            = Foreign.getInstance().addressSize() == 8 ? UINT64_MAX : UINT32_MAX;
-    public static final BigInteger SIZE_MAX_UNSIGNED   = Foreign.getInstance().addressSize() == 8 ? UINT64_MAX_UNSIGNED :
+    public static final long       NULL                      = 0L;
+    public static final byte       INT8_MIN                  = Byte.MIN_VALUE;
+    public static final byte       INT8_MAX                  = Byte.MAX_VALUE;
+    public static final byte       UINT8_MAX                 = -1;
+    public static final short      UINT8_MAX_UNSIGNED        = (short) Byte.toUnsignedInt(UINT8_MAX);
+    public static final short      INT16_MIN                 = Short.MIN_VALUE;
+    public static final short      INT16_MAX                 = Short.MAX_VALUE;
+    public static final short      UINT16_MAX                = -1;
+    public static final int        UINT16_MAX_UNSIGNED       = Short.toUnsignedInt(UINT16_MAX);
+    public static final int        INT32_MIN                 = Integer.MIN_VALUE;
+    public static final int        INT32_MAX                 = Integer.MAX_VALUE;
+    public static final int        UINT32_MAX                = 0xFFFFFF;
+    public static final long       UINT32_MAX_UNSIGNED       = Integer.toUnsignedLong(UINT32_MAX);
+    public static final long       INT64_MIN                 = Long.MIN_VALUE;
+    public static final long       INT64_MAX                 = Long.MAX_VALUE;
+    public static final long       UINT64_MAX                = 0xFFFFFFFFL;
+    public static final BigInteger UINT64_MAX_UNSIGNED       = FastMath.unsign(UINT64_MAX);
+    public static final long       NATIVE_INT_MAX            = Foreign.getInstance().nativeIntSize() == 8 ? Long.MAX_VALUE : Integer.MAX_VALUE;
+    public static final long       NATIVE_INT_MIN            = Foreign.getInstance().nativeIntSize() == 8 ? Long.MIN_VALUE : Integer.MAX_VALUE;
+    public static final long       NATIVE_UINT_MAX           = Foreign.getInstance().nativeIntSize() == 8 ? UINT64_MAX : UINT32_MAX;
+    public static final BigInteger NATIVE_UINT_MAX_UNSIGNED  = Foreign.getInstance().nativeIntSize() == 8 ? UINT64_MAX_UNSIGNED : BigInteger.valueOf(UINT32_MAX_UNSIGNED);
+    public static final long       NATIVE_LONG_MAX           = Foreign.getInstance().nativeLongSize() == 8 ? Long.MAX_VALUE : Integer.MAX_VALUE;
+    public static final long       NATIVE_LONG_MIN           = Foreign.getInstance().nativeLongSize() == 8 ? Long.MIN_VALUE : Integer.MAX_VALUE;
+    public static final long       NATIVE_ULONG_MAX          = Foreign.getInstance().nativeLongSize() == 8 ? UINT64_MAX : UINT32_MAX;
+    public static final BigInteger NATIVE_ULONG_MAX_UNSIGNED = Foreign.getInstance().nativeLongSize() == 8 ? UINT64_MAX_UNSIGNED : BigInteger.valueOf(UINT32_MAX_UNSIGNED);
+    public static final long       SIZE_MAX                  = Foreign.getInstance().addressSize() == 8 ? UINT64_MAX : UINT32_MAX;
+    public static final BigInteger SIZE_MAX_UNSIGNED         = Foreign.getInstance().addressSize() == 8 ? UINT64_MAX_UNSIGNED :
             BigInteger.valueOf(UINT32_MAX_UNSIGNED);
 
     private interface NativeTypeAdapter {
         long get(long address);
         long get(ByteBuffer buffer);
         long get(ByteBuffer buffer, int index);
+        long get(Object array, long offset);
         void put(long address, long value);
         void put(ByteBuffer buffer, long value);
         void put(ByteBuffer buffer, int index, long value);
@@ -74,6 +83,10 @@ public abstract class Allocator {
         @Override
         public long get(ByteBuffer buffer, int index) {
             return buffer.getLong(index);
+        }
+        @Override
+        public long get(Object array, long offset) {
+            return getLong(array, offset);
         }
         @Override
         public void put(long address, long value) {
@@ -101,6 +114,10 @@ public abstract class Allocator {
         @Override
         public long get(ByteBuffer buffer, int index) {
             return (long) buffer.getInt(index) & 0xFFFFFFFFL;
+        }
+        @Override
+        public long get(Object array, long offset) {
+            return (long) getInt(array, offset) & 0xFFFFFFFFL;
         }
         @Override
         public void put(long address, long value) {
@@ -736,7 +753,7 @@ public abstract class Allocator {
     public void putShortArray(long address, short[] array) {
         putShortArray(address, array, 0, array.length);
     }
-    
+
     /**
      * Reads a {@code short} array from native memory.
      *
@@ -960,7 +977,7 @@ public abstract class Allocator {
     public void putFloatArray(long address, float[] array) {
         putFloatArray(address, array, 0, array.length);
     }
-  
+
     /**
      * Reads a {@code float} array from native memory.
      *
@@ -1291,7 +1308,7 @@ public abstract class Allocator {
     }
 
     /**
-     * Copies a {@code byte} array to native memory and appends a '\0' terminating character 
+     * Copies a {@code byte} array to native memory and appends a '\0' terminating character
      * depends on the default charset.
      * <b>Note</b> A total of length + (character size) bytes is written to native memory.
      *
@@ -1317,7 +1334,7 @@ public abstract class Allocator {
     }
 
     /**
-     * Copies a {@code byte} array to native memory and appends a '\0' terminating character 
+     * Copies a {@code byte} array to native memory and appends a '\0' terminating character
      * depends on the wide charset.
      * <b>Note</b> A total of length + (character size) bytes is written to native memory.
      *
@@ -1343,7 +1360,7 @@ public abstract class Allocator {
     }
 
     /**
-     * Copies a {@code byte} array to native memory and appends a '\0' terminating character 
+     * Copies a {@code byte} array to native memory and appends a '\0' terminating character
      * depends on the specific charset.
      * <b>Note</b> A total of length + (character size) bytes is written to native memory.
      *
@@ -1665,11 +1682,11 @@ public abstract class Allocator {
     }
 
     public Pointer wrapPointer(long address) {
-        return new DirectPointer(this, address);
+        return new DirectPointer(address);
     }
 
     public Pointer wrapPointer(long address, long size) {
-        return new DirectPointer(this, address, size, false);
+        return new DirectPointer(address, size, false);
     }
 
     public Pointer wrapPointer(ByteBuffer buffer) {
@@ -1677,7 +1694,7 @@ public abstract class Allocator {
     }
 
     public Pointer wrapPointer(byte[] array, int offset, int length) {
-        return new HeapPointer(this, array, offset, length);
+        return new HeapPointer(array, offset, length);
     }
 
     public Pointer wrapPointer(byte[] array) {
@@ -1687,11 +1704,11 @@ public abstract class Allocator {
     private static DirectPointer allocateDirectPointer(Allocator allocator, long size) throws IOException {
         long address = allocator.allocateMemory(size);
         if (address == 0) throw new IOException("Unable to allocate native memory, size: " + FastMath.unsign(size));
-        else return new DirectPointer(allocator, address, size, true);
+        else return new DirectPointer(address, size, true);
     }
 
     public Pointer allocatePointer(long size, boolean direct) throws IOException {
-        return direct ? allocateDirectPointer(this, size) : new HeapPointer(this, size);
+        return direct ? allocateDirectPointer(this, size) : new HeapPointer(size);
     }
 
     public Pointer reallocatePointer(Pointer pointer, long size) throws IOException {
@@ -1708,6 +1725,93 @@ public abstract class Allocator {
      */
     public void freePointer(Pointer pointer) throws IOException {
         pointer.close();
+    }
+
+    public abstract boolean getBoolean(Object array, long offset);
+    public abstract byte getByte(Object array, long offset);
+    public abstract char getChar(Object array, long offset);
+    public abstract short getShort(Object array, long offset);
+    public abstract int getInt(Object array, long offset);
+    public abstract long getLong(Object array, long offset);
+    public abstract float getFloat(Object array, long offset);
+    public abstract double getDouble(Object array, long offset);
+    public void getBooleanArray(Object srcArray, long srcOffset, boolean[] dstArray, int dstOffset, int length) {
+        for (int i = 0; i < length; i ++) {
+            dstArray[dstOffset + i] = getByte(srcArray, srcOffset + i) != 0;
+        }
+    }
+    public void getByteArray(Object srcArray, long srcOffset, byte[] dstArray, int dstOffset, int length) {
+        for (int i = 0; i < length; i ++) {
+            dstArray[dstOffset + i] = getByte(srcArray, srcOffset + i);
+        }
+    }
+    public void getCharArray(Object srcArray, long srcOffset, char[] dstArray, int dstOffset, int length) {
+        for (int i = 0; i < length; i ++) {
+            dstArray[dstOffset + i] = getChar(srcArray, srcOffset + (long) i << 1);
+        }
+    }
+    public void getShortArray(Object srcArray, long srcOffset, short[] dstArray, int dstOffset, int length) {
+        for (int i = 0; i < length; i ++) {
+            dstArray[dstOffset + i] = getShort(srcArray, srcOffset + (long) i << 1);
+        }
+    }
+    public void getIntArray(Object srcArray, long srcOffset, int[] dstArray, int dstOffset, int length) {
+        for (int i = 0; i < length; i ++) {
+            dstArray[dstOffset + i] = getInt(srcArray, srcOffset + (long) i << 2);
+        }
+    }
+    public void getLongArray(Object srcArray, long srcOffset, long[] dstArray, int dstOffset, int length) {
+        for (int i = 0; i < length; i ++) {
+            dstArray[dstOffset + i] = getLong(srcArray, srcOffset + (long) i << 4);
+        }
+    }
+    public void getFloatArray(Object srcArray, long srcOffset, float[] dstArray, int dstOffset, int length) {
+        for (int i = 0; i < length; i ++) {
+            dstArray[dstOffset + i] = getFloat(srcArray, srcOffset + (long) i << 2);
+        }
+    }
+    public void getDoubleArray(Object srcArray, long srcOffset, double[] dstArray, int dstOffset, int length) {
+        for (int i = 0; i < length; i ++) {
+            dstArray[dstOffset + i] = getDouble(srcArray, srcOffset + (long) i << 4);
+        }
+    }
+    public long getNativeInt(Object array, long offset) {
+        return NATIVE_INT_ADAPTER.get(array, offset);
+    }
+    public long getNativeLong(Object array, long offset) {
+        return NATIVE_LONG_ADAPTER.get(array, offset);
+    }
+    public long getAddress(Object array, long offset) {
+        return ADDRESS_ADAPTER.get(array, offset);
+    }
+    public short getUnsignedByte(Object array, long offset) {
+        return (short) Byte.toUnsignedInt(getByte(array, offset));
+    }
+    public int getUnsignedShort(Object array, long offset) {
+        return Short.toUnsignedInt(getShort(array, offset));
+    }
+    public long getUnsignedInt(Object array, long offset) {
+        return Integer.toUnsignedLong(getInt(array, offset));
+    }
+    public BigInteger getUnsignedLong(Object array, long offset) {
+        return FastMath.unsign(getLong(array, offset));
+    }
+
+    public abstract int compareMemory(long srcAddress, long srcOffset, long dstAddress, long dstOffset, long length);
+    public abstract int compareMemory(Object srcArray, long srcOffset, Object dstArray, long dstOffset, long length);
+    public abstract int compareMemory(long srcAddress, long srcOffset, Object dstArray, long dstOffset, long length);
+    public abstract int compareMemory(Object srcArray, long srcOffset, long dstAddress, long dstOffset, long length);
+
+    public int compareMemory(long srcAddress, long dstAddress, long length) {
+        return compareMemory(srcAddress, 0, dstAddress, 0, length);
+    }
+
+    public int compareMemory(Object srcArray, long srcOffset, long dstAddress, long length) {
+        return compareMemory(srcArray, srcOffset, dstAddress, 0, length);
+    }
+
+    public int compareMemory(long srcAddress, Object dstArray, long dstOffset, long length) {
+        return compareMemory(srcAddress, 0, dstArray, dstOffset, length);
     }
 
 }

@@ -34,8 +34,8 @@ public final class EmptyArray {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> T ofArrayClass(Class<T> clazz) {
-        if (!clazz.isArray()) throw new IllegalArgumentException("Not an array class");
+    public static <T> T ofArrayType(Class<T> clazz) {
+        if (!clazz.isArray()) throw new IllegalArgumentException("not an array class");
         Class<?> componentClass = clazz.getComponentType();
         if (!CACHE.containsKey(componentClass)) synchronized (CACHE) {
             if (!CACHE.containsKey(componentClass))
@@ -45,7 +45,7 @@ public final class EmptyArray {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> T[] ofComponentClass(Class<T> clazz) {
+    public static <T> T[] ofComponentType(Class<T> clazz) {
         if (!CACHE.containsKey(clazz)) synchronized (CACHE) {
             if (!CACHE.containsKey(clazz)) CACHE.put(clazz, Array.newInstance(clazz, 0));
         }

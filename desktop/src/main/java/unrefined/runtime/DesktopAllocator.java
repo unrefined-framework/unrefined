@@ -2,9 +2,13 @@ package unrefined.runtime;
 
 import unrefined.desktop.ForeignSupport;
 import unrefined.desktop.UnsafeSupport;
-import unrefined.internal.OperatingSystem;
+import unrefined.desktop.OSInfo;
+import unrefined.math.FastMath;
 import unrefined.nio.Allocator;
+import unrefined.nio.Pointer;
 
+import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -20,6 +24,124 @@ public class DesktopAllocator extends Allocator {
     @Override
     public ByteBuffer wrapBytes(long address, int capacity) {
         return MEMORY_IO.newDirectByteBuffer(address, capacity).order(ByteOrder.nativeOrder());
+    }
+
+    private static final long ARRAY_MAX = Integer.MAX_VALUE * 8L;
+
+    private static long rangeCheck(Object array, long offset) {
+        Class<?> clazz = array.getClass();
+        if (clazz.isArray() && clazz.getComponentType().isPrimitive()) {
+            if (offset < 0) throw new ArrayIndexOutOfBoundsException("Array index out of range: " + FastMath.unsign(offset));
+            else if (offset >= ARRAY_MAX || offset / UNSAFE.arrayIndexScale(clazz) >= Integer.MAX_VALUE)
+                throw new ArrayIndexOutOfBoundsException("Array index out of range: " + FastMath.unsign(offset));
+            else return UNSAFE.arrayBaseOffset(clazz) + offset;
+        }
+        else throw new ArrayStoreException("not a primitive array");
+    }
+
+    @Override
+    public boolean getBoolean(Object array, long offset) {
+        return UNSAFE.getBoolean(array, rangeCheck(array, offset));
+    }
+
+    @Override
+    public byte getByte(Object array, long offset) {
+        return UNSAFE.getByte(array, rangeCheck(array, offset));
+    }
+
+    @Override
+    public char getChar(Object array, long offset) {
+        return UNSAFE.getChar(array, rangeCheck(array, offset));
+    }
+
+    @Override
+    public short getShort(Object array, long offset) {
+        return UNSAFE.getShort(array, rangeCheck(array, offset));
+    }
+
+    @Override
+    public int getInt(Object array, long offset) {
+        return UNSAFE.getInt(array, rangeCheck(array, offset));
+    }
+
+    @Override
+    public long getLong(Object array, long offset) {
+        return UNSAFE.getLong(array, rangeCheck(array, offset));
+    }
+
+    @Override
+    public float getFloat(Object array, long offset) {
+        return UNSAFE.getFloat(array, rangeCheck(array, offset));
+    }
+
+    @Override
+    public double getDouble(Object array, long offset) {
+        return UNSAFE.getDouble(array, rangeCheck(array, offset));
+    }
+
+    @Override
+    public int compareMemory(long srcAddress, long srcOffset, long dstAddress, long dstOffset, long length) {
+        long compared = ForeignSupport.memcmp(srcAddress + srcOffset, dstAddress + dstOffset, length);
+        return compared == 0 ? 0 : (compared < 0 ? -1 : 1);
+    }
+
+    private static void rangeCheck(Class<?> clazz, long offset, long length) {
+        if (clazz.isArray() && clazz.getComponentType().isPrimitive()) {
+            if (offset < 0) throw new ArrayIndexOutOfBoundsException("Array index out of range: " + FastMath.unsign(offset));
+            else if (length < 0) throw new ArrayIndexOutOfBoundsException("Array index out of range: " +
+                    FastMath.unsign(length).add(BigInteger.valueOf(offset)));
+            else {
+                long range = offset + length;
+                if (range < 0) throw new ArrayIndexOutOfBoundsException("Array index out of range: " + FastMath.unsign(range));
+                else if (range >= ARRAY_MAX || range / UNSAFE.arrayIndexScale(clazz) >= Integer.MAX_VALUE)
+                    throw new ArrayIndexOutOfBoundsException("Array index out of range: " + FastMath.unsign(offset));
+            }
+        }
+        else throw new ArrayStoreException("not a primitive array");
+    }
+
+    @Override
+    public int compareMemory(Object srcArray, long srcOffset, Object dstArray, long dstOffset, long length) {
+        Class<?> srcType = srcArray.getClass();
+        Class<?> dstType = dstArray.getClass();
+        rangeCheck(srcType, srcOffset, length);
+        rangeCheck(dstType, dstOffset, length);
+        for (long i = 0; i < length; i ++) {
+            byte oa = UNSAFE.getByte(srcArray, UNSAFE.arrayBaseOffset(srcType) + srcOffset + i);
+            byte ob = UNSAFE.getByte(dstArray, UNSAFE.arrayBaseOffset(dstType) + dstOffset + i);
+            if (oa != ob) {
+                return FastMath.compareUnsigned(oa, ob);
+            }
+        }
+        return 0;
+    }
+
+    @Override
+    public int compareMemory(long srcAddress, long srcOffset, Object dstArray, long dstOffset, long length) {
+        Class<?> dstType = dstArray.getClass();
+        rangeCheck(dstType, dstOffset, length);
+        for (long i = 0; i < length; i ++) {
+            byte oa = UNSAFE.getByte(srcAddress + srcOffset + i);
+            byte ob = UNSAFE.getByte(dstArray, UNSAFE.arrayBaseOffset(dstType) + dstOffset + i);
+            if (oa != ob) {
+                return FastMath.compareUnsigned(oa, ob);
+            }
+        }
+        return 0;
+    }
+
+    @Override
+    public int compareMemory(Object srcArray, long srcOffset, long dstAddress, long dstOffset, long length) {
+        Class<?> srcType = srcArray.getClass();
+        rangeCheck(srcType, srcOffset, length);
+        for (long i = 0; i < length; i ++) {
+            byte oa = UNSAFE.getByte(srcArray, UNSAFE.arrayBaseOffset(srcType) + srcOffset + i);
+            byte ob = UNSAFE.getByte(dstAddress + dstOffset + i);
+            if (oa != ob) {
+                return FastMath.compareUnsigned(oa, ob);
+            }
+        }
+        return 0;
     }
 
     @Override
@@ -94,72 +216,72 @@ public class DesktopAllocator extends Allocator {
 
     @Override
     public byte getByte(long address) {
-        return UNSAFE.getByte(address);
+        return MEMORY_IO.getByte(address);
     }
 
     @Override
     public short getShort(long address) {
-        return UNSAFE.getShort(address);
+        return MEMORY_IO.getShort(address);
     }
 
     @Override
     public int getInt(long address) {
-        return UNSAFE.getInt(address);
+        return MEMORY_IO.getInt(address);
     }
 
     @Override
     public long getLong(long address) {
-        return UNSAFE.getLong(address);
+        return MEMORY_IO.getLong(address);
     }
 
     @Override
     public float getFloat(long address) {
-        return UNSAFE.getFloat(address);
+        return MEMORY_IO.getFloat(address);
     }
 
     @Override
     public double getDouble(long address) {
-        return UNSAFE.getDouble(address);
+        return MEMORY_IO.getDouble(address);
     }
 
     @Override
     public void putByte(long address, byte value) {
-        UNSAFE.putByte(address, value);
+        MEMORY_IO.putByte(address, value);
     }
 
     @Override
     public void putShort(long address, short value) {
-        UNSAFE.putShort(address, value);
+        MEMORY_IO.putShort(address, value);
     }
 
     @Override
     public void putInt(long address, int value) {
-        UNSAFE.putInt(address, value);
+        MEMORY_IO.putInt(address, value);
     }
 
     @Override
     public void putLong(long address, long value) {
-        UNSAFE.putLong(address, value);
+        MEMORY_IO.putLong(address, value);
     }
 
     @Override
     public void putFloat(long address, float value) {
-        UNSAFE.putFloat(address, value);
+        MEMORY_IO.putFloat(address, value);
     }
 
     @Override
     public void putDouble(long address, double value) {
-        UNSAFE.putDouble(address, value);
+        MEMORY_IO.putDouble(address, value);
     }
 
     @Override
     public void copyMemory(long srcAddress, long dstAddress, long size) {
-        UNSAFE.copyMemory(srcAddress, dstAddress, size);
+        MEMORY_IO.copyMemory(srcAddress, dstAddress, size);
     }
 
     @Override
     public void setMemory(long address, long size, byte value) {
-        UNSAFE.setMemory(address, size, value);
+        MEMORY_IO.setMemory(address, size, value);
     }
 
     @Override
@@ -249,7 +371,7 @@ public class DesktopAllocator extends Allocator {
         byte[] terminator = "\0".getBytes(charset);
         int size = terminator.length;
         if (size == 1 && terminator[0] == '\0') return MEMORY_IO.getStringLength(address);
-        else if (OperatingSystem.isWideCharStringCompatible(terminator)) return ForeignSupport.wcslen(address);
+        else if (OSInfo.isWideCharStringCompatible(terminator)) return ForeignSupport.wcslen(address);
         else {
             long length = 0;
             byte[] buffer = new byte[size];
@@ -268,7 +390,7 @@ public class DesktopAllocator extends Allocator {
         byte[] terminator = "\0".getBytes(charset);
         int size = terminator.length;
         if (size == 1 && terminator[0] == '\0') return MEMORY_IO.memchr(address, '\0', maxLength) - address;
-        else if (OperatingSystem.isWideCharStringCompatible(terminator)) return (ForeignSupport.wmemchr(address, '\0', maxLength) - address) / ForeignSupport.wideCharSize();
+        else if (OSInfo.isWideCharStringCompatible(terminator)) return (ForeignSupport.wmemchr(address, '\0', maxLength) - address) / ForeignSupport.wideCharSize();
         else {
             long length = 0;
             byte[] buffer = new byte[size];
@@ -287,7 +409,7 @@ public class DesktopAllocator extends Allocator {
         byte[] terminator = "\0".getBytes(charset);
         int size = terminator.length;
         if (size == 1 && terminator[0] == '\0') return new String(getZeroTerminatedByteArray(address, maxLength), charset);
-        else if (OperatingSystem.isWideCharStringCompatible(terminator)) return new String(getZeroTerminatedWideCharByteArray(address, maxLength), charset);
+        else if (OSInfo.isWideCharStringCompatible(terminator)) return new String(getZeroTerminatedWideCharByteArray(address, maxLength), charset);
         else {
             StringBuilder builder = new StringBuilder();
             byte[] buffer = new byte[size];

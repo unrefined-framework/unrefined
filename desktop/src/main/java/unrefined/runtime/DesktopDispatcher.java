@@ -1,5 +1,6 @@
 package unrefined.runtime;
 
+import unrefined.desktop.AWTSupport;
 import unrefined.util.signal.Dispatcher;
 
 import java.awt.EventQueue;
@@ -7,24 +8,18 @@ import java.awt.EventQueue;
 public class DesktopDispatcher extends Dispatcher {
 
     @Override
-    protected boolean isDispatchThread() {
+    public boolean isDispatchThread(Thread thread) {
+        return AWTSupport.isDispatchThread(thread);
+    }
+
+    @Override
+    public boolean isDispatchThread() {
         return EventQueue.isDispatchThread();
     }
 
     @Override
-    protected void preActuation() {}
-
-    @Override
-    protected void switchContext() {
-        EventQueue.invokeLater(this::dispatch);
-    }
-
-    @Override
-    protected void postActuation() {}
-
-    @Override
-    protected boolean hasQueueThread() {
-        return false;
+    public void invokeLater(Runnable runnable) {
+        EventQueue.invokeLater(runnable);
     }
 
 }

@@ -15,7 +15,7 @@ public class AssetOffsetCountInputStream extends OffsetCountInputStream {
         this.asset = Objects.requireNonNull(asset);
     }
 
-    public void openStreamIfNull() throws IOException {
+    private void openStreamIfNull() throws IOException {
         if (stream == null) stream = asset.openStream();
     }
 

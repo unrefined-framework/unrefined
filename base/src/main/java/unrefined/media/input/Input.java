@@ -17,7 +17,7 @@ public final class Input {
         public static final int META  = 1 << 2;
         public static final int ALT   = 1 << 3;
         public static int removeUnusedBits(int modifiers) {
-            return modifiers << 4 >>> 4;
+            return modifiers << 28 >>> 28;
         }
         public static String toString(int modifiers) {
             modifiers = removeUnusedBits(modifiers);

@@ -1,24 +1,65 @@
 package unrefined.nio.charset;
 
+import unrefined.io.console.Console;
 import unrefined.util.NotInstantiableError;
 import unrefined.util.foreign.Foreign;
 
 import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
+import java.nio.charset.UnsupportedCharsetException;
+import java.util.SortedMap;
 
-/**
- * Constant definitions for the standard {@link Charset charsets}. These
- * charsets are guaranteed to be available on every implementation of the Java
- * platform.
- */
 public final class Charsets {
 
     private Charsets() {
         throw new NotInstantiableError(Charsets.class);
     }
 
-    public static final Charset DEFAULT = Charset.defaultCharset();
-    public static final Charset SYSTEM  = Foreign.getInstance().systemCharset();
-    public static final Charset WIDE    = Foreign.getInstance().wideCharset();
+    public static boolean isSupported(String charsetName) {
+        return Charset.isSupported(charsetName);
+    }
+
+    public static Charset forName(String charsetName) {
+        return Charset.forName(charsetName);
+    }
+
+    public static Charset getCharset(String charsetName) {
+        try {
+            return Charset.forName(charsetName);
+        }
+        catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
+            return null;
+        }
+    }
+
+    public static Charset getCharset(String charsetName, Charset fallback) {
+        try {
+            return Charset.forName(charsetName);
+        }
+        catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
+            return fallback;
+        }
+    }
+
+    public static SortedMap<String, Charset> availableCharsets() {
+        return Charset.availableCharsets();
+    }
+
+    public static Charset defaultCharset() {
+        return Charset.defaultCharset();
+    }
+
+    public static Charset systemCharset() {
+        return Foreign.getInstance().systemCharset();
+    }
+
+    public static Charset wideCharset() {
+        return Foreign.getInstance().wideCharset();
+    }
+
+    public static Charset consoleCharset() {
+        return Console.getInstance().getCharset();
+    }
 
     /**
      * Seven-bit ASCII, also known as ISO646-US, also known as the

@@ -10,7 +10,7 @@ import unrefined.desktop.AWTSupport;
 import unrefined.desktop.CursorAnimator;
 import unrefined.desktop.KeyEventParser;
 import unrefined.desktop.StandardDirectories;
-import unrefined.internal.OperatingSystem;
+import unrefined.desktop.OSInfo;
 import unrefined.internal.X11.X11FontSupport;
 import unrefined.internal.macos.MacFontSupport;
 import unrefined.internal.windows.WindowsAWTSupport;
@@ -22,7 +22,6 @@ import unrefined.media.graphics.Insets;
 import unrefined.media.graphics.Point;
 import unrefined.media.graphics.Rectangle;
 import unrefined.media.input.Input;
-import unrefined.nio.Allocator;
 import unrefined.util.TextManager;
 import unrefined.util.event.EventBus;
 import unrefined.util.signal.Dispatcher;
@@ -69,19 +68,18 @@ public class DesktopApplication extends unrefined.context.Container implements
     public DesktopApplication(ContainerListener containerListener) {
         super(containerListener);
 
-        local().put("unrefined.runtime.textManager", TextManager.defaultInstance());
-        local().put("unrefined.runtime.eventBus", EventBus.defaultInstance());
+        local.put("unrefined.runtime.textManager", TextManager.defaultInstance());
+        local.put("unrefined.runtime.eventBus", EventBus.defaultInstance());
 
-        local().put("unrefined.runtime.dispatcher", Dispatcher.defaultInstance());
-        local().put("unrefined.runtime.logger", Logger.defaultInstance());
-        local().put("unrefined.runtime.assetLoader", AssetLoader.defaultInstance());
-        local().put("unrefined.runtime.allocator", Allocator.defaultInstance());
+        local.put("unrefined.runtime.dispatcher", Dispatcher.defaultInstance());
+        local.put("unrefined.runtime.logger", Logger.defaultInstance());
+        local.put("unrefined.runtime.assetLoader", AssetLoader.defaultInstance());
 
-        properties().setProperty("unrefined.app.vendor", Environment.properties().getProperty("unrefined.app.vendor"));
-        properties().setProperty("unrefined.app.name", Environment.properties().getProperty("unrefined.app.name"));
-        properties().setProperty("unrefined.app.version.name", Environment.properties().getProperty("unrefined.app.version.name"));
-        properties().setProperty("unrefined.app.version.code", Environment.properties().getProperty("unrefined.app.version.code"));
-        properties().setProperty("unrefined.app.package", Environment.properties().getProperty("unrefined.app.package"));
+        properties.setProperty("unrefined.app.vendor", Environment.properties.getProperty("unrefined.app.vendor"));
+        properties.setProperty("unrefined.app.name", Environment.properties.getProperty("unrefined.app.name"));
+        properties.setProperty("unrefined.app.version.name", Environment.properties.getProperty("unrefined.app.version.name"));
+        properties.setProperty("unrefined.app.version.code", Environment.properties.getProperty("unrefined.app.version.code"));
+        properties.setProperty("unrefined.app.package", Environment.properties.getProperty("unrefined.app.package"));
 
         Frame frame;
         java.awt.Container container;
@@ -216,7 +214,7 @@ public class DesktopApplication extends unrefined.context.Container implements
 
     private String getNormalizedApplicationName() {
         if (NORMALIZED_APP_NAME == null) synchronized (NORMALIZED_APP_NAME_LOCK) {
-            if (NORMALIZED_APP_NAME == null) NORMALIZED_APP_NAME = OperatingSystem.normalize(getApplicationName());
+            if (NORMALIZED_APP_NAME == null) NORMALIZED_APP_NAME = OSInfo.normalize(getApplicationName());
         }
         return NORMALIZED_APP_NAME;
     }
@@ -281,32 +279,32 @@ public class DesktopApplication extends unrefined.context.Container implements
     @Override
     public int getDotsPerInch() {
         if (GraphicsEnvironment.isHeadless()) return 96;
-        else if (OperatingSystem.IS_WINDOWS) return WindowsAWTSupport.getDotsPerInch(container);
-        else if (OperatingSystem.IS_MAC) return 96 * MacFontSupport.getScaleFactor(container.getGraphicsConfiguration().getDevice());
+        else if (OSInfo.IS_WINDOWS) return WindowsAWTSupport.getDotsPerInch(container);
+        else if (OSInfo.IS_MAC) return 96 * MacFontSupport.getScaleFactor(container.getGraphicsConfiguration().getDevice());
         else return X11FontSupport.getDPI();
     }
 
     @Override
     public float getFontScale() {
         if (GraphicsEnvironment.isHeadless()) return 1;
-        else if (OperatingSystem.IS_WINDOWS) return WindowsFontSupport.getFontScale();
-        else if (OperatingSystem.IS_MAC) return MacFontSupport.FONT_SCALE;
+        else if (OSInfo.IS_WINDOWS) return WindowsFontSupport.getFontScale();
+        else if (OSInfo.IS_MAC) return MacFontSupport.FONT_SCALE;
         else return X11FontSupport.getFontScale();
     }
 
     @Override
     public float getDensity() {
         if (GraphicsEnvironment.isHeadless()) return 1;
-        else if (OperatingSystem.IS_WINDOWS) return WindowsAWTSupport.getDotsPerInch(container) / 96f;
-        else if (OperatingSystem.IS_MAC) return MacFontSupport.getScaleFactor(container.getGraphicsConfiguration().getDevice());
+        else if (OSInfo.IS_WINDOWS) return WindowsAWTSupport.getDotsPerInch(container) / 96f;
+        else if (OSInfo.IS_MAC) return MacFontSupport.getScaleFactor(container.getGraphicsConfiguration().getDevice());
         else return X11FontSupport.getDensity();
     }
 
     @Override
     public float getScaledDensity() {
         if (GraphicsEnvironment.isHeadless()) return 1;
-        else if (OperatingSystem.IS_WINDOWS) return WindowsAWTSupport.getDotsPerInch(container) / 96f * WindowsFontSupport.getFontScale();
-        else if (OperatingSystem.IS_MAC) return MacFontSupport.FONT_SCALE * MacFontSupport.getScaleFactor(container.getGraphicsConfiguration().getDevice());
+        else if (OSInfo.IS_WINDOWS) return WindowsAWTSupport.getDotsPerInch(container) / 96f * WindowsFontSupport.getFontScale();
+        else if (OSInfo.IS_MAC) return MacFontSupport.FONT_SCALE * MacFontSupport.getScaleFactor(container.getGraphicsConfiguration().getDevice());
         else return X11FontSupport.getScaledDensity();
     }
 

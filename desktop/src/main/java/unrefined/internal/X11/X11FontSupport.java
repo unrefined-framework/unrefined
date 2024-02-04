@@ -1,6 +1,6 @@
 package unrefined.internal.X11;
 
-import unrefined.internal.OperatingSystem;
+import unrefined.desktop.OSInfo;
 import unrefined.util.NotInstantiableError;
 
 import java.awt.Font;
@@ -20,7 +20,7 @@ public final class X11FontSupport {
     private static volatile float scaledDensity;
 
     static {
-        if (OperatingSystem.IS_X11) {
+        if (OSInfo.IS_X11) {
             syncFont(XSettings.getProperty("Gtk/FontName"));
             syncDensity(XSettings.getProperty("Gdk/UnscaledDPI"), XSettings.getProperty("Gdk/WindowScalingFactor"));
             XSettings.addPropertyChangeListener("Gtk/FontName", evt -> {

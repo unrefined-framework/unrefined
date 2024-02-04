@@ -23,6 +23,16 @@ public class DesktopAtomic extends Atomic {
     }
 
     @Override
+    public void loadLoadFence() {
+        AtomicSupport.loadLoadFence();
+    }
+
+    @Override
+    public void storeStoreFence() {
+        AtomicSupport.storeStoreFence();
+    }
+
+    @Override
     public Object getObjectFieldVolatile(Object object, Field field) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
         return AtomicSupport.getObjectFieldVolatile(object, field);
     }

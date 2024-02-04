@@ -16,14 +16,13 @@
 package unrefined.util;
 
 import java.util.Iterator;
-import java.util.RandomAccess;
 
 /**
  * CircularShortArray is a circular short array data structure that provides O(1) random read, O(1)
  * prepend and O(1) append. The CircularShortArray automatically grows its capacity when number of
  * added shorts is over its capacity.
  */
-public class CircularShortArray implements Cloneable, Iterable<Short>, RandomAccess {
+public class CircularShortArray implements Cloneable, Iterable<Short> {
 
     private short[] elements;
     private int head;

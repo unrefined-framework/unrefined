@@ -9,6 +9,6 @@ dependencies {
 
 jar {
     manifest {
-        attributes 'UXGL-Implementation-Title': 'Java Standard Edition Desktop'
+        attributes 'Unrefined-Implementation-Title': 'Java Standard Edition Desktop'
     }
 }

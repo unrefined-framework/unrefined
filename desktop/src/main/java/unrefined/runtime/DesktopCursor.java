@@ -57,7 +57,7 @@ public class DesktopCursor extends unrefined.media.graphics.Cursor {
     }
 
     public DesktopCursor(Bitmap bitmap, Point hotSpot) {
-        this.cursor = CursorSupport.createCustomCursor(((DesktopBitmap) bitmap).getBufferedImage(), hotSpot, "UXGL Image Cursor");
+        this.cursor = CursorSupport.createCustomCursor(((DesktopBitmap) bitmap).getBufferedImage(), hotSpot, "Unrefined Image Cursor");
         this.type = Type.CUSTOM;
         this.hotSpotX = hotSpot.x;
         this.hotSpotY = hotSpot.y;

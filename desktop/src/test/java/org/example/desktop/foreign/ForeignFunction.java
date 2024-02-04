@@ -6,13 +6,13 @@ import unrefined.util.foreign.Foreign;
 import unrefined.util.foreign.Symbol;
 
 /**
- * UXGL provides a set of simple and clear API ("UXGL FFI") to easily integrate native code.
- * Let's begin with the basis, UXGL "Handle Mapping"!.
+ * Unrefined provides a set of simple and clear API ("Unrefined FFI") to easily integrate native code.
+ * Let's begin with the basis, "Handle Mapping"!
  */
 public class ForeignFunction {
 
     public static void main(String[] args) throws NoSuchMethodException {
-        DesktopRuntime.setup(args);             // Initialize the UXGL runtime environment
+        DesktopRuntime.setup(args);             // Initialize the Unrefined runtime environment
 
         // Type mapping:
         // Java void -> void
@@ -24,9 +24,7 @@ public class ForeignFunction {
         // Java long -> int64_t
         // Java float -> float
         // Java double -> double
-        // Java unrefined.nio.Pointer -> pointer
-        // Note that unrefined.nio.Pointer is used just as a "marker class",
-        // for pointer types, the method parameter type in Java side should be long.class
+        // Java subclasses of unrefined.foreign.Aggregate -> struct / union
 
         // Varargs supported for the downcall handle, but the upcall stub not
 
@@ -34,13 +32,13 @@ public class ForeignFunction {
         Symbol upcallStub = foreign.upcallStub(ForeignFunction.class.getDeclaredMethod("helloFFI"),
                 void.class); // Create a upcall stub, which a closure/callback will call Java method from a corresponding C function pointer
         Symbol downcallHandle = foreign.downcallHandle(upcallStub.address(), void.class); // Create a downcall handle, which calls C function from Java
-        downcallHandle.invokeVoid(); // Java -> downcall -> C -> upcall -> Java
+        downcallHandle.invoke(); // Java -> downcall -> C -> upcall -> Java
 
         //upcallStub.invokeVoid();     // In fact, you can directly invoke the upcall stub without create a new downcall handle
     }
 
     public static void helloFFI() {
-        Logger.defaultInstance().info("UXGL FFI", "C call Java from C from Java");
+        Logger.defaultInstance().info("Unrefined FFI", "C call Java from C from Java");
     }
 
 }

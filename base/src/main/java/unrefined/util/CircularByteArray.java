@@ -16,14 +16,13 @@
 package unrefined.util;
 
 import java.util.Iterator;
-import java.util.RandomAccess;
 
 /**
  * CircularByteArray is a circular byte array data structure that provides O(1) random read, O(1)
  * prepend and O(1) append. The CircularByteArray automatically grows its capacity when number of
  * added bytes is over its capacity.
  */
-public class CircularByteArray implements Cloneable, Iterable<Byte>, RandomAccess {
+public class CircularByteArray implements Cloneable, Iterable<Byte> {
 
     private byte[] elements;
     private int head;

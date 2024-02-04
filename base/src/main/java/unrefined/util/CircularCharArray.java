@@ -16,14 +16,13 @@
 package unrefined.util;
 
 import java.util.Iterator;
-import java.util.RandomAccess;
 
 /**
  * CircularCharArray is a circular character array data structure that provides O(1) random read, O(1)
  * prepend and O(1) append. The CircularCharArray automatically grows its capacity when number of
  * added characters is over its capacity.
  */
-public class CircularCharArray implements Cloneable, Iterable<Character>, RandomAccess {
+public class CircularCharArray implements Cloneable, Iterable<Character> {
 
     private char[] elements;
     private int head;

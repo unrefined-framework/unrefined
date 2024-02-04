@@ -3,27 +3,19 @@ package unrefined.runtime;
 import unrefined.util.signal.Dispatcher;
 
 import java.util.Objects;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * A {@link Dispatcher} implementation with a worker thread.
- * {@link #start()} and {@link #stop()} are convenience methods to
- * start (and stop) an arbitrary thread which executes {@link #run()} in its
- * context.
+ * A {@link Dispatcher} implementation with a single-thread {@link ScheduledExecutorService}.
  *
  * @see Dispatcher
  */
 public class BaseDispatcher extends Dispatcher {
 
-    /**
-     * The thread used in {@link #start()} and {@link #stop}.
-     */
-    private Thread workerThread = null;
-
-    /**
-     * The worker thread name.
-     */
-    private final String workerThreadName;
+    private volatile Thread workerThread = null;
+    private final ScheduledExecutorService executor;
 
     /**
      * This ID is used to generate thread names.
@@ -33,21 +25,14 @@ public class BaseDispatcher extends Dispatcher {
         return nextSerialNumber.getAndIncrement();
     }
 
-    protected boolean isDispatchThread() {
-        return Thread.currentThread() == workerThread;
+    @Override
+    public boolean isDispatchThread(Thread thread) {
+        return thread == workerThread;
     }
 
     @Override
-    protected void preActuation() {
-    }
-
-    @Override
-    protected void postActuation() {
-    }
-
-    @Override
-    protected boolean hasQueueThread() {
-        return true;
+    public void invokeLater(Runnable runnable) {
+        executor.execute(runnable);
     }
 
     /**
@@ -65,40 +50,12 @@ public class BaseDispatcher extends Dispatcher {
      */
     public BaseDispatcher(String name) {
         Objects.requireNonNull(name);
-        workerThreadName = name;
-    }
-
-    /**
-     * Creates a new {@link Thread} which runs {@link #run()}. Does nothing if
-     * there already is a running thread.
-     */
-    public final synchronized void start() {
-        if (workerThread == null) {
-            workerThread = new Thread(this::run, workerThreadName);
-            workerThread.setDaemon(true);
-            workerThread.start();
-        }
-    }
-
-    protected void run() {
-        try {
-            while (!Thread.currentThread().isInterrupted()) {
-                waitFor();
-                switchContext();
-            }
-        } catch (InterruptedException ignored) {
-        }
-    }
-
-    /**
-     * Stops the current {@link Thread} created by {@link #start()}. Does
-     * nothing if there is no running thread.
-     */
-    public final synchronized void stop() {
-        if (workerThread != null) {
-            workerThread.interrupt();
-            workerThread = null;
-        }
+        executor = Executors.newSingleThreadScheduledExecutor(runnable -> {
+            Thread thread = new Thread(runnable, name);
+            thread.setDaemon(true);
+            workerThread = thread;
+            return thread;
+        });
     }
 
     @Override

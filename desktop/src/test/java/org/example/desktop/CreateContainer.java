@@ -9,19 +9,20 @@ import unrefined.media.graphics.Drawing;
 import unrefined.runtime.DesktopApplication;
 import unrefined.runtime.DesktopRuntime;
 import unrefined.util.UnexpectedError;
+import unrefined.util.signal.Dispatcher;
 
 import java.awt.EventQueue;
 
 /**
- * One of the main features of UXGL is creating "canvas" and draw on it. Before doing any drawing, you need to create a container to show the "canvas".
+ * One of the main features of Unrefined is creating "canvas" and draw on it. Before doing any drawing, you need to create a container to show the "canvas".
  * Let's create and change its cursor to the system "wait" cursor.
  */
 public class CreateContainer {
 
     public static void main(String[] args) {
-        DesktopRuntime.setup(args);             // Initialize the UXGL runtime environment
+        DesktopRuntime.setup(args);             // Initialize the Unrefined runtime environment
 
-        // Initialize the UXGL container (on desktop it's a window)
+        // Initialize the Unrefined container (on desktop it's a window)
         DesktopApplication application = new DesktopApplication(new ContainerAdapter() { // The lifecycle listener, it's fully platform-independent
 
             private Cursor wait;
@@ -56,7 +57,7 @@ public class CreateContainer {
 
         });
 
-        EventQueue.invokeLater(application); // Launch the container
+        Dispatcher.defaultInstance().invokeLater(application); // Launch the container
     }
 
 }

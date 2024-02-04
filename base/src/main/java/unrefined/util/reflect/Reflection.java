@@ -1,8 +1,11 @@
 package unrefined.util.reflect;
 
 import unrefined.context.Environment;
+import unrefined.util.FastArray;
+import unrefined.util.UnexpectedError;
 
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
@@ -17,7 +20,7 @@ public abstract class Reflection {
     private static final Object INSTANCE_LOCK = new Object();
     public static Reflection getInstance() {
         if (INSTANCE == null) synchronized (INSTANCE_LOCK) {
-            if (INSTANCE == null) INSTANCE = Environment.global().get("unrefined.runtime.reflection", Reflection.class);
+            if (INSTANCE == null) INSTANCE = Environment.global.get("unrefined.runtime.reflection", Reflection.class);
         }
         return INSTANCE;
     }
@@ -1479,9 +1482,497 @@ public abstract class Reflection {
         else return invokeDefaultObjectMethod(object, method, args);
     }
 
+    /**
+     * Creates a new array with the specified component type and
+     * length.
+     * Invoking this method is equivalent to creating an array
+     * as follows:
+     * <blockquote>
+     * <pre>
+     * int[] x = {length};
+     * Array.newInstance(componentType, x);
+     * </pre>
+     * </blockquote>
+     *
+     * <p>The number of dimensions of the new array must not
+     * exceed 255.
+     *
+     * @param  componentType the {@code Class} object representing the
+     *         component type of the new array
+     * @param  length the length of the new array
+     * @return the new array
+     * @throws NullPointerException if the specified
+     *         {@code componentType} parameter is null
+     * @throws IllegalArgumentException if componentType is {@link
+     *         Void#TYPE} or if the number of dimensions of the requested array
+     *         instance exceed 255.
+     * @throws NegativeArraySizeException if the specified {@code length}
+     *         is negative
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T[] newArrayInstance(Class<T> componentType, int length) throws NegativeArraySizeException {
+        return (T[]) Array.newInstance(componentType, length);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T newInstance(Class<T> arrayType, int length) throws NegativeArraySizeException {
+        return (T) Array.newInstance(FastArray.getComponentType(arrayType), length);
+    }
+
+    /**
+     * Creates a new array
+     * with the specified component type and dimensions.
+     * If {@code componentType}
+     * represents a non-array class or interface, the new array
+     * has {@code dimensions.length} dimensions and
+     * {@code componentType} as its component type. If
+     * {@code componentType} represents an array class, the
+     * number of dimensions of the new array is equal to the sum
+     * of {@code dimensions.length} and the number of
+     * dimensions of {@code componentType}. In this case, the
+     * component type of the new array is the component type of
+     * {@code componentType}.
+     *
+     * <p>The number of dimensions of the new array must not
+     * exceed 255.
+     *
+     * @param componentType the {@code Class} object representing the component
+     * type of the new array
+     * @param dimensions an array of {@code int} representing the dimensions of
+     * the new array
+     * @return the new array
+     * @throws    NullPointerException if the specified
+     * {@code componentType} argument is null
+     * @throws    IllegalArgumentException if the specified {@code dimensions}
+     * argument is a zero-dimensional array, if componentType is {@link
+     * Void#TYPE}, or if the number of dimensions of the requested array
+     * instance exceed 255.
+     * @throws    NegativeArraySizeException if any of the components in
+     * the specified {@code dimensions} argument is negative.
+     */
+    public Object newArrayInstance(Class<?> componentType, int... dimensions) throws IllegalArgumentException, NegativeArraySizeException {
+        return Array.newInstance(componentType, dimensions);
+    }
+
+    /**
+     * Returns the length of the specified array object, as an {@code int}.
+     *
+     * @param array the array
+     * @return the length of the array
+     * @throws    IllegalArgumentException if the object argument is not
+     * an array
+     */
+    public int getArrayLength(Object array) throws IllegalArgumentException {
+        return Array.getLength(array);
+    }
+
+    public int getArrayDimensions(Object array) throws IllegalArgumentException {
+        Class<?> clazz = array.getClass();
+        if (!clazz.isArray()) throw new IllegalArgumentException("not an array");
+        int dimensions = 0;
+        while (clazz.isArray()) {
+            dimensions ++;
+            clazz = clazz.getComponentType();
+        }
+        return dimensions;
+    }
+
+    /**
+     * Returns the value of the indexed component in the specified
+     * array object.  The value is automatically wrapped in an object
+     * if it has a primitive type.
+     *
+     * @param array the array
+     * @param index the index
+     * @return the (possibly wrapped) value of the indexed component in
+     * the specified array
+     * @throws    NullPointerException If the specified object is null
+     * @throws    IllegalArgumentException If the specified object is not
+     * an array
+     * @throws    ArrayIndexOutOfBoundsException If the specified {@code index}
+     * argument is negative, or if it is greater than or equal to the
+     * length of the specified array
+     */
+    public Object getArrayElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return Array.get(array, index);
+    }
+
+    public Object getArrayObjectElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        if (array == null || !array.getClass().isArray()) return Array.get(array, index);
+        else if (array.getClass().getComponentType().isPrimitive()) throw new IllegalArgumentException("Illegal array type; expected non-primitive");
+        return Array.get(array, index);
+    }
+
+    /**
+     * Returns the value of the indexed component in the specified
+     * array object, as a {@code boolean}.
+     *
+     * @param array the array
+     * @param index the index
+     * @return the value of the indexed component in the specified array
+     * @throws    NullPointerException If the specified object is null
+     * @throws    IllegalArgumentException If the specified object is not
+     * an array, or if the indexed element cannot be converted to the
+     * return type by an identity or widening conversion
+     * @throws    ArrayIndexOutOfBoundsException If the specified {@code index}
+     * argument is negative, or if it is greater than or equal to the
+     * length of the specified array
+     * @see #getArrayElement(Object, int)
+     */
+    public boolean getArrayBooleanElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return Array.getBoolean(array, index);
+    }
+
+    /**
+     * Returns the value of the indexed component in the specified
+     * array object, as a {@code byte}.
+     *
+     * @param array the array
+     * @param index the index
+     * @return the value of the indexed component in the specified array
+     * @throws    NullPointerException If the specified object is null
+     * @throws    IllegalArgumentException If the specified object is not
+     * an array, or if the indexed element cannot be converted to the
+     * return type by an identity or widening conversion
+     * @throws    ArrayIndexOutOfBoundsException If the specified {@code index}
+     * argument is negative, or if it is greater than or equal to the
+     * length of the specified array
+     * @see #getArrayElement(Object, int)
+     */
+    public byte getArrayByteElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return Array.getByte(array, index);
+    }
+
+    /**
+     * Returns the value of the indexed component in the specified
+     * array object, as a {@code char}.
+     *
+     * @param array the array
+     * @param index the index
+     * @return the value of the indexed component in the specified array
+     * @throws    NullPointerException If the specified object is null
+     * @throws    IllegalArgumentException If the specified object is not
+     * an array, or if the indexed element cannot be converted to the
+     * return type by an identity or widening conversion
+     * @throws    ArrayIndexOutOfBoundsException If the specified {@code index}
+     * argument is negative, or if it is greater than or equal to the
+     * length of the specified array
+     * @see #getArrayElement(Object, int)
+     */
+    public char getArrayCharElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return Array.getChar(array, index);
+    }
+
+    /**
+     * Returns the value of the indexed component in the specified
+     * array object, as a {@code short}.
+     *
+     * @param array the array
+     * @param index the index
+     * @return the value of the indexed component in the specified array
+     * @throws    NullPointerException If the specified object is null
+     * @throws    IllegalArgumentException If the specified object is not
+     * an array, or if the indexed element cannot be converted to the
+     * return type by an identity or widening conversion
+     * @throws    ArrayIndexOutOfBoundsException If the specified {@code index}
+     * argument is negative, or if it is greater than or equal to the
+     * length of the specified array
+     * @see #getArrayElement(Object, int)
+     */
+    public short getArrayShortElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return Array.getShort(array, index);
+    }
+
+    /**
+     * Returns the value of the indexed component in the specified
+     * array object, as an {@code int}.
+     *
+     * @param array the array
+     * @param index the index
+     * @return the value of the indexed component in the specified array
+     * @throws    NullPointerException If the specified object is null
+     * @throws    IllegalArgumentException If the specified object is not
+     * an array, or if the indexed element cannot be converted to the
+     * return type by an identity or widening conversion
+     * @throws    ArrayIndexOutOfBoundsException If the specified {@code index}
+     * argument is negative, or if it is greater than or equal to the
+     * length of the specified array
+     * @see #getArrayElement(Object, int)
+     */
+    public int getArrayIntElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return Array.getInt(array, index);
+    }
+
+    /**
+     * Returns the value of the indexed component in the specified
+     * array object, as a {@code long}.
+     *
+     * @param array the array
+     * @param index the index
+     * @return the value of the indexed component in the specified array
+     * @throws    NullPointerException If the specified object is null
+     * @throws    IllegalArgumentException If the specified object is not
+     * an array, or if the indexed element cannot be converted to the
+     * return type by an identity or widening conversion
+     * @throws    ArrayIndexOutOfBoundsException If the specified {@code index}
+     * argument is negative, or if it is greater than or equal to the
+     * length of the specified array
+     * @see #getArrayElement(Object, int)
+     */
+    public long getArrayLongElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return Array.getLong(array, index);
+    }
+
+    /**
+     * Returns the value of the indexed component in the specified
+     * array object, as a {@code float}.
+     *
+     * @param array the array
+     * @param index the index
+     * @return the value of the indexed component in the specified array
+     * @throws    NullPointerException If the specified object is null
+     * @throws    IllegalArgumentException If the specified object is not
+     * an array, or if the indexed element cannot be converted to the
+     * return type by an identity or widening conversion
+     * @throws    ArrayIndexOutOfBoundsException If the specified {@code index}
+     * argument is negative, or if it is greater than or equal to the
+     * length of the specified array
+     * @see #getArrayElement(Object, int)
+     */
+    public float getArrayFloatElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return Array.getFloat(array, index);
+    }
+
+    /**
+     * Returns the value of the indexed component in the specified
+     * array object, as a {@code double}.
+     *
+     * @param array the array
+     * @param index the index
+     * @return the value of the indexed component in the specified array
+     * @throws    NullPointerException If the specified object is null
+     * @throws    IllegalArgumentException If the specified object is not
+     * an array, or if the indexed element cannot be converted to the
+     * return type by an identity or widening conversion
+     * @throws    ArrayIndexOutOfBoundsException If the specified {@code index}
+     * argument is negative, or if it is greater than or equal to the
+     * length of the specified array
+     * @see #getArrayElement(Object, int)
+     */
+    public double getArrayDoubleElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return Array.getDouble(array, index);
+    }
+
+    /**
+     * Sets the value of the indexed component of the specified array
+     * object to the specified new value.  The new value is first
+     * automatically unwrapped if the array has a primitive component
+     * type.
+     * @param array the array
+     * @param index the index into the array
+     * @param value the new value of the indexed component
+     * @throws    NullPointerException If the specified object argument
+     * is null
+     * @throws    IllegalArgumentException If the specified object argument
+     * is not an array, or if the array component type is primitive and
+     * an unwrapping conversion fails
+     * @throws    ArrayIndexOutOfBoundsException If the specified {@code index}
+     * argument is negative, or if it is greater than or equal to
+     * the length of the specified array
+     */
+    public void setArrayElement(Object array, int index, Object value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        Array.set(array, index, value);
+    }
+
+    public void setArrayObjectElement(Object array, int index, Object value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        if (array == null || !array.getClass().isArray() || value == null) Array.set(array, index, null);
+        else {
+            Class<?> componentType = array.getClass().getComponentType();
+            if (componentType.isPrimitive()) throw new IllegalArgumentException("Illegal array type; expected non-primitive");
+            //else if (!componentType.isInstance(value)) throw new IllegalArgumentException("Illegal value type; expected " + componentType);
+            else Array.set(array, index, value);
+        }
+    }
+
+    /**
+     * Sets the value of the indexed component of the specified array
+     * object to the specified {@code boolean} value.
+     * @param array the array
+     * @param index the index into the array
+     * @param value the new value of the indexed component
+     * @throws    NullPointerException If the specified object argument
+     * is null
+     * @throws    IllegalArgumentException If the specified object argument
+     * is not an array, or if the specified value cannot be converted
+     * to the underlying array's component type by an identity or a
+     * primitive widening conversion
+     * @throws    ArrayIndexOutOfBoundsException If the specified {@code index}
+     * argument is negative, or if it is greater than or equal to
+     * the length of the specified array
+     * @see #setArrayElement(Object, int, Object)
+     */
+    public void setArrayBooleanElement(Object array, int index, boolean value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        Array.setBoolean(array, index, value);
+    }
+
+    /**
+     * Sets the value of the indexed component of the specified array
+     * object to the specified {@code byte} value.
+     * @param array the array
+     * @param index the index into the array
+     * @param value the new value of the indexed component
+     * @throws    NullPointerException If the specified object argument
+     * is null
+     * @throws    IllegalArgumentException If the specified object argument
+     * is not an array, or if the specified value cannot be converted
+     * to the underlying array's component type by an identity or a
+     * primitive widening conversion
+     * @throws    ArrayIndexOutOfBoundsException If the specified {@code index}
+     * argument is negative, or if it is greater than or equal to
+     * the length of the specified array
+     * @see #setArrayElement(Object, int, Object)
+     */
+    public void setArrayByteElement(Object array, int index, byte value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        Array.setByte(array, index, value);
+    }
+
+    /**
+     * Sets the value of the indexed component of the specified array
+     * object to the specified {@code char} value.
+     * @param array the array
+     * @param index the index into the array
+     * @param value the new value of the indexed component
+     * @throws    NullPointerException If the specified object argument
+     * is null
+     * @throws    IllegalArgumentException If the specified object argument
+     * is not an array, or if the specified value cannot be converted
+     * to the underlying array's component type by an identity or a
+     * primitive widening conversion
+     * @throws    ArrayIndexOutOfBoundsException If the specified {@code index}
+     * argument is negative, or if it is greater than or equal to
+     * the length of the specified array
+     * @see #setArrayElement(Object, int, Object)
+     */
+    public void setArrayCharElement(Object array, int index, char value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        Array.setChar(array, index, value);
+    }
+
+    /**
+     * Sets the value of the indexed component of the specified array
+     * object to the specified {@code short} value.
+     * @param array the array
+     * @param index the index into the array
+     * @param value the new value of the indexed component
+     * @throws    NullPointerException If the specified object argument
+     * is null
+     * @throws    IllegalArgumentException If the specified object argument
+     * is not an array, or if the specified value cannot be converted
+     * to the underlying array's component type by an identity or a
+     * primitive widening conversion
+     * @throws    ArrayIndexOutOfBoundsException If the specified {@code index}
+     * argument is negative, or if it is greater than or equal to
+     * the length of the specified array
+     * @see #setArrayElement(Object, int, Object)
+     */
+    public void setArrayShortElement(Object array, int index, short value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        Array.setShort(array, index, value);
+    }
+
+    /**
+     * Sets the value of the indexed component of the specified array
+     * object to the specified {@code int} value.
+     * @param array the array
+     * @param index the index into the array
+     * @param value the new value of the indexed component
+     * @throws    NullPointerException If the specified object argument
+     * is null
+     * @throws    IllegalArgumentException If the specified object argument
+     * is not an array, or if the specified value cannot be converted
+     * to the underlying array's component type by an identity or a
+     * primitive widening conversion
+     * @throws    ArrayIndexOutOfBoundsException If the specified {@code index}
+     * argument is negative, or if it is greater than or equal to
+     * the length of the specified array
+     * @see #setArrayElement(Object, int, Object)
+     */
+    public void setArrayIntElement(Object array, int index, int value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        Array.setInt(array, index, value);
+    }
+
+    /**
+     * Sets the value of the indexed component of the specified array
+     * object to the specified {@code long} value.
+     * @param array the array
+     * @param index the index into the array
+     * @param value the new value of the indexed component
+     * @throws    NullPointerException If the specified object argument
+     * is null
+     * @throws    IllegalArgumentException If the specified object argument
+     * is not an array, or if the specified value cannot be converted
+     * to the underlying array's component type by an identity or a
+     * primitive widening conversion
+     * @throws    ArrayIndexOutOfBoundsException If the specified {@code index}
+     * argument is negative, or if it is greater than or equal to
+     * the length of the specified array
+     * @see #setArrayElement(Object, int, Object)
+     */
+    public void setArrayLongElement(Object array, int index, long value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        Array.setLong(array, index, value);
+    }
+
+    /**
+     * Sets the value of the indexed component of the specified array
+     * object to the specified {@code float} value.
+     * @param array the array
+     * @param index the index into the array
+     * @param value the new value of the indexed component
+     * @throws    NullPointerException If the specified object argument
+     * is null
+     * @throws    IllegalArgumentException If the specified object argument
+     * is not an array, or if the specified value cannot be converted
+     * to the underlying array's component type by an identity or a
+     * primitive widening conversion
+     * @throws    ArrayIndexOutOfBoundsException If the specified {@code index}
+     * argument is negative, or if it is greater than or equal to
+     * the length of the specified array
+     * @see #setArrayElement(Object, int, Object)
+     */
+    public void setArrayFloatElement(Object array, int index, float value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        Array.setFloat(array, index, value);
+    }
+
+    /**
+     * Sets the value of the indexed component of the specified array
+     * object to the specified {@code double} value.
+     * @param array the array
+     * @param index the index into the array
+     * @param value the new value of the indexed component
+     * @throws    NullPointerException If the specified object argument
+     * is null
+     * @throws    IllegalArgumentException If the specified object argument
+     * is not an array, or if the specified value cannot be converted
+     * to the underlying array's component type by an identity or a
+     * primitive widening conversion
+     * @throws    ArrayIndexOutOfBoundsException If the specified {@code index}
+     * argument is negative, or if it is greater than or equal to
+     * the length of the specified array
+     * @see #setArrayElement(Object, int, Object)
+     */
+    public void setArrayDoubleElement(Object array, int index, double value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        Array.setDouble(array, index, value);
+    }
+
     public abstract Class<?> getCallerClass();
     public abstract String getCallerMethod();
 
-    public abstract void sneakyThrows(Throwable throwable);
+    public void initialize(Class<?> clazz) {
+        try {
+            Class.forName(clazz.getName(), true, clazz.getClassLoader());
+        } catch (ClassNotFoundException e) {
+            throw new UnexpectedError(e);
+        }
+    }
+    public abstract void ensureInitialized(Class<?> clazz);
+    public abstract boolean shouldBeInitialized(Class<?> clazz);
 
 }

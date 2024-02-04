@@ -1,5 +1,6 @@
 package org.example.desktop.foreign;
 
+import unrefined.app.Logger;
 import unrefined.nio.Allocator;
 import unrefined.nio.Pointer;
 import unrefined.runtime.DesktopRuntime;
@@ -17,14 +18,14 @@ import java.util.concurrent.ThreadLocalRandom;
 public class GlobalVariables {
 
     public interface CLibrary extends Library {
-        void fprintf(long fp, long format, int... args); // Varargs supported!
+        @Marshal("int") long fprintf(@Marshal("size_t") long fp, @Marshal("size_t") long format, Object... args); // Varargs supported!
     }
 
     public static void main(String[] args) {
-        DesktopRuntime.setup(args);              // Initialize the UXGL runtime environment
+        DesktopRuntime.setup(args);              // Initialize the Unrefined runtime environment
         Foreign foreign = Foreign.getInstance(); // Get the platform-dependent FFI factory
 
-        long stdout = Allocator.defaultInstance().getAddress(foreign.getSymbolAddress("stdout")); // Get stdout FILE*
+        long stdout = Allocator.getInstance().getAddress(foreign.getSymbolAddress("stdout")); // Get stdout FILE*
 
         Random random = ThreadLocalRandom.current();
 
@@ -33,7 +34,8 @@ public class GlobalVariables {
 
         CLibrary c = foreign.downcallProxy(CLibrary.class);
         try (Pointer format = Pointer.allocateDirect("SUM (%d, %d) = %d")) {
-            c.fprintf(stdout, format.address(), a, b, a + b);
+            Logger.defaultInstance().info("Unrefined FFI", "characters: " +
+                    c.fprintf(stdout, format.address(), a, b, a + b));
         }
         catch (IOException e) {
             throw new UnexpectedError(e);

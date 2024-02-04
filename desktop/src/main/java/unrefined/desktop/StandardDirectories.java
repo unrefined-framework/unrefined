@@ -1,6 +1,5 @@
 package unrefined.desktop;
 
-import unrefined.internal.OperatingSystem;
 import unrefined.util.NotInstantiableError;
 
 import java.io.File;
@@ -19,7 +18,7 @@ public final class StandardDirectories {
 
     // FIXME hardcoded, not using native functions
     static {
-        if (OperatingSystem.IS_WINDOWS) {
+        if (OSInfo.IS_WINDOWS) {
             // for more information, see:
             // https://learn.microsoft.com/en-us/windows/win32/shell/csidl
             // https://learn.microsoft.com/en-us/windows/win32/shell/knownfolderid
@@ -35,7 +34,7 @@ public final class StandardDirectories {
             }
             CONFIG_HOME = new File(APPDATA); // CSIDL_APPDATA or FOLDERID_RoamingAppData
         }
-        else if (OperatingSystem.IS_MAC) {
+        else if (OSInfo.IS_MAC) {
             // for more information, see:
             // 'The File System' section in
             // https://developer.apple.com/library/archive/documentation/General/Conceptual/MOSXAppProgrammingGuide/AppRuntime/AppRuntime.html

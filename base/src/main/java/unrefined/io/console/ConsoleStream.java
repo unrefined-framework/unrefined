@@ -1,7 +1,7 @@
 package unrefined.io.console;
 
-import unrefined.nio.charset.Charsets;
 import unrefined.util.UnexpectedError;
+import unrefined.util.foreign.Foreign;
 
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
@@ -11,6 +11,8 @@ import java.io.PrintStream;
 import java.nio.charset.Charset;
 import java.util.Locale;
 import java.util.Objects;
+
+import static unrefined.io.IOFactory.getFilteredOutputStream;
 
 public class ConsoleStream extends OutputStream {
 
@@ -26,7 +28,7 @@ public class ConsoleStream extends OutputStream {
     public ConsoleStream(OutputStream out) {
         this.out = new PrintStream(Objects.requireNonNull(out));
         FileDescriptor descriptor;
-        if (out instanceof FileOutputStream) {
+        if ((out = getFilteredOutputStream(out)) instanceof FileOutputStream) {
             try {
                 descriptor = ((FileOutputStream) out).getFD();
             } catch (IOException e) {
@@ -67,7 +69,7 @@ public class ConsoleStream extends OutputStream {
     }
 
     public int print(Object value) {
-        return print(value, Charsets.SYSTEM);
+        return print(value, Foreign.getInstance().systemCharset());
     }
 
     public int print(Object value, Charset charset) {
@@ -75,7 +77,7 @@ public class ConsoleStream extends OutputStream {
     }
 
     public int print(boolean value) {
-        return print(value, Charsets.SYSTEM);
+        return print(value, Foreign.getInstance().systemCharset());
     }
 
     public int print(boolean value, Charset charset) {
@@ -83,7 +85,7 @@ public class ConsoleStream extends OutputStream {
     }
 
     public int print(byte value) {
-        return print(value, Charsets.SYSTEM);
+        return print(value, Foreign.getInstance().systemCharset());
     }
 
     public int print(byte value, Charset charset) {
@@ -91,7 +93,7 @@ public class ConsoleStream extends OutputStream {
     }
 
     public int print(char value) {
-        return print(value, Charsets.SYSTEM);
+        return print(value, Foreign.getInstance().systemCharset());
     }
 
     public int print(char value, Charset charset) {
@@ -99,7 +101,7 @@ public class ConsoleStream extends OutputStream {
     }
 
     public int print(short value) {
-        return print(value, Charsets.SYSTEM);
+        return print(value, Foreign.getInstance().systemCharset());
     }
 
     public int print(short value, Charset charset) {
@@ -107,7 +109,7 @@ public class ConsoleStream extends OutputStream {
     }
 
     public int print(int value) {
-        return print(value, Charsets.SYSTEM);
+        return print(value, Foreign.getInstance().systemCharset());
     }
 
     public int print(int value, Charset charset) {
@@ -115,7 +117,7 @@ public class ConsoleStream extends OutputStream {
     }
 
     public int print(long value) {
-        return print(value, Charsets.SYSTEM);
+        return print(value, Foreign.getInstance().systemCharset());
     }
 
     public int print(long value, Charset charset) {
@@ -123,7 +125,7 @@ public class ConsoleStream extends OutputStream {
     }
 
     public int print(float value) {
-        return print(value, Charsets.SYSTEM);
+        return print(value, Foreign.getInstance().systemCharset());
     }
 
     public int print(float value, Charset charset) {
@@ -131,7 +133,7 @@ public class ConsoleStream extends OutputStream {
     }
 
     public int print(double value) {
-        return print(value, Charsets.SYSTEM);
+        return print(value, Foreign.getInstance().systemCharset());
     }
 
     public int print(double value, Charset charset) {
@@ -139,11 +141,11 @@ public class ConsoleStream extends OutputStream {
     }
 
     public int print(String string) {
-        return print(string, Charsets.SYSTEM);
+        return print(string, Foreign.getInstance().systemCharset());
     }
 
     public int print(String string, Charset charset) {
-        if (charset == null) charset = Charset.defaultCharset();
+        if (charset == null) charset = Foreign.getInstance().systemCharset();
         byte[] bytes = (string = String.valueOf(string)).getBytes(charset);
         try {
             toPrintStream().write(bytes);
@@ -154,7 +156,7 @@ public class ConsoleStream extends OutputStream {
     }
 
     public int println(Object value) {
-        return println(value, Charsets.SYSTEM);
+        return println(value, Foreign.getInstance().systemCharset());
     }
 
     public int println(Object value, Charset charset) {
@@ -162,7 +164,7 @@ public class ConsoleStream extends OutputStream {
     }
 
     public int println(boolean value) {
-        return println(value, Charsets.SYSTEM);
+        return println(value, Foreign.getInstance().systemCharset());
     }
 
     public int println(boolean value, Charset charset) {
@@ -170,7 +172,7 @@ public class ConsoleStream extends OutputStream {
     }
 
     public int println(byte value) {
-        return println(value, Charsets.SYSTEM);
+        return println(value, Foreign.getInstance().systemCharset());
     }
 
     public int println(byte value, Charset charset) {
@@ -178,7 +180,7 @@ public class ConsoleStream extends OutputStream {
     }
 
     public int println(char value) {
-        return println(value, Charsets.SYSTEM);
+        return println(value, Foreign.getInstance().systemCharset());
     }
 
     public int println(char value, Charset charset) {
@@ -186,7 +188,7 @@ public class ConsoleStream extends OutputStream {
     }
 
     public int println(short value) {
-        return println(value, Charsets.SYSTEM);
+        return println(value, Foreign.getInstance().systemCharset());
     }
 
     public int println(short value, Charset charset) {
@@ -194,7 +196,7 @@ public class ConsoleStream extends OutputStream {
     }
 
     public int println(int value) {
-        return println(value, Charsets.SYSTEM);
+        return println(value, Foreign.getInstance().systemCharset());
     }
 
     public int println(int value, Charset charset) {
@@ -202,7 +204,7 @@ public class ConsoleStream extends OutputStream {
     }
 
     public int println(long value) {
-        return println(value, Charsets.SYSTEM);
+        return println(value, Foreign.getInstance().systemCharset());
     }
 
     public int println(long value, Charset charset) {
@@ -210,7 +212,7 @@ public class ConsoleStream extends OutputStream {
     }
 
     public int println(float value) {
-        return println(value, Charsets.SYSTEM);
+        return println(value, Foreign.getInstance().systemCharset());
     }
 
     public int println(float value, Charset charset) {
@@ -218,7 +220,7 @@ public class ConsoleStream extends OutputStream {
     }
 
     public int println(double value) {
-        return println(value, Charsets.SYSTEM);
+        return println(value, Foreign.getInstance().systemCharset());
     }
 
     public int println(double value, Charset charset) {
@@ -226,11 +228,11 @@ public class ConsoleStream extends OutputStream {
     }
 
     public int println(String string) {
-        return println(string, Charsets.SYSTEM);
+        return println(string, Foreign.getInstance().systemCharset());
     }
 
     public int println(String string, Charset charset) {
-        if (charset == null) charset = Charset.defaultCharset();
+        if (charset == null) charset = Foreign.getInstance().systemCharset();
         byte[] bytes = (string = String.valueOf(string)).getBytes(charset);
         try {
             toPrintStream().write(bytes);
@@ -250,11 +252,11 @@ public class ConsoleStream extends OutputStream {
     }
 
     public int printf(String format, Object... args) {
-        return printf(format, Charsets.SYSTEM, args);
+        return printf(format, Foreign.getInstance().systemCharset(), args);
     }
 
     public int printf(String format, Charset charset, Object... args) {
-        if (charset == null) charset = Charset.defaultCharset();
+        if (charset == null) charset = Foreign.getInstance().systemCharset();
         byte[] bytes = (format = String.format(String.valueOf(format), args)).getBytes(charset);
         try {
             toPrintStream().write(bytes);
@@ -265,11 +267,11 @@ public class ConsoleStream extends OutputStream {
     }
 
     public int printf(Locale locale, String format, Object... args) {
-        return printf(locale, format, Charsets.SYSTEM, args);
+        return printf(locale, format, Foreign.getInstance().systemCharset(), args);
     }
 
     public int printf(Locale locale, String format, Charset charset, Object... args) {
-        if (charset == null) charset = Charset.defaultCharset();
+        if (charset == null) charset = Foreign.getInstance().systemCharset();
         byte[] bytes = (format = String.format(locale, String.valueOf(format), args)).getBytes(charset);
         try {
             toPrintStream().write(bytes);

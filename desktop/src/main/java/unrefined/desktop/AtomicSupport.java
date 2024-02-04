@@ -1,13 +1,17 @@
 package unrefined.desktop;
 
 import unrefined.util.NotInstantiableError;
+import unrefined.util.UnexpectedError;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 import static java.lang.reflect.Modifier.isStatic;
 import static unrefined.desktop.ReflectionSupport.checkObject;
 import static unrefined.desktop.UnsafeSupport.UNSAFE;
 
+@SuppressWarnings("BlockedPrivateApi")
 public final class AtomicSupport {
 
     private AtomicSupport() {
@@ -24,6 +28,33 @@ public final class AtomicSupport {
 
     public static void storeFence() {
         UNSAFE.storeFence();
+    }
+
+    private static final Method storeStoreFence;
+    static {
+        Method method;
+        try {
+            method = Class.forName("java.lang.invoke.VarHandle").getDeclaredMethod("storeStoreFence");
+        }
+        catch (ClassNotFoundException | NoSuchMethodException e) {
+            method = null;
+        }
+        storeStoreFence = method;
+    }
+
+    public static void loadLoadFence() {
+        UNSAFE.loadFence();
+    }
+
+    public static void storeStoreFence() {
+        if (storeStoreFence == null) UNSAFE.storeFence();
+        else {
+            try {
+                ReflectionSupport.invokeVoidMethod(null, storeStoreFence);
+            } catch (InvocationTargetException e) {
+                throw new UnexpectedError(e);
+            }
+        }
     }
 
     public static Object getObjectFieldVolatile(Object object, Field field) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {

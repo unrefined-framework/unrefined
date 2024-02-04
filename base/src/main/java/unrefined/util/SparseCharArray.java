@@ -17,7 +17,6 @@
 package unrefined.util;
 
 import java.util.Iterator;
-import java.util.RandomAccess;
 
 /**
  * SparseCharArrays map integers to characters.  Unlike a normal array of characters,
@@ -40,7 +39,7 @@ import java.util.RandomAccess;
  * keys in ascending order, or the values corresponding to the keys in ascending
  * order in the case of <code>valueAt(int)</code>.</p>
  */
-public class SparseCharArray implements Cloneable, Iterable<Character>, RandomAccess {
+public class SparseCharArray implements Cloneable, Iterable<Character> {
 
     private int[] keys;
     private char[] values;

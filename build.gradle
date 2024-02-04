@@ -13,22 +13,22 @@ subprojects {
     apply plugin: 'maven-publish'
 
     ext {
-        libraryName = 'Unrefined Media Layer'
+        libraryName = 'Unrefined'
         libraryGroupName = 'unrefined'
-        libraryPublishGroupName = 'com.tianscar.uxgl'
-        libraryDescription = 'Simple, lightweight, cross-platform graphics library which also provides some common features for application/game development.'
-        libraryUrl = 'https://github.com/Tianscar/uxgl'
+        libraryPublishGroupName = 'com.tianscar.unrefined'
+        libraryDescription = 'Simple, lightweight, cross-platform utilities library which also provides some common features for application/game development.'
+        libraryUrl = 'https://github.com/Tianscar/unrefined'
 
-        libraryVersionCode = 50
-        libraryVersionName = '0.5.0-SNAPSHOT'
+        libraryVersionCode = 60
+        libraryVersionName = '0.6.0-SNAPSHOT'
         libraryVersionCodeName = 'Claw Hammer'
 
         libraryLicenseName = 'The Apache License, Version 2.0'
         libraryLicenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-        libraryScmConnection = 'scm:git:git@github.com/Tianscar/uxgl.git'
+        libraryScmConnection = 'scm:git:git@github.com/Tianscar/unrefined.git'
         libraryScmDeveloperConnection = libraryScmConnection
         libraryScmUrl = libraryUrl
-        libraryDevelopersName = 'UXGL Contributors'
+        libraryDevelopersName = 'Unrefined Contributors'
         libraryDeveloperId = 'Tianscar'
         libraryDeveloperName = 'Karstian Lee'
         libraryDeveloperEmail = 'tianscar@protonmail.com'
@@ -94,11 +94,11 @@ configure (baseProjects + desktopProjects) {
 
     jar {
         manifest {
-            attributes 'UXGL-Specification-Vendor': libraryDeveloperName
-            attributes 'UXGL-Specification-Title': libraryName
-            attributes 'UXGL-Specification-Version': libraryVersionCodeName
-            attributes 'UXGL-Implementation-Vendor': libraryDevelopersName
-            attributes 'UXGL-Implementation-Version': libraryVersionName
+            attributes 'Unrefined-Specification-Vendor': libraryDeveloperName
+            attributes 'Unrefined-Specification-Title': libraryName
+            attributes 'Unrefined-Specification-Version': libraryVersionCodeName
+            attributes 'Unrefined-Implementation-Vendor': libraryDevelopersName
+            attributes 'Unrefined-Implementation-Version': libraryVersionName
         }
     }
 

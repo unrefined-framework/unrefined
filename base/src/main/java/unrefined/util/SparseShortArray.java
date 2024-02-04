@@ -17,7 +17,6 @@
 package unrefined.util;
 
 import java.util.Iterator;
-import java.util.RandomAccess;
 
 /**
  * SparseShortArrays map integers to shorts.  Unlike a normal array of shorts,
@@ -40,7 +39,7 @@ import java.util.RandomAccess;
  * keys in ascending order, or the values corresponding to the keys in ascending
  * order in the case of <code>valueAt(int)</code>.</p>
  */
-public class SparseShortArray implements Cloneable, Iterable<Short>, RandomAccess {
+public class SparseShortArray implements Cloneable, Iterable<Short> {
 
     private int[] keys;
     private short[] values;

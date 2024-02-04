@@ -2,7 +2,7 @@ package unrefined.internal.X11;
 
 import unrefined.desktop.AWTSupport;
 import unrefined.desktop.ReflectionSupport;
-import unrefined.internal.OperatingSystem;
+import unrefined.desktop.OSInfo;
 import unrefined.util.NotInstantiableError;
 
 import java.awt.Component;
@@ -18,7 +18,7 @@ public final class X11AWTSupport {
     private static final Method getDisplayMethod;
     private static final Method getWindowMethod;
     static {
-        if (OperatingSystem.IS_X11) {
+        if (OSInfo.IS_X11) {
             Method method;
             try {
                 method = Class.forName("sun.awt.X11.XToolkit").getDeclaredMethod("getDisplay");

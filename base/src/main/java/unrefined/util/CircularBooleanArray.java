@@ -16,14 +16,13 @@
 package unrefined.util;
 
 import java.util.Iterator;
-import java.util.RandomAccess;
 
 /**
  * CircularBooleanArray is a circular boolean array data structure that provides O(1) random read, O(1)
  * prepend and O(1) append. The CircularBooleanArray automatically grows its capacity when number of
  * added booleans is over its capacity.
  */
-public class CircularBooleanArray implements Cloneable, Iterable<Boolean>, RandomAccess {
+public class CircularBooleanArray implements Cloneable, Iterable<Boolean> {
 
     private boolean[] elements;
     private int head;

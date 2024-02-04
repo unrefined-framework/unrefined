@@ -121,8 +121,7 @@ public abstract class Signal<T> {
 
 	/**
 	 * Indicates whether a signal is enabled/disabled.
-	 * @see #enable()
-	 * @see #disable()
+	 * @see #setEnabled(boolean)
 	 */
 	private final AtomicBoolean enabled = new AtomicBoolean(true);
 
@@ -148,8 +147,7 @@ public abstract class Signal<T> {
 
 	/**
 	 * Returns whether the signal is enabled.
-	 * @see #enable()
-	 * @see #disable()
+	 * @see #setEnabled(boolean)
 	 * @return true if enabled, false opposite
 	 */
 	public boolean isEnabled() {
@@ -158,29 +156,10 @@ public abstract class Signal<T> {
 
 	/**
 	 * Sets whether the signal is enabled.
-	 * @see #enable()
-	 * @see #disable()
 	 * @param enabled true if enabled, false opposite
 	 */
 	public void setEnabled(boolean enabled) {
 		this.enabled.set(enabled);
-	}
-
-	/**
-	 * Enables this signal.
-	 * @see #disable()
-	 */
-	public void enable() {
-		enabled.set(true);
-	}
-
-	/**
-	 * Disables this signal. A disabled signal will not actuate its connected
-	 * slots.
-	 * @see #enable()
-	 */
-	public void disable() {
-		enabled.set(false);
 	}
 
 	/**
@@ -248,9 +227,10 @@ public abstract class Signal<T> {
 	public Connection connect(T slot, Dispatcher dispatcher, int type) throws IllegalArgumentException, NullPointerException {
 		Objects.requireNonNull(slot);
 		if (dispatcher == null) dispatcher = Dispatcher.defaultInstance();
-		final boolean unique = (type & UNIQUE) == UNIQUE;
-		final boolean singleShot = (type & SINGLE_SHOT) == SINGLE_SHOT;
-		type = type << 3 >>> 3;
+		final boolean unique = (type & UNIQUE) != 0;
+		final boolean singleShot = (type & SINGLE_SHOT) != 0;
+		int original = type;
+		type = type << 29 >>> 29;
 		boolean broken = false;
 		if (uniques.contains(slot)) broken = true;
 		else if (unique) uniques.add(slot);
@@ -260,7 +240,7 @@ public abstract class Signal<T> {
 			case DIRECT:
 			case QUEUED:
 			case BLOCKING_QUEUED:
-				connections.add((connection = new Connection(this, slot, type, dispatcher, singleShot, broken)));
+				connections.add((connection = new Connection(this, slot, original, type, dispatcher, singleShot, broken)));
 				break;
 			default:
 				throw new IllegalArgumentException("Illegal connection type: " + type);

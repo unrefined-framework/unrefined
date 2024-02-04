@@ -17,7 +17,6 @@
 package unrefined.util;
 
 import java.util.Iterator;
-import java.util.RandomAccess;
 
 /**
  * SparseByteArrays map integers to bytes.  Unlike a normal array of bytes,
@@ -40,7 +39,7 @@ import java.util.RandomAccess;
  * keys in ascending order, or the values corresponding to the keys in ascending
  * order in the case of <code>valueAt(int)</code>.</p>
  */
-public class SparseByteArray implements Cloneable, Iterable<Byte>, RandomAccess {
+public class SparseByteArray implements Cloneable, Iterable<Byte> {
 
     private int[] keys;
     private byte[] values;

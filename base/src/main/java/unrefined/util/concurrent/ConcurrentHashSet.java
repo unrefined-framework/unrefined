@@ -1,6 +1,7 @@
 package unrefined.util.concurrent;
 
 import java.util.AbstractSet;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -24,6 +25,11 @@ public class ConcurrentHashSet<E> extends AbstractSet<E> {
 
     public ConcurrentHashSet(int initialCapacity, float loadFactor, int concurrencyLevel) {
         backMap = new ConcurrentHashMap<>(initialCapacity, loadFactor, concurrencyLevel);
+    }
+
+    public ConcurrentHashSet(Collection<E> c) {
+        backMap = new ConcurrentHashMap<>(Math.max(c.size(), 12));
+        addAll(c);
     }
 
     @Override

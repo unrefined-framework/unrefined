@@ -31,7 +31,7 @@ public abstract class Font {
         public static final int ITALIC      = 1 << 1;
         public static final int BOLD_ITALIC = BOLD | ITALIC;
         public static int removeUnusedBits(int style) {
-            return style << 2 >>> 2;
+            return style << 30 >>> 30;
         }
         public static String toString(int style) {
             style = removeUnusedBits(style);

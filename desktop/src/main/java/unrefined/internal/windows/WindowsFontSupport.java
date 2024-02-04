@@ -1,10 +1,13 @@
 package unrefined.internal.windows;
 
+import com.kenai.jffi.CallContext;
+import com.kenai.jffi.CallingConvention;
 import com.kenai.jffi.Function;
 import com.kenai.jffi.HeapInvocationBuffer;
 import com.kenai.jffi.Type;
 import unrefined.desktop.ForeignSupport;
-import unrefined.internal.OperatingSystem;
+import unrefined.desktop.ShutdownGuard;
+import unrefined.desktop.OSInfo;
 import unrefined.util.NotInstantiableError;
 
 import java.awt.Font;
@@ -13,6 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static unrefined.desktop.ForeignSupport.INVOKER;
 import static unrefined.desktop.ForeignSupport.MEMORY_IO;
+import static unrefined.desktop.UnsafeSupport.UNSAFE;
 import static unrefined.internal.windows.WindowsLibrary.*;
 
 public final class WindowsFontSupport {
@@ -37,29 +41,40 @@ public final class WindowsFontSupport {
     private static final Function CloseHandle;
 
     static {
-        if (OperatingSystem.IS_WINDOWS) {
-            TextScaleFactorBufferDWORD = MEMORY_IO.allocateMemory(Type.UINT32.size(), false);
-            TextScaleFactorBufferDWORD1 = MEMORY_IO.allocateMemory(Type.UINT32.size(), false);
+        if (OSInfo.IS_WINDOWS) {
+            TextScaleFactorBufferDWORD = UNSAFE.allocateMemory(Type.UINT32.size());
+            TextScaleFactorBufferDWORD1 = UNSAFE.allocateMemory(Type.UINT32.size());
             TextScaleFactorBufferCWSTR = ForeignSupport.allocateWideCharString("TextScaleFactor");
             SystemParametersInfoW = new Function(User32.getSymbolAddress("SystemParametersInfoW"),
-                    Type.UINT32, Type.UINT32, Type.UINT32, Type.POINTER, Type.UINT32);
-            LOGFONTW = MEMORY_IO.allocateMemory(96, false);
+                    CallContext.getCallContext(Type.UINT32,
+                            new Type[] {Type.UINT32, Type.UINT32, Type.POINTER, Type.UINT32},
+                            CallingConvention.DEFAULT, false));
+            LOGFONTW = UNSAFE.allocateMemory(92);
             RegOpenKeyExW = new Function(Advapi32.getSymbolAddress("RegOpenKeyExW"),
-                    Type.UINT32, Type.POINTER, Type.POINTER, Type.UINT32, Type.POINTER);
+                    CallContext.getCallContext(Type.UINT32, new Type[] {Type.POINTER, Type.POINTER, Type.UINT32, Type.POINTER},
+                            CallingConvention.DEFAULT, false));
             RegQueryValueExW = new Function(Advapi32.getSymbolAddress("RegQueryValueExW"),
-                    Type.UINT32, Type.POINTER, Type.POINTER, Type.POINTER, Type.POINTER, Type.POINTER, Type.POINTER);
+                    CallContext.getCallContext(Type.UINT32,
+                            new Type[] {Type.POINTER, Type.POINTER, Type.POINTER, Type.POINTER, Type.POINTER, Type.POINTER},
+                            CallingConvention.DEFAULT, false));
             RegNotifyChangeKeyValue = new Function(Advapi32.getSymbolAddress("RegNotifyChangeKeyValue"),
-                    Type.UINT32, Type.POINTER, Type.UINT32, Type.UINT32, Type.POINTER, Type.UINT32);
-            RegCloseKey = new Function(Advapi32.getSymbolAddress("RegCloseKey"), Type.UINT32, Type.POINTER);
+                    CallContext.getCallContext(Type.UINT32, new Type[] {Type.POINTER, Type.UINT32, Type.UINT32, Type.POINTER, Type.UINT32},
+                            CallingConvention.DEFAULT, false));
+            RegCloseKey = new Function(Advapi32.getSymbolAddress("RegCloseKey"),
+                    CallContext.getCallContext(Type.UINT32, new Type[] {Type.POINTER}, CallingConvention.DEFAULT, false));
             CreateEventW = new Function(Kernel32.getSymbolAddress("CreateEventW"),
-                    Type.POINTER, Type.POINTER, Type.UINT32, Type.UINT32, Type.POINTER);
+                    CallContext.getCallContext(Type.POINTER, new Type[] {Type.POINTER, Type.UINT32, Type.UINT32, Type.POINTER},
+                            CallingConvention.DEFAULT, false));
             WaitForSingleObject = new Function(Kernel32.getSymbolAddress("WaitForSingleObject"),
-                    Type.UINT32, Type.POINTER, Type.UINT32);
-            CloseHandle = new Function(Kernel32.getSymbolAddress("CloseHandle"), Type.UINT32, Type.POINTER);
+                    CallContext.getCallContext(Type.UINT32, new Type[] {Type.POINTER, Type.UINT32},
+                            CallingConvention.DEFAULT, false));
+            CloseHandle = new Function(Kernel32.getSymbolAddress("CloseHandle"),
+                    CallContext.getCallContext(Type.UINT32, new Type[] {Type.POINTER},
+                            CallingConvention.DEFAULT, false));
             long hKeyAccessibilityBuffer;
             long hEventBuffer;
             long lpSubKey = ForeignSupport.allocateWideCharString("SOFTWARE\\Microsoft\\Accessibility");
-            long phkResult = MEMORY_IO.allocateMemory(Type.POINTER.size(), false);
+            long phkResult = UNSAFE.allocateMemory(Type.POINTER.size());
             try {
                 HeapInvocationBuffer heapInvocationBuffer = new HeapInvocationBuffer(RegOpenKeyExW);
                 heapInvocationBuffer.putAddress(0x80000001L);
@@ -68,8 +83,13 @@ public final class WindowsFontSupport {
                 heapInvocationBuffer.putInt(0x20019);
                 heapInvocationBuffer.putAddress(phkResult);
                 if (INVOKER.invokeInt(RegOpenKeyExW, heapInvocationBuffer) == 0) {
-                    hEventBuffer = MEMORY_IO.allocateMemory(Type.POINTER.size(), false);
-                    hKeyAccessibilityBuffer = MEMORY_IO.allocateMemory(Type.POINTER.size(), false);
+                    heapInvocationBuffer = new HeapInvocationBuffer(CreateEventW);
+                    heapInvocationBuffer.putAddress(0);
+                    heapInvocationBuffer.putInt(1);
+                    heapInvocationBuffer.putInt(0);
+                    heapInvocationBuffer.putAddress(0);
+                    hEventBuffer = INVOKER.invokeAddress(CreateEventW, heapInvocationBuffer);
+                    hKeyAccessibilityBuffer = UNSAFE.allocateMemory(Type.POINTER.size());
                     MEMORY_IO.putAddress(hKeyAccessibilityBuffer, phkResult);
                 }
                 else {
@@ -78,8 +98,8 @@ public final class WindowsFontSupport {
                 }
             }
             finally {
-                MEMORY_IO.freeMemory(lpSubKey);
-                MEMORY_IO.freeMemory(phkResult);
+                UNSAFE.freeMemory(lpSubKey);
+                UNSAFE.freeMemory(phkResult);
             }
             hKeyAccessibility = hKeyAccessibilityBuffer;
             hEvent = hEventBuffer;
@@ -114,16 +134,16 @@ public final class WindowsFontSupport {
         if (INVOKER.invokeInt(SystemParametersInfoW, heapInvocationBuffer) != 0) {
             boolean bold = MEMORY_IO.getInt(LOGFONTW + 16) > 500;
             boolean italic = MEMORY_IO.getInt(LOGFONTW + 20) != 0;
-            int size = (int) (ForeignSupport.wcslen(LOGFONTW + 32)) * OperatingSystem.WIDE_CHAR_SIZE;
+            int size = (int) (ForeignSupport.wcslen(LOGFONTW + 28)) * OSInfo.WIDE_CHAR_SIZE;
             byte[] bytes = new byte[size];
-            MEMORY_IO.getByteArray(LOGFONTW + 32, bytes, 0, size);
-            StringBuilder builder = new StringBuilder(new String(bytes, OperatingSystem.WIDE_CHARSET));
+            MEMORY_IO.getByteArray(LOGFONTW + 28, bytes, 0, size);
+            StringBuilder builder = new StringBuilder(new String(bytes, OSInfo.WIDE_CHARSET));
             if (bold || italic) builder.append(" ");
             if (bold) builder.append("Bold");
             if (italic) builder.append("Italic");
             return builder.toString();
         }
-        Font font = (Font) Toolkit.getDefaultToolkit().getDesktopProperty(OperatingSystem.IS_WINDOWS_PE ? "win.defaultGUI.font" : "win.messagebox.font");
+        Font font = (Font) Toolkit.getDefaultToolkit().getDesktopProperty(OSInfo.IS_WINDOWS_PE ? "win.defaultGUI.font" : "win.messagebox.font");
         return font == null ? null : font.getFontName();
     }
 
@@ -169,10 +189,11 @@ public final class WindowsFontSupport {
                         fontScale = getTextScaleFactor() / 100f;
                     }
                 }
-            }, "UXGL Registry Daemon");
+            }, "Unrefined Registry Daemon");
             thread.setDaemon(true);
             thread.start();
-            Runtime.getRuntime().addShutdownHook(new Thread(WindowsFontSupport::shutdown, "UXGL Registry Daemon Cleanup"));
+            //Runtime.getRuntime().addShutdownHook(new Thread(WindowsFontSupport::shutdown, "Unrefined Registry Daemon Cleanup"));
+            ShutdownGuard.register(WindowsFontSupport::shutdown);
         }
     }
 

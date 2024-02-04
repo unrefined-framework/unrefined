@@ -8,7 +8,6 @@ import unrefined.media.graphics.Dimension;
 import unrefined.media.graphics.Insets;
 import unrefined.media.graphics.Point;
 import unrefined.media.graphics.Rectangle;
-import unrefined.nio.Allocator;
 import unrefined.util.TextManager;
 import unrefined.util.event.EventBus;
 import unrefined.util.signal.Dispatcher;
@@ -22,8 +21,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class Container implements Runnable {
 
     private volatile ContainerListener containerListener;
-    private final Environment local;
-    private final Environment properties;
+
+    public final Environment local;
+    public final Environment properties;
 
     public Container(ContainerListener containerListener) {
         this.containerListener = containerListener;
@@ -43,23 +43,15 @@ public abstract class Container implements Runnable {
     private final Object ASSET_LOADER_LOCK = new Object();
     public AssetLoader getAssetLoader() {
         if (ASSET_LOADER == null) synchronized (ASSET_LOADER_LOCK) {
-            if (ASSET_LOADER == null) ASSET_LOADER = local().get("unrefined.runtime.assetLoader", AssetLoader.class);
+            if (ASSET_LOADER == null) ASSET_LOADER = local.get("unrefined.runtime.assetLoader", AssetLoader.class);
         }
         return ASSET_LOADER;
-    }
-    private volatile Allocator ALLOCATOR;
-    private final Object ALLOCATOR_LOCK = new Object();
-    public Allocator getAllocator() {
-        if (ALLOCATOR == null) synchronized (ALLOCATOR_LOCK) {
-            if (ALLOCATOR == null) ALLOCATOR = local().get("unrefined.runtime.allocator", Allocator.class);
-        }
-        return ALLOCATOR;
     }
     private volatile Dispatcher DISPATCHER;
     private final Object DISPATCHER_LOCK = new Object();
     public Dispatcher getDispatcher() {
         if (DISPATCHER == null) synchronized (DISPATCHER_LOCK) {
-            if (DISPATCHER == null) DISPATCHER = local().get("unrefined.runtime.dispatcher", Dispatcher.class);
+            if (DISPATCHER == null) DISPATCHER = local.get("unrefined.runtime.dispatcher", Dispatcher.class);
         }
         return DISPATCHER;
     }
@@ -67,7 +59,7 @@ public abstract class Container implements Runnable {
     private final Object LOGGER_LOCK = new Object();
     public Logger getLogger() {
         if (LOGGER == null) synchronized (LOGGER_LOCK) {
-            if (LOGGER == null) LOGGER = local().get("unrefined.runtime.logger", Logger.class);
+            if (LOGGER == null) LOGGER = local.get("unrefined.runtime.logger", Logger.class);
         }
         return LOGGER;
     }
@@ -75,7 +67,7 @@ public abstract class Container implements Runnable {
     private final Object TEXT_MANAGER_LOCK = new Object();
     public TextManager getTextManager() {
         if (TEXT_MANAGER == null) synchronized (TEXT_MANAGER_LOCK) {
-            if (TEXT_MANAGER == null) TEXT_MANAGER = local().get("unrefined.runtime.textManager", TextManager.class);
+            if (TEXT_MANAGER == null) TEXT_MANAGER = local.get("unrefined.runtime.textManager", TextManager.class);
         }
         return TEXT_MANAGER;
     }
@@ -83,7 +75,7 @@ public abstract class Container implements Runnable {
     private final Object EVENT_BUS_LOCK = new Object();
     public EventBus getEventBus() {
         if (EVENT_BUS == null) synchronized (EVENT_BUS_LOCK) {
-            if (EVENT_BUS == null) EVENT_BUS = local().get("unrefined.runtime.eventBus", EventBus.class);
+            if (EVENT_BUS == null) EVENT_BUS = local.get("unrefined.runtime.eventBus", EventBus.class);
         }
         return EVENT_BUS;
     }
@@ -95,7 +87,7 @@ public abstract class Container implements Runnable {
     private final Object APP_VENDOR_LOCK = new Object();
     public String getApplicationVendor() {
         if (APP_VENDOR == null) synchronized (APP_VENDOR_LOCK) {
-            if (APP_VENDOR == null) APP_VENDOR = properties().getProperty("unrefined.app.vendor");
+            if (APP_VENDOR == null) APP_VENDOR = properties.getProperty("unrefined.app.vendor");
         }
         return APP_VENDOR;
     }
@@ -103,7 +95,7 @@ public abstract class Container implements Runnable {
     private final Object APP_NAME_LOCK = new Object();
     public String getApplicationName() {
         if (APP_NAME == null) synchronized (APP_NAME_LOCK) {
-            if (APP_NAME == null) APP_NAME = properties().getProperty("unrefined.app.name");
+            if (APP_NAME == null) APP_NAME = properties.getProperty("unrefined.app.name");
         }
         return APP_NAME;
     }
@@ -111,7 +103,7 @@ public abstract class Container implements Runnable {
     private final Object APP_VERSION_NAME_LOCK = new Object();
     public String getApplicationVersionName() {
         if (APP_VERSION_NAME == null) synchronized (APP_VERSION_NAME_LOCK) {
-            if (APP_VERSION_NAME == null) APP_VERSION_NAME = properties().getProperty("unrefined.app.version.name");
+            if (APP_VERSION_NAME == null) APP_VERSION_NAME = properties.getProperty("unrefined.app.version.name");
         }
         return APP_VERSION_NAME;
     }
@@ -119,7 +111,7 @@ public abstract class Container implements Runnable {
     private final Object APP_VERSION_CODE_LOCK = new Object();
     public String getApplicationVersionCode() {
         if (APP_VERSION_CODE == null) synchronized (APP_VERSION_CODE_LOCK) {
-            if (APP_VERSION_CODE == null) APP_VERSION_CODE = properties().getProperty("unrefined.app.version.code");
+            if (APP_VERSION_CODE == null) APP_VERSION_CODE = properties.getProperty("unrefined.app.version.code");
         }
         return APP_VERSION_CODE;
     }
@@ -127,7 +119,7 @@ public abstract class Container implements Runnable {
     private final Object APP_PACKAGE_LOCK = new Object();
     public String getApplicationPackage() {
         if (APP_PACKAGE == null) synchronized (APP_PACKAGE_LOCK) {
-            if (APP_PACKAGE == null) APP_PACKAGE = properties().getProperty("unrefined.app.package");
+            if (APP_PACKAGE == null) APP_PACKAGE = properties.getProperty("unrefined.app.package");
         }
         return APP_PACKAGE;
     }
@@ -179,13 +171,6 @@ public abstract class Container implements Runnable {
     public abstract File getHomeDirectory();
     public abstract File getTempDirectory();
     public abstract File getCurrentDirectory();
-
-    public Environment local() {
-        return local;
-    }
-    public Environment properties() {
-        return properties;
-    }
 
     private final List<Context> contexts = Collections.synchronizedList(new ArrayList<>());
     public void addContext(Context context) {

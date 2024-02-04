@@ -1,7 +1,7 @@
 package unrefined.internal.windows;
 
 import com.kenai.jffi.Library;
-import unrefined.internal.OperatingSystem;
+import unrefined.desktop.OSInfo;
 import unrefined.util.NotInstantiableError;
 
 public final class WindowsLibrary {
@@ -14,7 +14,7 @@ public final class WindowsLibrary {
     public static final Library Kernel32;
     public static final Library Advapi32;
     static {
-        if (OperatingSystem.IS_WINDOWS) {
+        if (OSInfo.IS_WINDOWS) {
             User32 = Library.getCachedInstance(System.mapLibraryName("User32"), Library.LAZY | Library.GLOBAL);
             Kernel32 = Library.getCachedInstance(System.mapLibraryName("Kernel32"), Library.LAZY | Library.GLOBAL);
             Advapi32 = Library.getCachedInstance(System.mapLibraryName("Advapi32"), Library.LAZY | Library.GLOBAL);

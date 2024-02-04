@@ -364,20 +364,20 @@ public class DiskLruCache implements Closeable {
         Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(journalFileTmp), Charsets.US_ASCII));
         try {
             writer.write(MAGIC);
-            writer.write("\n");
+            writer.write(System.lineSeparator());
             writer.write(VERSION_1);
-            writer.write("\n");
+            writer.write(System.lineSeparator());
             writer.write(Integer.toString(appVersion));
-            writer.write("\n");
+            writer.write(System.lineSeparator());
             writer.write(Integer.toString(valueCount));
-            writer.write("\n");
-            writer.write("\n");
+            writer.write(System.lineSeparator());
+            writer.write(System.lineSeparator());
 
             for (Entry entry : lruEntries.values()) {
                 if (entry.currentEditor != null) {
-                    writer.write(DIRTY + ' ' + entry.key + '\n');
+                    writer.write(DIRTY + ' ' + entry.key + System.lineSeparator());
                 } else {
-                    writer.write(CLEAN + ' ' + entry.key + entry.getLengths() + '\n');
+                    writer.write(CLEAN + ' ' + entry.key + entry.getLengths() + System.lineSeparator());
                 }
             }
         } finally {
@@ -450,7 +450,7 @@ public class DiskLruCache implements Closeable {
         }
 
         redundantOpCount++;
-        journalWriter.append(READ + ' ' + key + '\n');
+        journalWriter.append(READ + ' ' + key + System.lineSeparator());
         if (journalRebuildRequired()) {
             executorService.submit(cleanupCallable);
         }
@@ -485,7 +485,7 @@ public class DiskLruCache implements Closeable {
         entry.currentEditor = editor;
 
         // Flush the journal before creating files to prevent file leaks.
-        journalWriter.write(DIRTY + ' ' + key + '\n');
+        journalWriter.write(DIRTY + ' ' + key + System.lineSeparator());
         journalWriter.flush();
         return editor;
     }
@@ -563,13 +563,13 @@ public class DiskLruCache implements Closeable {
         entry.currentEditor = null;
         if (entry.readable | success) {
             entry.readable = true;
-            journalWriter.write(CLEAN + ' ' + entry.key + entry.getLengths() + '\n');
+            journalWriter.write(CLEAN + ' ' + entry.key + entry.getLengths() + System.lineSeparator());
             if (success) {
                 entry.sequenceNumber = nextSequenceNumber++;
             }
         } else {
             lruEntries.remove(entry.key);
-            journalWriter.write(REMOVE + ' ' + entry.key + '\n');
+            journalWriter.write(REMOVE + ' ' + entry.key + System.lineSeparator());
         }
         journalWriter.flush();
 
@@ -612,7 +612,7 @@ public class DiskLruCache implements Closeable {
         }
 
         redundantOpCount++;
-        journalWriter.append(REMOVE + ' ' + key + '\n');
+        journalWriter.append(REMOVE + ' ' + key + System.lineSeparator());
         lruEntries.remove(key);
 
         if (journalRebuildRequired()) {

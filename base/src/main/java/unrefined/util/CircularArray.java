@@ -17,14 +17,13 @@ package unrefined.util;
 
 import java.util.Iterator;
 import java.util.Objects;
-import java.util.RandomAccess;
 
 /**
  * CircularArray is a generic circular array data structure that provides O(1) random read, O(1)
  * prepend and O(1) append. The CircularArray automatically grows its capacity when number of added
  * items is over its capacity.
  */
-public class CircularArray<E> implements Cloneable, Iterable<E>, RandomAccess {
+public class CircularArray<E> implements Cloneable, Iterable<E> {
 
     private E[] elements;
     private int head;

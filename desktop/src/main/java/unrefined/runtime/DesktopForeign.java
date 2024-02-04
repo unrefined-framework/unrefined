@@ -1,6 +1,8 @@
 package unrefined.runtime;
 
+import com.kenai.jffi.LastError;
 import unrefined.desktop.ForeignSupport;
+import unrefined.util.foreign.Aggregate;
 import unrefined.util.foreign.Foreign;
 import unrefined.util.foreign.Library;
 import unrefined.util.foreign.Symbol;
@@ -13,93 +15,88 @@ import java.nio.charset.Charset;
 public class DesktopForeign extends Foreign {
 
     @Override
-    public void register(Class<?> clazz) {
-        ForeignSupport.register(clazz);
+    public <T extends Library> T downcallProxy(int options, Class<T> clazz, ClassLoader loader) {
+        return ForeignSupport.downcallProxy(options, clazz, loader);
     }
 
     @Override
-    public void unregister(Class<?> clazz) {
-        ForeignSupport.unregister(clazz);
+    public Symbol downcallHandle(int options, long function, Class<?> returnType, Class<?>... parameterTypes) {
+        return ForeignSupport.downcallHandle(options, function, returnType, parameterTypes);
     }
 
     @Override
-    public <T extends Library> T downcallProxy(ClassLoader loader, Class<T> clazz) {
-        return ForeignSupport.downcallProxy(loader, clazz);
+    public Symbol upcallStub(int options, Object object, Method method, Class<?> returnType, Class<?>... parameterTypes) {
+        return ForeignSupport.upcallStub(options, object, method, returnType, parameterTypes);
     }
 
     @Override
-    public Symbol downcallHandle(long function, Class<?> returnType, Class<?>... parameterTypes) {
-        return ForeignSupport.downcallHandle(function, returnType, parameterTypes);
+    public void invokeVoidFunction(int options, long address, Object... args) {
+        ForeignSupport.invokeVoidFunction(options, address, args);
     }
 
     @Override
-    public Symbol upcallStub(Object object, Method method, Class<?> returnType, Class<?>... parameterTypes) {
-        return ForeignSupport.upcallStub(object, method, returnType, parameterTypes);
+    public boolean invokeBooleanFunction(int options, long address, Object... args) {
+        return ForeignSupport.invokeBooleanFunction(options, address, args);
     }
 
     @Override
-    public void invokeVoidFunction(long address, Object... args) {
-        ForeignSupport.invokeVoidFunction(address, args);
+    public byte invokeByteFunction(int options, long address, Object... args) {
+        return ForeignSupport.invokeByteFunction(options, address, args);
     }
 
     @Override
-    public boolean invokeBooleanFunction(long address, Object... args) {
-        return ForeignSupport.invokeBooleanFunction(address, args);
+    public char invokeCharFunction(int options, long address, Object... args) {
+        return ForeignSupport.invokeCharFunction(options, address, args);
     }
 
     @Override
-    public byte invokeByteFunction(long address, Object... args) {
-        return ForeignSupport.invokeByteFunction(address, args);
+    public short invokeShortFunction(int options, long address, Object... args) {
+        return ForeignSupport.invokeShortFunction(options, address, args);
     }
 
     @Override
-    public char invokeCharFunction(long address, Object... args) {
-        return ForeignSupport.invokeCharFunction(address, args);
+    public int invokeIntFunction(int options, long address, Object... args) {
+        return ForeignSupport.invokeIntFunction(options, address, args);
     }
 
     @Override
-    public short invokeShortFunction(long address, Object... args) {
-        return ForeignSupport.invokeShortFunction(address, args);
+    public long invokeNativeIntFunction(int options, long address, Object... args) {
+        return ForeignSupport.invokeNativeIntFunction(options, address, args);
     }
 
     @Override
-    public int invokeIntFunction(long address, Object... args) {
-        return ForeignSupport.invokeIntFunction(address, args);
+    public long invokeLongFunction(int options, long address, Object... args) {
+        return ForeignSupport.invokeLongFunction(options, address, args);
     }
 
     @Override
-    public long invokeNativeIntFunction(long address, Object... args) {
-        return ForeignSupport.invokeNativeIntFunction(address, args);
+    public long invokeNativeLongFunction(int options, long address, Object... args) {
+        return ForeignSupport.invokeNativeLongFunction(options, address, args);
     }
 
     @Override
-    public long invokeLongFunction(long address, Object... args) {
-        return ForeignSupport.invokeLongFunction(address, args);
+    public float invokeFloatFunction(int options, long address, Object... args) {
+        return ForeignSupport.invokeFloatFunction(options, address, args);
     }
 
     @Override
-    public long invokeNativeLongFunction(long address, Object... args) {
-        return ForeignSupport.invokeNativeLongFunction(address, args);
+    public double invokeDoubleFunction(int options, long address, Object... args) {
+        return ForeignSupport.invokeDoubleFunction(options, address, args);
     }
 
     @Override
-    public float invokeFloatFunction(long address, Object... args) {
-        return ForeignSupport.invokeFloatFunction(address, args);
+    public long invokeAddressFunction(int options, long address, Object... args) {
+        return ForeignSupport.invokeAddressFunction(options, address, args);
     }
 
     @Override
-    public double invokeDoubleFunction(long address, Object... args) {
-        return ForeignSupport.invokeDoubleFunction(address, args);
+    public <T extends Aggregate> T invokeAggregateFunction(int options, long address, Class<T> returnType, Object... args) {
+        return ForeignSupport.invokeAggregateFunction(options, address, returnType, args);
     }
 
     @Override
-    public long invokeAddressFunction(long address, Object... args) {
-        return ForeignSupport.invokeAddressFunction(address, args);
-    }
-
-    @Override
-    public <T> T invokeFunction(long address, Class<T> returnType, Object... args) {
-        return ForeignSupport.invokeFunction(address, returnType, args);
+    public <T> T invokeFunction(int options, long address, Class<T> returnType, Object... args) {
+        return ForeignSupport.invokeFunction(options, address, returnType, args);
     }
 
     @Override
@@ -153,16 +150,6 @@ public class DesktopForeign extends Foreign {
     }
 
     @Override
-    public int memoryPageSize() {
-        return ForeignSupport.memoryPageSize();
-    }
-
-    @Override
-    public int arrayIndexScale(Class<?> clazz) {
-        return ForeignSupport.arrayIndexScale(clazz);
-    }
-
-    @Override
     public Charset systemCharset() {
         return ForeignSupport.systemCharset();
     }
@@ -184,12 +171,17 @@ public class DesktopForeign extends Foreign {
 
     @Override
     public int getLastError() {
-        return ForeignSupport.getLastError();
+        return LastError.getInstance().get();
     }
 
     @Override
     public void setLastError(int errno) {
-        ForeignSupport.setLastError(errno);
+        LastError.getInstance().set(errno);
+    }
+
+    @Override
+    public String getErrorString(int errno) {
+        return ForeignSupport.ERROR_STRING_PRODUCER.apply(errno);
     }
 
 }

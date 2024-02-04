@@ -3,14 +3,16 @@ package org.example.desktop.foreign;
 import unrefined.app.Logger;
 import unrefined.runtime.DesktopRuntime;
 import unrefined.util.StringCompat;
+import unrefined.util.concurrent.LongProducer;
 import unrefined.util.foreign.Foreign;
+import unrefined.util.foreign.Library;
 import unrefined.util.foreign.Redirect;
 import unrefined.util.foreign.Symbol;
 
 import java.io.IOException;
 
 /**
- * Symbols are internally managed by UXGL.
+ * Symbols are internally managed by Unrefined.
  * Load the library, get the symbol, and do whatever you want!
  */
 public class SymbolManagement {
@@ -19,7 +21,7 @@ public class SymbolManagement {
     public static final boolean IS_LINUX = System.getProperty("os.name").equalsIgnoreCase("linux");
 
     public static void main(String[] args) throws IOException {
-        DesktopRuntime.setup(args);              // Initialize the UXGL runtime environment
+        DesktopRuntime.setup(args);              // Initialize the Unrefined runtime environment
         Foreign foreign = Foreign.getInstance(); // Get the platform-dependent FFI factory
 
         foreign.loadLibrary(foreign.mapLibraryName(IS_WINDOWS ? "Kernel32" : (IS_LINUX ? "libc.so.6" : "c")),
@@ -29,21 +31,31 @@ public class SymbolManagement {
 
         Symbol getpid = foreign.downcallHandle(foreign.getSymbolAddress(IS_WINDOWS ? "GetCurrentProcessId" : "getpid"),
                 IS_WINDOWS ? int.class : long.class);
-        foreign.register(IS_WINDOWS ? Windows.class : POSIX.class);
-        final long pid = IS_WINDOWS ? Windows.pidInt() : POSIX.pidLong();
-        foreign.unregister(SymbolManagement.class); // We're able to cache the pid value, so it's okay to unregister
-        Logger.defaultInstance().info("UXGL FFI", "PID: " + pid);
-        Logger.defaultInstance().info("UXGL FFI", "Direct Mapping result == Handle Mapping result: " + (getpid.invokeNativeLong() == pid));
+        LongProducer pidProducer = IS_WINDOWS ? new LongProducer() {
+            final Windows windows = foreign.downcallProxy(Windows.class);
+            @Override
+            public long get() {
+                return windows.pidInt();
+            }
+        } : new LongProducer() {
+            final POSIX posix = foreign.downcallProxy(POSIX.class);
+            @Override
+            public long get() {
+                return posix.pidLong();
+            }
+        };
+        Logger.defaultInstance().info("Unrefined FFI", "PID: " + getpid.invokeNativeLong());
+        Logger.defaultInstance().info("Unrefined FFI", "Library Mapping result == Handle Mapping result: " + (getpid.invokeNativeLong() == pidProducer.get()));
     }
 
-    private static final class Windows {
+    private interface Windows extends Library {
         @Redirect("GetCurrentProcessId")     // Redirect to the real symbol name
-        public static native int pidInt();
+        int pidInt();
     }
 
-    private static final class POSIX {
-        @Redirect("getpid")
-        public static native long pidLong(); // Like above
+    private interface POSIX extends Library {
+        @Redirect("getpid")                  // Like above
+        long pidLong();
     }
 
 }

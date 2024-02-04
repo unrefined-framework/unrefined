@@ -12,6 +12,8 @@ import unrefined.desktop.ReflectionSupport;
 import unrefined.desktop.SymbolSupport;
 import unrefined.nio.Pointer;
 import unrefined.util.UnexpectedError;
+import unrefined.util.foreign.Aggregate;
+import unrefined.util.foreign.LastErrorException;
 import unrefined.util.foreign.Symbol;
 
 import java.lang.reflect.InvocationTargetException;
@@ -22,8 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-import static unrefined.desktop.ForeignSupport.NATIVE_INT_INVOKER;
-import static unrefined.desktop.ForeignSupport.NATIVE_LONG_INVOKER;
+import static unrefined.desktop.ForeignSupport.*;
 
 public class DesktopSymbol extends Symbol {
 
@@ -41,10 +42,12 @@ public class DesktopSymbol extends Symbol {
 
     private final Function function;
     private final Closure.Handle closure;
+    private final int options;
 
-    public DesktopSymbol(long address, Class<?> returnType, Class<?>... parameterTypes) {
+    public DesktopSymbol(int options, long address, Class<?> returnType, Class<?>... parameterTypes) {
         if (address == 0) throw new NullPointerException("address == NULL");
         else this.address = address;
+        this.options = Option.removeUnusedBits(options);
         varargs = parameterTypes.length > 0 && parameterTypes[parameterTypes.length - 1].isArray();
         if (varargs) {
             function = null;
@@ -52,7 +55,8 @@ public class DesktopSymbol extends Symbol {
             nonVariadicFFITypes = SymbolSupport.toFFITypes(parameterTypes, 0, parameterTypes.length - 1);
         }
         else {
-            function = new Function(address, SymbolSupport.toFFIType(returnType), SymbolSupport.toFFITypes(parameterTypes));
+            function = new Function(address, SymbolSupport.toFFIType(returnType), SymbolSupport.toFFITypes(parameterTypes),
+                    CallingConvention.DEFAULT, false);
             nonVariadicFFITypes = null;
             returnFFIType = null;
         }
@@ -60,6 +64,12 @@ public class DesktopSymbol extends Symbol {
         this.parameterTypes = parameterTypes.clone();
         this.markerTypes = Arrays.asList(parameterTypes);
         closure = null;
+    }
+
+    private static byte[] toByteArray(Aggregate aggregate) {
+        byte[] array = new byte[(int) aggregate.getDescriptor().getSize()];
+        aggregate.memory().getByteArray(0, array);
+        return SymbolSupport.reverseIfNeeded(array);
     }
 
     private static void push(Closure.Buffer buffer, Object result, Class<?> returnType) {
@@ -72,24 +82,22 @@ public class DesktopSymbol extends Symbol {
         else if (returnType == long.class) buffer.setLongReturn(((Number) result).longValue());
         else if (returnType == float.class) buffer.setFloatReturn(((Number) result).floatValue());
         else if (returnType == double.class) buffer.setDoubleReturn(((Number) result).doubleValue());
-        else if (returnType == Pointer.class) buffer.setAddressReturn(((Number) result).longValue());
+        else if (Aggregate.class.isAssignableFrom(returnType)) buffer.setStructReturn(toByteArray((Aggregate) result), 0);
     }
 
-    public DesktopSymbol(Object object, Method method, Class<?> returnType, Class<?>... parameterTypes) {
+    @SuppressWarnings("unchecked")
+    public DesktopSymbol(int options, Object object, Method method, Class<?> returnType, Class<?>... parameterTypes) {
         if (!Modifier.isStatic(method.getModifiers())) Objects.requireNonNull(object);
+        this.options = Option.removeUnusedBits(options);
         Parameter[] parameters = method.getParameters();
         int parameterCount = parameters.length;
         if (parameterCount != parameterTypes.length) throw new IndexOutOfBoundsException("Array length mismatch");
         Class<?> methodReturnType = method.getReturnType();
-        if (returnType == Pointer.class) {
-            if (methodReturnType != long.class) throw new IllegalArgumentException("Illegal method return type; expected long");
-        }
-        else if (methodReturnType != returnType)
-            throw new IllegalArgumentException("Illegal method return type; expected " + returnType);
+        if (methodReturnType != returnType) throw new IllegalArgumentException("Illegal method return type; expected " + returnType);
         this.returnType = returnType;
         for (int i = 0; i < parameterCount; i ++) {
-            if (parameterTypes[i] == Pointer.class) {
-                if (parameters[i].getType() != long.class) throw new IllegalArgumentException("Illegal method return type; expected long");
+            if (Aggregate.class.isAssignableFrom(parameterTypes[i])) {
+                if (parameters[i].getType() != parameterTypes[i]) throw new IllegalArgumentException("Illegal argument type; expected " + parameterTypes[i]);
             }
             else if (!SymbolSupport.matches(parameterTypes[i], parameters[i].getType()))
                 throw new IllegalArgumentException("Illegal argument type; expected " + parameterTypes[i]);
@@ -101,7 +109,7 @@ public class DesktopSymbol extends Symbol {
         returnFFIType = null;
         CallContext context = CallContext.getCallContext(
                 SymbolSupport.toFFIType(returnType), SymbolSupport.toFFITypes(parameterTypes),
-                CallingConvention.DEFAULT, true);
+                CallingConvention.DEFAULT, false);
         this.parameterTypes = parameterTypes.clone();
         markerTypes = Arrays.asList(parameterTypes);
         closure = ClosureManager.getInstance().newClosure(buffer -> {
@@ -123,9 +131,10 @@ public class DesktopSymbol extends Symbol {
                     args[i] = buffer.getDouble(index);
                     if (ABI.P != 8) index ++;
                 }
-                else if (parameterType == Pointer.class) {
-                    args[i] = buffer.getAddress(index);
-                    if (ABI.P != 8) index ++;
+                else if (Aggregate.class.isAssignableFrom(parameterType)) {
+                    byte[] struct = new byte[(int) Aggregate.sizeOfType((Class<? extends Aggregate>) parameterType)];
+                    MEMORY_IO.getByteArray(buffer.getStruct(index), struct, 0, struct.length);
+                    args[i] = Aggregate.newInstance((Class<? extends Aggregate>) parameterType, Pointer.wrap(SymbolSupport.reverseIfNeeded(struct)));
                 }
                 index ++;
             }
@@ -161,146 +170,344 @@ public class DesktopSymbol extends Symbol {
         return varargs;
     }
 
-    @Override
-    public void invokeVoid(Object... args) {
-        if (returnType != void.class) throw new IllegalArgumentException("Illegal return type; expected void");
+    private void invokeVoid0(int options, Object... args) {
         if (varargs) {
             CallContext context = CallContext.getCallContext(returnFFIType, nonVariadicFFITypes.length,
                     SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args[args.length - 1]),
-                    CallingConvention.DEFAULT, true);
+                    (options & Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
+                    (options & Option.SAVE_ERRNO) != 0);
             INVOKER.invokeInt(context, address, SymbolSupport.toHeapInvocationBufferVariadic(context, parameterTypes, args));
         }
         else INVOKER.invokeInt(function, SymbolSupport.toHeapInvocationBuffer(function.getCallContext(), parameterTypes, args));
     }
 
     @Override
-    public boolean invokeBoolean(Object... args) {
-        if (returnType != boolean.class) throw new IllegalArgumentException("Illegal return type; expected boolean");
+    public void invokeVoid(Object... args) {
+        if (returnType != void.class) throw new IllegalArgumentException("Illegal return type; expected void");
+        if ((options & Option.THROW_ERRNO) != 0) {
+            int prev = LAST_ERROR.get();
+            LAST_ERROR.set(0);
+            invokeVoid0(options | Option.SAVE_ERRNO, args);
+            int errno = LAST_ERROR.get();
+            LAST_ERROR.set(prev);
+            if (errno != 0) throw new LastErrorException(errno);
+        }
+        else invokeVoid0(options, args);
+    }
+
+    private boolean invokeBoolean0(int options, Object... args) {
         if (varargs) {
             CallContext context = CallContext.getCallContext(returnFFIType, nonVariadicFFITypes.length,
                     SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args[args.length - 1]),
-                    CallingConvention.DEFAULT, true);
+                    (options & Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
+                    (options & Option.SAVE_ERRNO) != 0);
             return INVOKER.invokeInt(context, address, SymbolSupport.toHeapInvocationBufferVariadic(context, parameterTypes, args)) != 0;
         }
         else return INVOKER.invokeInt(function, SymbolSupport.toHeapInvocationBuffer(function.getCallContext(), parameterTypes, args)) != 0;
     }
 
     @Override
-    public byte invokeByte(Object... args) {
-        if (returnType != byte.class) throw new IllegalArgumentException("Illegal return type; expected byte");
+    public boolean invokeBoolean(Object... args) {
+        if (returnType != boolean.class) throw new IllegalArgumentException("Illegal return type; expected boolean");
+        if ((options & Option.THROW_ERRNO) != 0) {
+            int prev = LAST_ERROR.get();
+            LAST_ERROR.set(0);
+            boolean result = invokeBoolean0(options | Option.SAVE_ERRNO, args);
+            int errno = LAST_ERROR.get();
+            LAST_ERROR.set(prev);
+            if (errno == 0) return result;
+            else throw new LastErrorException(errno);
+        }
+        else return invokeBoolean0(options, args);
+    }
+
+    private byte invokeByte0(int options, Object... args) {
         if (varargs) {
             CallContext context = CallContext.getCallContext(returnFFIType, nonVariadicFFITypes.length,
                     SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args[args.length - 1]),
-                    CallingConvention.DEFAULT, true);
+                    (options & Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
+                    (options & Option.SAVE_ERRNO) != 0);
             return (byte) (INVOKER.invokeInt(context, address, SymbolSupport.toHeapInvocationBufferVariadic(context, parameterTypes, args)) & 0xFF);
         }
         else return (byte) (INVOKER.invokeInt(function, SymbolSupport.toHeapInvocationBuffer(function.getCallContext(), parameterTypes, args)) & 0xFF);
     }
 
     @Override
-    public char invokeChar(Object... args) {
-        if (returnType != char.class) throw new IllegalArgumentException("Illegal return type; expected char");
+    public byte invokeByte(Object... args) {
+        if (returnType != byte.class) throw new IllegalArgumentException("Illegal return type; expected byte");
+        if ((options & Option.THROW_ERRNO) != 0) {
+            int prev = LAST_ERROR.get();
+            LAST_ERROR.set(0);
+            byte result = invokeByte0(options | Option.SAVE_ERRNO, args);
+            int errno = LAST_ERROR.get();
+            LAST_ERROR.set(prev);
+            if (errno == 0) return result;
+            else throw new LastErrorException(errno);
+        }
+        else return invokeByte0(options, args);
+    }
+
+    private char invokeChar0(int options, Object... args) {
         if (varargs) {
             CallContext context = CallContext.getCallContext(returnFFIType, nonVariadicFFITypes.length,
                     SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args[args.length - 1]),
-                    CallingConvention.DEFAULT, true);
+                    (options & Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
+                    (options & Option.SAVE_ERRNO) != 0);
             return (char) (INVOKER.invokeInt(context, address, SymbolSupport.toHeapInvocationBufferVariadic(context, parameterTypes, args)) & 0xFFFF);
         }
         else return (char) (INVOKER.invokeInt(function, SymbolSupport.toHeapInvocationBuffer(function.getCallContext(), parameterTypes, args)) & 0xFFFF);
     }
 
     @Override
-    public short invokeShort(Object... args) {
-        if (returnType != short.class) throw new IllegalArgumentException("Illegal return type; expected short");
+    public char invokeChar(Object... args) {
+        if (returnType != char.class) throw new IllegalArgumentException("Illegal return type; expected char");
+        if ((options & Option.THROW_ERRNO) != 0) {
+            int prev = LAST_ERROR.get();
+            LAST_ERROR.set(0);
+            char result = invokeChar0(options | Option.SAVE_ERRNO, args);
+            int errno = LAST_ERROR.get();
+            LAST_ERROR.set(prev);
+            if (errno == 0) return result;
+            else throw new LastErrorException(errno);
+        }
+        else return invokeChar0(options, args);
+    }
+
+    private short invokeShort0(int options, Object... args) {
         if (varargs) {
             CallContext context = CallContext.getCallContext(returnFFIType, nonVariadicFFITypes.length,
                     SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args[args.length - 1]),
-                    CallingConvention.DEFAULT, true);
+                    (options & Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
+                    (options & Option.SAVE_ERRNO) != 0);
             return (short) (INVOKER.invokeInt(context, address, SymbolSupport.toHeapInvocationBufferVariadic(context, parameterTypes, args)) & 0xFFFF);
         }
         else return (short) (INVOKER.invokeInt(function, SymbolSupport.toHeapInvocationBuffer(function.getCallContext(), parameterTypes, args)) & 0xFFFF);
     }
 
     @Override
-    public int invokeInt(Object... args) {
-        if (returnType != int.class) throw new IllegalArgumentException("Illegal return type; expected int");
+    public short invokeShort(Object... args) {
+        if (returnType != short.class) throw new IllegalArgumentException("Illegal return type; expected short");
+        if ((options & Option.THROW_ERRNO) != 0) {
+            int prev = LAST_ERROR.get();
+            LAST_ERROR.set(0);
+            short result = invokeShort0(options | Option.SAVE_ERRNO, args);
+            int errno = LAST_ERROR.get();
+            LAST_ERROR.set(prev);
+            if (errno == 0) return result;
+            else throw new LastErrorException(errno);
+        }
+        else return invokeShort0(options, args);
+    }
+
+    private int invokeInt0(int options, Object... args) {
         if (varargs) {
             CallContext context = CallContext.getCallContext(returnFFIType, nonVariadicFFITypes.length,
                     SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args[args.length - 1]),
-                    CallingConvention.DEFAULT, true);
+                    (options & Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
+                    (options & Option.SAVE_ERRNO) != 0);
             return INVOKER.invokeInt(context, address, SymbolSupport.toHeapInvocationBufferVariadic(context, parameterTypes, args));
         }
         else return INVOKER.invokeInt(function, SymbolSupport.toHeapInvocationBuffer(function.getCallContext(), parameterTypes, args));
     }
 
     @Override
-    public long invokeNativeInt(Object... args) {
-        if (returnType != ABI.I_TYPE) throw new IllegalArgumentException("Illegal return type; expected " + ABI.I_TYPE);
+    public int invokeInt(Object... args) {
+        if (returnType != int.class) throw new IllegalArgumentException("Illegal return type; expected int");
+        if ((options & Option.THROW_ERRNO) != 0) {
+            int prev = LAST_ERROR.get();
+            LAST_ERROR.set(0);
+            int result = invokeInt0(options | Option.SAVE_ERRNO, args);
+            int errno = LAST_ERROR.get();
+            LAST_ERROR.set(prev);
+            if (errno == 0) return result;
+            else throw new LastErrorException(errno);
+        }
+        else return invokeInt0(options, args);
+    }
+
+    private long invokeNativeInt0(int options, Object... args) {
         if (varargs) {
             CallContext context = CallContext.getCallContext(returnFFIType, nonVariadicFFITypes.length,
                     SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args[args.length - 1]),
-                    CallingConvention.DEFAULT, true);
+                    (options & Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
+                    (options & Option.SAVE_ERRNO) != 0);
             return NATIVE_INT_INVOKER.invoke(context, address, SymbolSupport.toHeapInvocationBufferVariadic(context, parameterTypes, args));
         }
         else return NATIVE_INT_INVOKER.invoke(function, SymbolSupport.toHeapInvocationBuffer(function.getCallContext(), parameterTypes, args));
     }
 
     @Override
-    public long invokeLong(Object... args) {
-        if (returnType != long.class) throw new IllegalArgumentException("Illegal return type; expected long");
-        CallContext context = CallContext.getCallContext(returnFFIType, nonVariadicFFITypes.length,
-                SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args[args.length - 1]),
-                CallingConvention.DEFAULT, true);
-        if (varargs) return INVOKER.invokeLong(context, address, SymbolSupport.toHeapInvocationBufferVariadic(context, parameterTypes, args));
+    public long invokeNativeInt(Object... args) {
+        if (returnType != ABI.I_TYPE) throw new IllegalArgumentException("Illegal return type; expected " + ABI.I_TYPE);
+        if ((options & Option.THROW_ERRNO) != 0) {
+            int prev = LAST_ERROR.get();
+            LAST_ERROR.set(0);
+            long result = invokeNativeInt0(options | Option.SAVE_ERRNO, args);
+            int errno = LAST_ERROR.get();
+            LAST_ERROR.set(prev);
+            if (errno == 0) return result;
+            else throw new LastErrorException(errno);
+        }
+        else return invokeNativeInt0(options, args);
+    }
+
+    private long invokeLong0(int options, Object... args) {
+        if (varargs) {
+            CallContext context = CallContext.getCallContext(returnFFIType, nonVariadicFFITypes.length,
+                    SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args[args.length - 1]),
+                    (options & Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
+                    (options & Option.SAVE_ERRNO) != 0);
+            return INVOKER.invokeLong(context, address, SymbolSupport.toHeapInvocationBufferVariadic(context, parameterTypes, args));
+        }
         else return INVOKER.invokeLong(function, SymbolSupport.toHeapInvocationBuffer(function.getCallContext(), parameterTypes, args));
     }
 
     @Override
-    public long invokeNativeLong(Object... args) {
-        if (returnType != ABI.L_TYPE) throw new IllegalArgumentException("Illegal return type; expected " + ABI.L_TYPE);
+    public long invokeLong(Object... args) {
+        if (returnType != long.class) throw new IllegalArgumentException("Illegal return type; expected long");
+        if ((options & Option.THROW_ERRNO) != 0) {
+            int prev = LAST_ERROR.get();
+            LAST_ERROR.set(0);
+            long result = invokeLong0(options | Option.SAVE_ERRNO, args);
+            int errno = LAST_ERROR.get();
+            LAST_ERROR.set(prev);
+            if (errno == 0) return result;
+            else throw new LastErrorException(errno);
+        }
+        else return invokeLong0(options, args);
+    }
+
+    private long invokeNativeLong0(int options, Object... args) {
         if (varargs) {
             CallContext context = CallContext.getCallContext(returnFFIType, nonVariadicFFITypes.length,
                     SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args[args.length - 1]),
-                    CallingConvention.DEFAULT, true);
+                    (options & Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
+                    (options & Option.SAVE_ERRNO) != 0);
             return NATIVE_LONG_INVOKER.invoke(context, address, SymbolSupport.toHeapInvocationBufferVariadic(context, parameterTypes, args));
         }
         else return NATIVE_LONG_INVOKER.invoke(function, SymbolSupport.toHeapInvocationBuffer(function.getCallContext(), parameterTypes, args));
     }
 
     @Override
-    public float invokeFloat(Object... args) {
-        if (returnType != float.class) throw new IllegalArgumentException("Illegal return type; expected void");
+    public long invokeNativeLong(Object... args) {
+        if (returnType != ABI.L_TYPE) throw new IllegalArgumentException("Illegal return type; expected " + ABI.L_TYPE);
+        if ((options & Option.THROW_ERRNO) != 0) {
+            int prev = LAST_ERROR.get();
+            LAST_ERROR.set(0);
+            long result = invokeNativeLong0(options | Option.SAVE_ERRNO, args);
+            int errno = LAST_ERROR.get();
+            LAST_ERROR.set(prev);
+            if (errno == 0) return result;
+            else throw new LastErrorException(errno);
+        }
+        else return invokeNativeLong0(options, args);
+    }
+
+    private float invokeFloat0(int options, Object... args) {
         if (varargs) {
             CallContext context = CallContext.getCallContext(returnFFIType, nonVariadicFFITypes.length,
                     SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args[args.length - 1]),
-                    CallingConvention.DEFAULT, true);
+                    (options & Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
+                    (options & Option.SAVE_ERRNO) != 0);
             return INVOKER.invokeFloat(context, address, SymbolSupport.toHeapInvocationBufferVariadic(context, parameterTypes, args));
         }
         else return INVOKER.invokeFloat(function, SymbolSupport.toHeapInvocationBuffer(function.getCallContext(), parameterTypes, args));
     }
 
     @Override
-    public double invokeDouble(Object... args) {
-        if (returnType != double.class) throw new IllegalArgumentException("Illegal return type; expected double");
+    public float invokeFloat(Object... args) {
+        if (returnType != float.class) throw new IllegalArgumentException("Illegal return type; expected void");
+        if ((options & Option.THROW_ERRNO) != 0) {
+            int prev = LAST_ERROR.get();
+            LAST_ERROR.set(0);
+            float result = invokeFloat0(options | Option.SAVE_ERRNO, args);
+            int errno = LAST_ERROR.get();
+            LAST_ERROR.set(prev);
+            if (errno == 0) return result;
+            else throw new LastErrorException(errno);
+        }
+        else return invokeFloat0(options, args);
+    }
+
+    private double invokeDouble0(int options, Object... args) {
         if (varargs) {
             CallContext context = CallContext.getCallContext(returnFFIType, nonVariadicFFITypes.length,
                     SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args[args.length - 1]),
-                    CallingConvention.DEFAULT, true);
+                    (options & Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
+                    (options & Option.SAVE_ERRNO) != 0);
             return INVOKER.invokeDouble(context, address, SymbolSupport.toHeapInvocationBufferVariadic(context, parameterTypes, args));
         }
         else return INVOKER.invokeDouble(function, SymbolSupport.toHeapInvocationBuffer(function.getCallContext(), parameterTypes, args));
     }
 
     @Override
-    public long invokeAddress(Object... args) {
-        if (returnType != Pointer.class) throw new IllegalArgumentException("Illegal return type; expected pointer");
+    public double invokeDouble(Object... args) {
+        if (returnType != double.class) throw new IllegalArgumentException("Illegal return type; expected double");
+        if ((options & Option.THROW_ERRNO) != 0) {
+            int prev = LAST_ERROR.get();
+            LAST_ERROR.set(0);
+            double result = invokeDouble0(options | Option.SAVE_ERRNO, args);
+            int errno = LAST_ERROR.get();
+            LAST_ERROR.set(prev);
+            if (errno == 0) return result;
+            else throw new LastErrorException(errno);
+        }
+        else return invokeDouble0(options, args);
+    }
+
+    private long invokeAddress0(int options, Object... args) {
         if (varargs) {
             CallContext context = CallContext.getCallContext(returnFFIType, nonVariadicFFITypes.length,
                     SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args[args.length - 1]),
-                CallingConvention.DEFAULT, true);
+                    (options & Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
+                    (options & Option.SAVE_ERRNO) != 0);
             return INVOKER.invokeAddress(context, address, SymbolSupport.toHeapInvocationBufferVariadic(context, parameterTypes, args));
         }
         else return INVOKER.invokeAddress(function, SymbolSupport.toHeapInvocationBuffer(function.getCallContext(), parameterTypes, args));
+    }
+
+    @Override
+    public long invokeAddress(Object... args) {
+        if (returnType != ABI.P_TYPE) throw new IllegalArgumentException("Illegal return type; expected " + ABI.P_TYPE);
+        if ((options & Option.THROW_ERRNO) != 0) {
+            int prev = LAST_ERROR.get();
+            LAST_ERROR.set(0);
+            long result = invokeAddress0(options | Option.SAVE_ERRNO, args);
+            int errno = LAST_ERROR.get();
+            LAST_ERROR.set(prev);
+            if (errno == 0) return result;
+            else throw new LastErrorException(errno);
+        }
+        else return invokeAddress0(options, args);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Aggregate invokeAggregate0(int options, Object... args) {
+        if (varargs) {
+            CallContext context = CallContext.getCallContext(returnFFIType, nonVariadicFFITypes.length,
+                    SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args[args.length - 1]),
+                    (options & Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
+                    (options & Option.SAVE_ERRNO) != 0);
+            return Aggregate.newInstance((Class<? extends Aggregate>) returnType, Pointer.wrap(SymbolSupport.reverseIfNeeded(
+                    INVOKER.invokeStruct(context, address, SymbolSupport.toHeapInvocationBufferVariadic(context, parameterTypes, args)))));
+        }
+        else return Aggregate.newInstance((Class<? extends Aggregate>) returnType, Pointer.wrap(SymbolSupport.reverseIfNeeded(
+                INVOKER.invokeStruct(function, SymbolSupport.toHeapInvocationBuffer(function.getCallContext(), parameterTypes, args)))));
+    }
+
+    @Override
+    public Aggregate invokeAggregate(Object... args) {
+        if (!Aggregate.class.isAssignableFrom(returnType)) throw new IllegalArgumentException("Illegal return type; expected aggregate");
+        if ((options & Option.THROW_ERRNO) != 0) {
+            int prev = LAST_ERROR.get();
+            LAST_ERROR.set(0);
+            Aggregate result = invokeAggregate0(options | Option.SAVE_ERRNO, args);
+            int errno = LAST_ERROR.get();
+            LAST_ERROR.set(prev);
+            if (errno == 0) return result;
+            else throw new LastErrorException(errno);
+        }
+        else return invokeAggregate0(options, args);
     }
 
     @Override
@@ -317,7 +524,7 @@ public class DesktopSymbol extends Symbol {
         else if (returnType == long.class) return invokeLong(args);
         else if (returnType == float.class) return invokeFloat(args);
         else if (returnType == double.class) return invokeDouble(args);
-        else if (returnType == Pointer.class) return invokeAddress(args);
+        else if (Aggregate.class.isAssignableFrom(returnType)) return invokeAggregate(args);
         else throw new UnexpectedError();
     }
 
@@ -360,7 +567,8 @@ public class DesktopSymbol extends Symbol {
     public String toString() {
         return getClass().getName() + '@' + Integer.toHexString(hashCode())
                 + '{' +
-                "address=" + address +
+                "options=" + Option.toString(options) +
+                ", address=" + address +
                 '}';
     }
 

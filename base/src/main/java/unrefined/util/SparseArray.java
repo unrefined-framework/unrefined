@@ -18,7 +18,6 @@ package unrefined.util;
 
 import java.util.Iterator;
 import java.util.Objects;
-import java.util.RandomAccess;
 
 /**
  * <code>SparseArray</code> maps integers to Objects and, unlike a normal array of Objects,
@@ -50,7 +49,7 @@ import java.util.RandomAccess;
  * keys in ascending order. In the case of <code>valueAt(int)</code>, the
  * values corresponding to the keys are returned in ascending order.
  */
-public class SparseArray<E> implements Cloneable, Iterable<E>, RandomAccess {
+public class SparseArray<E> implements Cloneable, Iterable<E> {
 
     private static final Object DELETED = new Object();
     private boolean garbage = false;

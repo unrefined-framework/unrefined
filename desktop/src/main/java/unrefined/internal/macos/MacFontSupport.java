@@ -1,7 +1,7 @@
 package unrefined.internal.macos;
 
 import unrefined.desktop.ReflectionSupport;
-import unrefined.internal.OperatingSystem;
+import unrefined.desktop.OSInfo;
 import unrefined.util.NotInstantiableError;
 import unrefined.util.UnexpectedError;
 
@@ -19,10 +19,10 @@ public final class MacFontSupport {
     public static final Font SYSTEM_FONT;
     public static final float FONT_SCALE = 13f / 12f;
     static {
-        if (OperatingSystem.IS_MAC) {
+        if (OSInfo.IS_MAC) {
             String fontName;
-            if (OperatingSystem.checkOSVersion(10, 15, 0, 0)) fontName = "Helvetica Neue";
-            else if (OperatingSystem.checkOSVersion(10, 11, 0, 0)) fontName = ".SF NS Text";
+            if (OSInfo.checkOSVersion(10, 15, 0, 0)) fontName = "Helvetica Neue";
+            else if (OSInfo.checkOSVersion(10, 11, 0, 0)) fontName = ".SF NS Text";
             else fontName = "Lucida Grande";
             SYSTEM_FONT = new Font(fontName, Font.PLAIN, 13);
         }
@@ -31,7 +31,7 @@ public final class MacFontSupport {
 
     private static final Method getScaleFactorMethod;
     static {
-        if (OperatingSystem.IS_MAC) {
+        if (OSInfo.IS_MAC) {
             Method method;
             try {
                 method = Class.forName("sun.awt.CGraphicsDevice").getDeclaredMethod("getScaleFactor");

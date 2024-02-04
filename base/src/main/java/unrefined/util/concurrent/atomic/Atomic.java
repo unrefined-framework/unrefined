@@ -14,16 +14,16 @@ public abstract class Atomic {
     private static final Object INSTANCE_LOCK = new Object();
     public static Atomic getInstance() {
         if (INSTANCE == null) synchronized (INSTANCE_LOCK) {
-            if (INSTANCE == null) INSTANCE = Environment.global().get("unrefined.runtime.atomic", Atomic.class);
+            if (INSTANCE == null) INSTANCE = Environment.global.get("unrefined.runtime.atomic", Atomic.class);
         }
         return INSTANCE;
     }
 
     public abstract void fullFence();
-
     public abstract void loadFence();
-
     public abstract void storeFence();
+    public abstract void loadLoadFence();
+    public abstract void storeStoreFence();
 
     public <T> AtomicIntegerFieldUpdater<T> createAtomicIntegerFieldUpdater(Class<T> clazz, String fieldName) {
         return AtomicIntegerFieldUpdater.newUpdater(clazz, fieldName);

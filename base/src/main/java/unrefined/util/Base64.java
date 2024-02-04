@@ -14,7 +14,7 @@ public abstract class Base64 {
     private static final Object INSTANCE_LOCK = new Object();
     public static Base64 getInstance() {
         if (INSTANCE == null) synchronized (INSTANCE_LOCK) {
-            if (INSTANCE == null) INSTANCE = Environment.global().get("unrefined.runtime.base64", Base64.class);
+            if (INSTANCE == null) INSTANCE = Environment.global.get("unrefined.runtime.base64", Base64.class);
         }
         return INSTANCE;
     }
@@ -29,7 +29,7 @@ public abstract class Base64 {
         public static final int CRLF = 1 << 2;
         public static final int URL_SAFE = 1 << 3;
         public static int removeUnusedBits(int flags) {
-            return flags << 4 >>> 4;
+            return flags << 28 >>> 28;
         }
         public static String toString(int flags) {
             flags = removeUnusedBits(flags);

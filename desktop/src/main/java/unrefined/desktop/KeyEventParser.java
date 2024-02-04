@@ -1,6 +1,5 @@
 package unrefined.desktop;
 
-import unrefined.internal.OperatingSystem;
 import unrefined.util.NotInstantiableError;
 import unrefined.util.UnexpectedError;
 
@@ -18,7 +17,7 @@ public final class KeyEventParser {
     static {
         try {
             rawCodeField = KeyEvent.class.getDeclaredField("rawCode");
-            if (OperatingSystem.IS_WINDOWS) scancodeField = KeyEvent.class.getDeclaredField("scancode");
+            if (OSInfo.IS_WINDOWS) scancodeField = KeyEvent.class.getDeclaredField("scancode");
             else scancodeField = null;
         } catch (NoSuchFieldException e) {
             throw new UnexpectedError(e);
@@ -802,8 +801,8 @@ public final class KeyEventParser {
 
     private static final Parser PARSER;
     static {
-        if (OperatingSystem.IS_WINDOWS) PARSER = WINDOWS_PARSER;
-        else if (OperatingSystem.IS_MAC) PARSER = MAC_PARSER;
+        if (OSInfo.IS_WINDOWS) PARSER = WINDOWS_PARSER;
+        else if (OSInfo.IS_MAC) PARSER = MAC_PARSER;
         else PARSER = X11_PARSER;
     }
 

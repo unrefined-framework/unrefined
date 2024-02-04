@@ -1,6 +1,5 @@
 package unrefined.desktop;
 
-import unrefined.internal.OperatingSystem;
 import unrefined.internal.X11.X11CursorSupport;
 import unrefined.media.graphics.CursorNotFoundException;
 import unrefined.util.NotInstantiableError;
@@ -22,7 +21,7 @@ public final class CursorSupport {
         try {
             cursor = Toolkit.getDefaultToolkit().createCustomCursor(
                     Toolkit.getDefaultToolkit().getImage(CursorSupport.class.getResource("")),
-                    new Point(0, 0), "UXGL None Cursor");
+                    new Point(0, 0), "Unrefined None Cursor");
         }
         catch (HeadlessException e) {
             cursor = null;
@@ -40,7 +39,7 @@ public final class CursorSupport {
             case CROSSHAIR: return Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR);
             case IBEAM: return Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR);
             case WAIT:
-                if (OperatingSystem.IS_MAC) return Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR); // FIXME Cocoa
+                if (OSInfo.IS_MAC) return Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR); // FIXME Cocoa
                 else return Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
             case POINTING_HAND: return Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
             case MOVE: return Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR);
@@ -53,92 +52,92 @@ public final class CursorSupport {
             case RESIZE_NW: return Cursor.getPredefinedCursor(Cursor.NW_RESIZE_CURSOR);
             case RESIZE_NE: return Cursor.getPredefinedCursor(Cursor.NE_RESIZE_CURSOR);
             case RESIZE_NS:
-                if (OperatingSystem.IS_WINDOWS) return Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR); // Windows unsupported
-                else if (OperatingSystem.IS_MAC) return Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR); // FIXME Cocoa
+                if (OSInfo.IS_WINDOWS) return Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR); // Windows unsupported
+                else if (OSInfo.IS_MAC) return Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR); // FIXME Cocoa
                 else return X11CursorSupport.getSystemCursor(X11CursorSupport.XC_sb_v_double_arrow);
             case RESIZE_WE:
-                if (OperatingSystem.IS_WINDOWS) return Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR); // Windows unsupported
-                else if (OperatingSystem.IS_MAC) return Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR); // FIXME Cocoa
+                if (OSInfo.IS_WINDOWS) return Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR); // Windows unsupported
+                else if (OSInfo.IS_MAC) return Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR); // FIXME Cocoa
                 else return X11CursorSupport.getSystemCursor(X11CursorSupport.XC_sb_h_double_arrow);
             case RESIZE_NWSE:
-                if (OperatingSystem.IS_WINDOWS) return Cursor.getPredefinedCursor(Cursor.NW_RESIZE_CURSOR); // Windows unsupported
-                else if (OperatingSystem.IS_MAC) return Cursor.getDefaultCursor(); // FIXME Cocoa
+                if (OSInfo.IS_WINDOWS) return Cursor.getPredefinedCursor(Cursor.NW_RESIZE_CURSOR); // Windows unsupported
+                else if (OSInfo.IS_MAC) return Cursor.getDefaultCursor(); // FIXME Cocoa
                 else return X11CursorSupport.getSystemCursor("bd_double_arrow");
             case RESIZE_NESW:
-                if (OperatingSystem.IS_WINDOWS) return Cursor.getPredefinedCursor(Cursor.NE_RESIZE_CURSOR); // Windows unsupported
-                else if (OperatingSystem.IS_MAC) return Cursor.getDefaultCursor(); // FIXME Cocoa
+                if (OSInfo.IS_WINDOWS) return Cursor.getPredefinedCursor(Cursor.NE_RESIZE_CURSOR); // Windows unsupported
+                else if (OSInfo.IS_MAC) return Cursor.getDefaultCursor(); // FIXME Cocoa
                 else return X11CursorSupport.getSystemCursor("fd_double_arrow");
             case RESIZE_COL:
-                if (OperatingSystem.IS_WINDOWS) return Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR); // FIXME extract ole32.dll and bundle image
-                else if (OperatingSystem.IS_MAC) return Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR); // FIXME Cocoa
+                if (OSInfo.IS_WINDOWS) return Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR); // FIXME extract ole32.dll and bundle image
+                else if (OSInfo.IS_MAC) return Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR); // FIXME Cocoa
                 else return X11CursorSupport.getSystemCursor("col-resize");
             case RESIZE_ROW:
-                if (OperatingSystem.IS_WINDOWS) return Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR); // FIXME extract ole32.dll and bundle image
-                else if (OperatingSystem.IS_MAC) return Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR); // FIXME Cocoa
+                if (OSInfo.IS_WINDOWS) return Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR); // FIXME extract ole32.dll and bundle image
+                else if (OSInfo.IS_MAC) return Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR); // FIXME Cocoa
                 else return X11CursorSupport.getSystemCursor("row-resize");
             case CELL:
-                if (OperatingSystem.IS_WINDOWS) return Cursor.getDefaultCursor(); // FIXME extract ole32.dll and bundle image
-                else if (OperatingSystem.IS_MAC) return Cursor.getDefaultCursor(); // FIXME Cocoa
+                if (OSInfo.IS_WINDOWS) return Cursor.getDefaultCursor(); // FIXME extract ole32.dll and bundle image
+                else if (OSInfo.IS_MAC) return Cursor.getDefaultCursor(); // FIXME Cocoa
                 else return X11CursorSupport.getSystemCursor("plus");
             case HELP:
-                if (OperatingSystem.IS_WINDOWS) return Cursor.getDefaultCursor(); // FIXME read cursor file
-                else if (OperatingSystem.IS_MAC) return Cursor.getDefaultCursor(); // FIXME Cocoa
+                if (OSInfo.IS_WINDOWS) return Cursor.getDefaultCursor(); // FIXME read cursor file
+                else if (OSInfo.IS_MAC) return Cursor.getDefaultCursor(); // FIXME Cocoa
                 else return X11CursorSupport.getSystemCursor(X11CursorSupport.XC_question_arrow);
             case ZOOM_IN:
-                if (OperatingSystem.IS_WINDOWS) return Cursor.getDefaultCursor(); // FIXME extract ole32.dll and bundle image
-                else if (OperatingSystem.IS_MAC) return Cursor.getDefaultCursor(); // FIXME Cocoa
+                if (OSInfo.IS_WINDOWS) return Cursor.getDefaultCursor(); // FIXME extract ole32.dll and bundle image
+                else if (OSInfo.IS_MAC) return Cursor.getDefaultCursor(); // FIXME Cocoa
                 else return X11CursorSupport.getSystemCursor("zoom-in");
             case ZOOM_OUT:
-                if (OperatingSystem.IS_WINDOWS) return Cursor.getDefaultCursor(); // FIXME extract ole32.dll and bundle image
-                else if (OperatingSystem.IS_MAC) return Cursor.getDefaultCursor(); // FIXME Cocoa
+                if (OSInfo.IS_WINDOWS) return Cursor.getDefaultCursor(); // FIXME extract ole32.dll and bundle image
+                else if (OSInfo.IS_MAC) return Cursor.getDefaultCursor(); // FIXME Cocoa
                 else return X11CursorSupport.getSystemCursor("zoom-out");
             case NO:
-                if (OperatingSystem.IS_WINDOWS) return getSystemCustomCursor("Invalid.32x32"); // FIXME read cursor file
-                else if (OperatingSystem.IS_MAC) return getDesktopPropertyCursor("DnD.Cursor.MoveNoDrop");
+                if (OSInfo.IS_WINDOWS) return getSystemCustomCursor("Invalid.32x32"); // FIXME read cursor file
+                else if (OSInfo.IS_MAC) return getDesktopPropertyCursor("DnD.Cursor.MoveNoDrop");
                 else return X11CursorSupport.getSystemCursor("crossed_circle");
             case GRAB:
-                if (OperatingSystem.IS_WINDOWS) return Cursor.getDefaultCursor(); // FIXME extract ole32.dll and bundle image
-                else if (OperatingSystem.IS_MAC) return Cursor.getDefaultCursor(); // FIXME Cocoa
+                if (OSInfo.IS_WINDOWS) return Cursor.getDefaultCursor(); // FIXME extract ole32.dll and bundle image
+                else if (OSInfo.IS_MAC) return Cursor.getDefaultCursor(); // FIXME Cocoa
                 else return X11CursorSupport.getSystemCursor(X11CursorSupport.XC_hand1);
             case GRABBING:
-                if (OperatingSystem.IS_WINDOWS) return Cursor.getDefaultCursor(); // FIXME extract ole32.dll and bundle image
-                else if (OperatingSystem.IS_MAC) return getDesktopPropertyCursor("DnD.Cursor.MoveDrop");
+                if (OSInfo.IS_WINDOWS) return Cursor.getDefaultCursor(); // FIXME extract ole32.dll and bundle image
+                else if (OSInfo.IS_MAC) return getDesktopPropertyCursor("DnD.Cursor.MoveDrop");
                 else return X11CursorSupport.getSystemCursor("grabbing");
             case COPY_DROP:
-                if (OperatingSystem.IS_WINDOWS) return getSystemCustomCursor("CopyDrop.32x32"); // FIXME extract ole32.dll and bundle image
-                else if (OperatingSystem.IS_MAC) return getDesktopPropertyCursor("DnD.Cursor.CopyDrop");
+                if (OSInfo.IS_WINDOWS) return getSystemCustomCursor("CopyDrop.32x32"); // FIXME extract ole32.dll and bundle image
+                else if (OSInfo.IS_MAC) return getDesktopPropertyCursor("DnD.Cursor.CopyDrop");
                 else return X11CursorSupport.getSystemCursor("dnd-copy");
             case LINK_DROP:
-                if (OperatingSystem.IS_WINDOWS) return getSystemCustomCursor("LinkDrop.32x32"); // FIXME extract ole32.dll and bundle image
-                else if (OperatingSystem.IS_MAC) return getDesktopPropertyCursor("DnD.Cursor.LinkDrop");
+                if (OSInfo.IS_WINDOWS) return getSystemCustomCursor("LinkDrop.32x32"); // FIXME extract ole32.dll and bundle image
+                else if (OSInfo.IS_MAC) return getDesktopPropertyCursor("DnD.Cursor.LinkDrop");
                 else return X11CursorSupport.getSystemCursor("dnd-link");
             case MOVE_DROP:
-                if (OperatingSystem.IS_WINDOWS) return getSystemCustomCursor("MoveDrop.32x32"); // FIXME extract ole32.dll and bundle image
-                else if (OperatingSystem.IS_MAC) return getDesktopPropertyCursor("DnD.Cursor.MoveDrop");
+                if (OSInfo.IS_WINDOWS) return getSystemCustomCursor("MoveDrop.32x32"); // FIXME extract ole32.dll and bundle image
+                else if (OSInfo.IS_MAC) return getDesktopPropertyCursor("DnD.Cursor.MoveDrop");
                 else return X11CursorSupport.getSystemCursor("dnd-move");
             case NO_DROP:
-                if (OperatingSystem.IS_WINDOWS) return getSystemCustomCursor("Invalid.32x32"); // FIXME read cursor file
-                else if (OperatingSystem.IS_MAC) return getDesktopPropertyCursor("DnD.Cursor.MoveNoDrop");
+                if (OSInfo.IS_WINDOWS) return getSystemCustomCursor("Invalid.32x32"); // FIXME read cursor file
+                else if (OSInfo.IS_MAC) return getDesktopPropertyCursor("DnD.Cursor.MoveNoDrop");
                 else return X11CursorSupport.getSystemCursor("dnd-no-drop");
             case UP_ARROW:
-                if (OperatingSystem.IS_WINDOWS) return Cursor.getDefaultCursor(); // FIXME read cursor file
-                else if (OperatingSystem.IS_MAC) return Cursor.getDefaultCursor(); // FIXME Cocoa
+                if (OSInfo.IS_WINDOWS) return Cursor.getDefaultCursor(); // FIXME read cursor file
+                else if (OSInfo.IS_MAC) return Cursor.getDefaultCursor(); // FIXME Cocoa
                 else return X11CursorSupport.getSystemCursor(X11CursorSupport.XC_sb_up_arrow);
             case VERTICAL_IBEAM:
-                if (OperatingSystem.IS_WINDOWS) return Cursor.getDefaultCursor(); // FIXME read cursor file
-                else if (OperatingSystem.IS_MAC) return Cursor.getDefaultCursor(); // FIXME Cocoa
+                if (OSInfo.IS_WINDOWS) return Cursor.getDefaultCursor(); // FIXME read cursor file
+                else if (OSInfo.IS_MAC) return Cursor.getDefaultCursor(); // FIXME Cocoa
                 else return X11CursorSupport.getSystemCursor("vertical-text");
             case CONTEXT_MENU:
-                if (OperatingSystem.IS_WINDOWS) return Cursor.getDefaultCursor(); // FIXME extract ole32.dll and bundle image
-                else if (OperatingSystem.IS_MAC) return Cursor.getDefaultCursor(); // FIXME Cocoa
+                if (OSInfo.IS_WINDOWS) return Cursor.getDefaultCursor(); // FIXME extract ole32.dll and bundle image
+                else if (OSInfo.IS_MAC) return Cursor.getDefaultCursor(); // FIXME Cocoa
                 else return X11CursorSupport.getSystemCursor("context-menu");
             case PROGRESS:
-                if (OperatingSystem.IS_WINDOWS) return Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR); // FIXME read cursor file
-                else if (OperatingSystem.IS_MAC) return Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR); // FIXME Cocoa
+                if (OSInfo.IS_WINDOWS) return Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR); // FIXME read cursor file
+                else if (OSInfo.IS_MAC) return Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR); // FIXME Cocoa
                 else return X11CursorSupport.getSystemCursor("left_ptr_watch");
             case FLEUR:
-                if (OperatingSystem.IS_WINDOWS) return Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR); // Windows unsupported
-                else if (OperatingSystem.IS_MAC) return Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR); // FIXME Cocoa
+                if (OSInfo.IS_WINDOWS) return Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR); // Windows unsupported
+                else if (OSInfo.IS_MAC) return Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR); // FIXME Cocoa
                 else return X11CursorSupport.getSystemCursor(X11CursorSupport.XC_fleur);
             case NONE: return NONE_CURSOR;
             default: throw new CursorNotFoundException(type);
@@ -166,12 +165,12 @@ public final class CursorSupport {
     }
 
     public static Cursor createCustomCursor(Image cursor, Point hotSpot, String name) {
-        if (OperatingSystem.IS_X11) return X11CursorSupport.createCustomCursor(cursor, hotSpot, name);
+        if (OSInfo.IS_X11) return X11CursorSupport.createCustomCursor(cursor, hotSpot, name);
         else return Toolkit.getDefaultToolkit().createCustomCursor(cursor, hotSpot, name);
     }
 
     public static int getMaximumCursorColors() {
-        if (OperatingSystem.IS_X11) return X11CursorSupport.getMaximumCursorColors();
+        if (OSInfo.IS_X11) return X11CursorSupport.getMaximumCursorColors();
         else return Toolkit.getDefaultToolkit().getMaximumCursorColors();
     }
 

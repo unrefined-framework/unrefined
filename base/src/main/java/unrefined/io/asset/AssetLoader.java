@@ -13,7 +13,7 @@ public abstract class AssetLoader {
     private static final Object DEFAULT_INSTANCE_LOCK = new Object();
     public static AssetLoader defaultInstance() {
         if (DEFAULT_INSTANCE == null) synchronized (DEFAULT_INSTANCE_LOCK) {
-            if (DEFAULT_INSTANCE == null) DEFAULT_INSTANCE = Environment.global().get("unrefined.runtime.assetLoader", AssetLoader.class);
+            if (DEFAULT_INSTANCE == null) DEFAULT_INSTANCE = Environment.global.get("unrefined.runtime.assetLoader", AssetLoader.class);
         }
         return DEFAULT_INSTANCE;
     }

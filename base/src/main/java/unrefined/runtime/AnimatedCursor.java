@@ -10,7 +10,7 @@ public class AnimatedCursor extends Cursor {
     private final long[] durations;
 
     public AnimatedCursor(Cursor[] cursors, int cursorsOffset, long[] durations, int durationsOffset, int length) {
-        if (length < 1) throw new IllegalArgumentException("Not an animated cursor");
+        if (length < 1) throw new IllegalArgumentException("not an animated cursor");
         cursors = Arrays.copyOfRange(cursors, cursorsOffset, cursorsOffset + length);
         for (int i = 0; i < length; i ++) {
             if (cursors[i] instanceof AnimatedCursor) throw new IllegalArgumentException("Illegal cursor type; expected non-animated");

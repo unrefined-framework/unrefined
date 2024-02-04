@@ -18,7 +18,7 @@ public abstract class EventBus {
     private static final Object DEFAULT_INSTANCE_LOCK = new Object();
     public static EventBus defaultInstance() {
         if (DEFAULT_INSTANCE == null) synchronized (DEFAULT_INSTANCE_LOCK) {
-            if (DEFAULT_INSTANCE == null) DEFAULT_INSTANCE = Environment.global().get("unrefined.runtime.eventBus", EventBus.class);
+            if (DEFAULT_INSTANCE == null) DEFAULT_INSTANCE = Environment.global.get("unrefined.runtime.eventBus", EventBus.class);
         }
         return DEFAULT_INSTANCE;
     }
@@ -64,10 +64,16 @@ public abstract class EventBus {
     }
 
     public void unregister() {
+        connectionMap.clear();
         signal.disconnect();
     }
 
     public void unregister(Dispatcher dispatcher) {
+        synchronized (connectionMap) {
+            for (Connection connection : connectionMap.values()) {
+                if (connection.getDispatcher() == dispatcher) connectionMap.remove(connection);
+            }
+        }
         signal.disconnect(dispatcher);
     }
 

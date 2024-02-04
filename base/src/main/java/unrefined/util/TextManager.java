@@ -19,7 +19,7 @@ public abstract class TextManager {
     private static final Object DEFAULT_INSTANCE_LOCK = new Object();
     public static TextManager defaultInstance() {
         if (DEFAULT_INSTANCE == null) synchronized (DEFAULT_INSTANCE_LOCK) {
-            if (DEFAULT_INSTANCE == null) DEFAULT_INSTANCE = Environment.global().get("unrefined.runtime.textManager", TextManager.class);
+            if (DEFAULT_INSTANCE == null) DEFAULT_INSTANCE = Environment.global.get("unrefined.runtime.textManager", TextManager.class);
         }
         return DEFAULT_INSTANCE;
     }

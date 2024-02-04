@@ -1,5 +1,6 @@
 package unrefined.nio;
 
+import unrefined.math.FastMath;
 import unrefined.util.Duplicatable;
 import unrefined.util.foreign.Foreign;
 
@@ -8,7 +9,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.util.Objects;
 
 /**
  * A wrapper class which represents a block of memory.
@@ -20,81 +20,55 @@ import java.util.Objects;
  * Java <code>byte</code> array.
  * See {@link #isDirect()}, {@link #hasArrays()} for more information.
  */
-public abstract class Pointer implements Closeable, Duplicatable {
+public abstract class Pointer implements Comparable<Pointer>, Closeable, Duplicatable {
 
     public static final Pointer NULL = Pointer.wrap(0);
-    
-    private final Allocator allocator;
 
     /**
      * Wraps a Java {@code byte} array in a {@link Pointer} instance.
      *
-     * @param allocator the {@code Allocator} of the pointer.
      * @param array the {@code array} to wrap in a {@code Pointer} instance.
      *
      * @return a {@code Pointer} instance.
      */
-    public static Pointer wrap(Allocator allocator, byte[] array) {
-        if (allocator == null) allocator = Allocator.defaultInstance();
-        return allocator.wrapPointer(array);
-    }
-
     public static Pointer wrap(byte[] array) {
-        return wrap(null, array);
+        return Allocator.getInstance().wrapPointer(array);
     }
 
     /**
      * Wraps a Java {@code byte} array in a {@link Pointer} instance.
      *
-     * @param allocator the {@code Allocator} of the pointer.
      * @param array the {@code array} to wrap in a {@code Pointer} instance.
      * @param offset the offset of the array.
      * @param length the region length of the array.
      *
      * @return a {@code Pointer} instance.
      */
-    public static Pointer wrap(Allocator allocator, byte[] array, int offset, int length) {
-        if (allocator == null) allocator = Allocator.defaultInstance();
-        return allocator.wrapPointer(array, offset, length);
-    }
-
     public static Pointer wrap(byte[] array, int offset, int length) {
-        return wrap(null, array, offset, length);
+        return Allocator.getInstance().wrapPointer(array, offset, length);
     }
 
     /**
      * Wraps a native address in a {@link Pointer} instance.
      *
-     * @param allocator the {@code Allocator} of the pointer.
      * @param address the {@code address} to wrap in a {@code Pointer} instance.
      *
      * @return a {@code Pointer} instance.
      */
-    public static Pointer wrap(Allocator allocator, long address) {
-        if (allocator == null) allocator = Allocator.defaultInstance();
-        return allocator.wrapPointer(address);
-    }
-
     public static Pointer wrap(long address) {
-        return wrap(null, address);
+        return Allocator.getInstance().wrapPointer(address);
     }
 
     /**
      * Wraps a native address in a {@link Pointer} instance.
      *
-     * @param allocator the {@code Allocator} of the pointer.
      * @param address the {@code address} to wrap in a Pointer instance.
      * @param size the size of the native memory region.
      *
      * @return a {@code Pointer} instance.
      */
-    public static Pointer wrap(Allocator allocator, long address, long size) {
-        if (allocator == null) allocator = Allocator.defaultInstance();
-        return allocator.wrapPointer(address, size);
-    }
-
     public static Pointer wrap(long address, long size) {
-        return wrap(null, address, size);
+        return Allocator.getInstance().wrapPointer(address, size);
     }
 
     /**
@@ -106,37 +80,34 @@ public abstract class Pointer implements Closeable, Duplicatable {
      * with {@code ByteBuffer} parameters, then the parameter type can just be declared
      * as {@code ByteBuffer} and the conversion will be performed automatically.
      *
-     * @param allocator the {@code Allocator} the wrapped {@code ByteBuffer} will
-     * be used with.
      * @param buffer the {@code ByteBuffer} to wrap.
      *
      * @return a {@code Pointer} instance that will proxy all accesses to the ByteBuffer contents.
      */
-    public static Pointer wrap(Allocator allocator, ByteBuffer buffer) {
-        if (allocator == null) allocator = Allocator.defaultInstance();
-        return allocator.wrapPointer(buffer);
-    }
-
     public static Pointer wrap(ByteBuffer buffer) {
-        return wrap(null, buffer);
-    }
-
-    public static Pointer allocate(Allocator allocator, long size) throws IOException {
-        if (allocator == null) allocator = Allocator.defaultInstance();
-        return allocator.allocatePointer(size, false);
+        return Allocator.getInstance().wrapPointer(buffer);
     }
 
     public static Pointer allocate(long size) throws IOException {
-        return allocate(null, size);
+        return Allocator.getInstance().allocatePointer(size, false);
     }
 
-    public static Pointer allocateDirect(Allocator allocator, long size) throws IOException {
-        if (allocator == null) allocator = Allocator.defaultInstance();
-        return allocator.allocatePointer(size, true);
+    public static Pointer allocate(String string) throws IOException {
+        return allocate(string, null);
+    }
+
+    public static Pointer allocate(String string, Charset charset) throws IOException {
+        if (charset == null) charset = Charset.defaultCharset();
+        byte[] bytes = string.getBytes(charset);
+        byte[] terminator = "\0".getBytes(charset);
+        Pointer pointer = allocate(bytes.length + terminator.length);
+        pointer.putByteArray(bytes.length, terminator);
+        pointer.putByteArray(0, bytes);
+        return pointer;
     }
 
     public static Pointer allocateDirect(long size) throws IOException {
-        return allocateDirect(null, size);
+        return Allocator.getInstance().allocatePointer(size, true);
     }
 
     public static Pointer allocateDirect(String string) throws IOException {
@@ -151,23 +122,6 @@ public abstract class Pointer implements Closeable, Duplicatable {
         pointer.putByteArray(bytes.length, terminator);
         pointer.putByteArray(0, bytes);
         return pointer;
-    }
-
-    public static Pointer allocateDirect(Allocator allocator, String string) throws IOException {
-        return allocateDirect(allocator, string, null);
-    }
-
-    public static Pointer allocateDirect(Allocator allocator, String string, Charset charset) throws IOException {
-        byte[] bytes = string.getBytes(charset);
-        byte[] terminator = "\0".getBytes(charset);
-        Pointer pointer = allocateDirect(allocator, bytes.length + terminator.length);
-        pointer.putByteArray(bytes.length, terminator);
-        pointer.putByteArray(0, bytes);
-        return pointer;
-    }
-
-    protected Pointer(Allocator allocator) {
-        this.allocator = Objects.requireNonNull(allocator);
     }
 
     /**
@@ -199,15 +153,6 @@ public abstract class Pointer implements Closeable, Duplicatable {
      * a native memory address, an address of zero is returned.
      */
     public abstract long address();
-
-    /**
-     * Gets the {@link Runtime} this {@code Pointer} instance belongs to.
-     *
-     * @return the {@code Runtime} instance of this {@code Pointer}.
-     */
-    public Allocator getAllocator() {
-        return allocator;
-    }
 
     @Override
     public String toString() {
@@ -884,7 +829,7 @@ public abstract class Pointer implements Closeable, Duplicatable {
      * @return the {@code Pointer} value read from memory.
      */
     public Pointer getPointer(long offset) {
-        return wrap(allocator, getAddress(offset));
+        return wrap(getAddress(offset));
     }
 
     /**
@@ -895,7 +840,7 @@ public abstract class Pointer implements Closeable, Duplicatable {
      * @return the {@code Pointer} value read from memory.
      */
     public Pointer getPointer(long offset, long size) {
-        return wrap(allocator, getAddress(offset), size);
+        return wrap(getAddress(offset), size);
     }
 
     /**
@@ -1307,5 +1252,87 @@ public abstract class Pointer implements Closeable, Duplicatable {
     public abstract Pointer reallocate(long size) throws IOException;
 
     public abstract boolean hasMemory();
+
+    public abstract boolean isNullPointer();
+
+    @Override
+    public int compareTo(Pointer other) {
+        try {
+            if (isNullPointer()) return other.isNullPointer() ? 0 : -1;
+            else if (other.isNullPointer()) return isNullPointer() ? 0 : 1;
+            else if (isBounded() && other.isBounded()) {
+                long size = size();
+                long otherSize = other.size();
+                long length;
+                if (size > 0) length = otherSize < 0 ? size : Math.min(size, otherSize);
+                else length = otherSize >= 0 ? otherSize : Math.min(size, otherSize);
+
+                if (length >= 0) {
+                    for (long i = 0; i < length; i ++) {
+                        byte oa = getByte(i);
+                        byte ob = other.getByte(i);
+                        if (oa != ob) return FastMath.compareUnsigned(oa, ob);
+                    }
+                }
+                else {
+                    byte oa, ob;
+                    for (long i = 0; i < Long.MAX_VALUE; i ++) {
+                        oa = getByte(i);
+                        ob = other.getByte(i);
+                        if (oa != ob) return FastMath.compareUnsigned(oa, ob);
+                    }
+                    oa = getByte(Long.MAX_VALUE);
+                    ob = other.getByte(Long.MAX_VALUE);
+                    if (oa != ob) return FastMath.compareUnsigned(oa, ob);
+                    for (long i = Long.MIN_VALUE; i < length; i ++) {
+                        oa = getByte(i);
+                        ob = other.getByte(i);
+                        if (oa != ob) return FastMath.compareUnsigned(oa, ob);
+                    }
+                }
+                return FastMath.compareUnsigned(size, otherSize);
+            }
+            else if (isBounded()) return compare(other, 0, size());
+            else return compare(other, 0, other.size());
+        } catch (UnboundedPointerException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private int compare(Pointer other, long offset, long length) {
+        // FIXME: performance optimization
+        if (length > 0) {
+            for (long i = 0; i < length; i ++) {
+                byte oa = getByte(offset + i);
+                byte ob = other.getByte(offset + i);
+                if (oa != ob) return FastMath.compareUnsigned(oa, ob);
+            }
+            return 0;
+        }
+        else {
+            byte oa, ob;
+            for (long i = 0; i < Long.MAX_VALUE; i ++) {
+                oa = getByte(offset + i);
+                ob = other.getByte(offset + i);
+                if (oa != ob) return FastMath.compareUnsigned(oa, ob);
+            }
+            oa = getByte(offset + Long.MAX_VALUE);
+            ob = other.getByte(offset + Long.MAX_VALUE);
+            if (oa != ob) return FastMath.compareUnsigned(oa, ob);
+            for (long i = Long.MIN_VALUE; i < length; i ++) {
+                oa = getByte(offset + i);
+                ob = other.getByte(offset + i);
+                if (oa != ob) return FastMath.compareUnsigned(oa, ob);
+            }
+            return 0;
+        }
+    }
+
+    public int compareTo(Pointer other, long offset, long length) {
+        if (length == 0) return 0;
+        else if (isNullPointer() && other.isNullPointer()) return 0;
+        else if (isDirect() && other.isDirect()) return Allocator.getInstance().compareMemory(address(), other.address(), length);
+        else return compare(other, offset, length);
+    }
 
 }

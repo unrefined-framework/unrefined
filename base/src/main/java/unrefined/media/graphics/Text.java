@@ -381,12 +381,4 @@ public final class Text {
         }
     }
 
-    public static char[] toCharArray(CharSequence text, int start, int end) {
-        char[] array = new char[end - start];
-        for (int i = 0; i < array.length; i ++) {
-            array[i] = text.charAt(i + start);
-        }
-        return array;
-    }
-
 }

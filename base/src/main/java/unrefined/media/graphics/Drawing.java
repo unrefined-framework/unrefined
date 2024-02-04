@@ -21,7 +21,7 @@ public abstract class Drawing {
     private static final Object INSTANCE_LOCK = new Object();
     public static Drawing getInstance() {
         if (INSTANCE == null) synchronized (INSTANCE_LOCK) {
-            if (INSTANCE == null) INSTANCE = Environment.global().get("unrefined.runtime.drawing", Drawing.class);
+            if (INSTANCE == null) INSTANCE = Environment.global.get("unrefined.runtime.drawing", Drawing.class);
         }
         return INSTANCE;
     }

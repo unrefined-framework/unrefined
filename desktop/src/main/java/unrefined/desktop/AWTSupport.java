@@ -1,6 +1,5 @@
 package unrefined.desktop;
 
-import unrefined.internal.OperatingSystem;
 import unrefined.internal.X11.X11AWTSupport;
 import unrefined.internal.macos.MacAWTSupport;
 import unrefined.internal.windows.WindowsAWTSupport;
@@ -12,6 +11,7 @@ import unrefined.util.UnexpectedError;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dialog;
+import java.awt.EventQueue;
 import java.awt.Frame;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
@@ -27,6 +27,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Hashtable;
+import java.util.concurrent.locks.Lock;
 
 public final class AWTSupport {
 
@@ -229,21 +230,19 @@ public final class AWTSupport {
         }
     }
 
-    public static boolean awtLock() {
+    public static void awtLock() {
         try {
-            awtLock.invoke(null);
-            return true;
-        } catch (InvocationTargetException | IllegalAccessException e) {
-            return false;
+            ReflectionSupport.invokeVoidMethod(null, awtLock);
+        } catch (InvocationTargetException e) {
+            throw new UnexpectedError(e);
         }
     }
 
-    public static boolean awtUnlock() {
+    public static void awtUnlock() {
         try {
-            awtUnlock.invoke(null);
-            return true;
-        } catch (InvocationTargetException | IllegalAccessException e) {
-            return false;
+            ReflectionSupport.invokeVoidMethod(null, awtUnlock);
+        } catch (InvocationTargetException e) {
+            throw new UnexpectedError(e);
         }
     }
 
@@ -252,8 +251,8 @@ public final class AWTSupport {
     }
 
     public static void patch() {
-        if (OperatingSystem.IS_WINDOWS) WindowsAWTSupport.patch();
-        else if (OperatingSystem.IS_MAC) MacAWTSupport.patch();
+        if (OSInfo.IS_WINDOWS) WindowsAWTSupport.patch();
+        else if (OSInfo.IS_MAC) MacAWTSupport.patch();
         else X11AWTSupport.patch();
     }
 
@@ -299,6 +298,39 @@ public final class AWTSupport {
         }
 
         return null;
+    }
+
+    private static final Field pushPopLockField;
+    private static final Field nextQueueField;
+    private static final Field dispatchThreadField;
+    static {
+        try {
+            pushPopLockField = EventQueue.class.getDeclaredField("pushPopLock");
+            nextQueueField = EventQueue.class.getDeclaredField("nextQueue");
+            dispatchThreadField = EventQueue.class.getDeclaredField("dispatchThread");
+        }
+        catch (NoSuchFieldException e) {
+            throw new UnexpectedError(e);
+        }
+    }
+
+    public static boolean isDispatchThread(Thread thread) {
+        EventQueue eq = Toolkit.getDefaultToolkit().getSystemEventQueue();
+        Lock pushPopLock = (Lock) ReflectionSupport.getObjectField(eq, pushPopLockField);
+        pushPopLock.lock();
+        try {
+            EventQueue next = (EventQueue) ReflectionSupport.getObjectField(eq, nextQueueField);
+            while (next != null) {
+                eq = next;
+                next = (EventQueue) ReflectionSupport.getObjectField(eq, nextQueueField);
+            }
+            //if (eq.fwDispatcher != null) {
+            //    return eq.fwDispatcher.isDispatchThread();
+            //}
+            return (thread == ReflectionSupport.getObjectField(eq, dispatchThreadField));
+        } finally {
+            pushPopLock.unlock();
+        }
     }
 
 }

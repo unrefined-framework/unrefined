@@ -1,5 +1,7 @@
 package unrefined.internal.X11;
 
+import com.kenai.jffi.CallContext;
+import com.kenai.jffi.CallingConvention;
 import com.kenai.jffi.Function;
 import com.kenai.jffi.HeapInvocationBuffer;
 import com.kenai.jffi.Invoker;
@@ -9,7 +11,7 @@ import unrefined.desktop.ABI;
 import unrefined.desktop.AWTSupport;
 import unrefined.desktop.ForeignSupport;
 import unrefined.desktop.ReflectionSupport;
-import unrefined.internal.OperatingSystem;
+import unrefined.desktop.OSInfo;
 import unrefined.util.NotInstantiableError;
 import unrefined.util.UnexpectedError;
 
@@ -32,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static unrefined.desktop.ForeignSupport.MEMORY_IO;
+import static unrefined.desktop.UnsafeSupport.UNSAFE;
 import static unrefined.internal.X11.X11Library.X11;
 
 public final class X11CursorSupport {
@@ -131,8 +134,10 @@ public final class X11CursorSupport {
     private static final Function XcursorSupportsARGB;
     private static final Function XcursorSetDefaultSize;
     static {
-        if (OperatingSystem.IS_X11 && !GraphicsEnvironment.isHeadless()) {
-            XCreateFontCursor = new Function(X11.getSymbolAddress("XCreateFontCursor"), Type.POINTER, Type.POINTER, Type.UINT);
+        if (OSInfo.IS_X11 && !GraphicsEnvironment.isHeadless()) {
+            XCreateFontCursor = new Function(X11.getSymbolAddress("XCreateFontCursor"),
+                    CallContext.getCallContext(Type.POINTER, new Type[] {Type.POINTER, Type.UINT},
+                            CallingConvention.DEFAULT, false));
             Xcursor = Library.getCachedInstance(System.mapLibraryName("Xcursor"), Library.GLOBAL | Library.LAZY);
             if (Xcursor == null) {
                 XcursorLibraryLoadCursor = null;
@@ -144,17 +149,23 @@ public final class X11CursorSupport {
             }
             else {
                 XcursorLibraryLoadCursor = new Function(Xcursor.getSymbolAddress("XcursorLibraryLoadCursor"),
-                        Type.POINTER, Type.POINTER, Type.POINTER);
+                        CallContext.getCallContext(Type.POINTER, new Type[] {Type.POINTER, Type.POINTER},
+                                CallingConvention.DEFAULT, false));
                 XcursorImageLoadCursor = new Function(Xcursor.getSymbolAddress("XcursorImageLoadCursor"),
-                        Type.POINTER, Type.POINTER, Type.POINTER);
+                        CallContext.getCallContext(Type.POINTER, new Type[] {Type.POINTER, Type.POINTER},
+                                CallingConvention.DEFAULT, false));
                 XcursorImageCreate = new Function(Xcursor.getSymbolAddress("XcursorImageCreate"),
-                        Type.POINTER, Type.SINT, Type.SINT);
+                        CallContext.getCallContext(Type.POINTER, new Type[] {Type.SINT, Type.SINT},
+                                CallingConvention.DEFAULT, false));
                 XcursorImageDestroy = new Function(Xcursor.getSymbolAddress("XcursorImageDestroy"),
-                        Type.VOID, Type.POINTER);
+                        CallContext.getCallContext(Type.VOID, new Type[] {Type.POINTER},
+                                CallingConvention.DEFAULT, false));
                 XcursorSupportsARGB = new Function(Xcursor.getSymbolAddress("XcursorSupportsARGB"),
-                        Type.SINT, Type.POINTER);
+                        CallContext.getCallContext(Type.SINT, new Type[] {Type.POINTER},
+                                CallingConvention.DEFAULT, false));
                 XcursorSetDefaultSize = new Function(Xcursor.getSymbolAddress("XcursorSetDefaultSize"),
-                        Type.SINT, Type.POINTER, Type.SINT);
+                        CallContext.getCallContext(Type.SINT, new Type[] {Type.POINTER, Type.SINT},
+                                CallingConvention.DEFAULT, false));
             }
         }
         else {
@@ -350,7 +361,7 @@ public final class X11CursorSupport {
             heapInvocationBuffer.putAddress(string);
             return INVOKER.invokeAddress(XcursorLibraryLoadCursor, heapInvocationBuffer);
         } finally {
-            MEMORY_IO.freeMemory(string);
+            UNSAFE.freeMemory(string);
         }
     }
 
@@ -452,11 +463,11 @@ public final class X11CursorSupport {
         }
 
         public void setPData(long pData) {
-            boolean locked = AWTSupport.awtLock();
+            AWTSupport.awtLock();
             try {
                 setCursorPData(this, this.pData = pData);
             } finally {
-                if (locked) AWTSupport.awtUnlock();
+                AWTSupport.awtUnlock();
             }
         }
 
@@ -534,9 +545,9 @@ public final class X11CursorSupport {
             } catch (InterruptedException ignored) {
             }
 
-            boolean locked = AWTSupport.awtLock();
+            AWTSupport.awtLock();
             try {
-                long nativePixels = MEMORY_IO.allocateMemory(pixels.length * 4L, false);
+                long nativePixels = UNSAFE.allocateMemory(pixels.length * 4L);
                 try {
                     MEMORY_IO.putIntArray(nativePixels, pixels, 0, pixels.length);
                     HeapInvocationBuffer heapInvocationBuffer = new HeapInvocationBuffer(XcursorImageCreate);
@@ -567,18 +578,18 @@ public final class X11CursorSupport {
                     }
                 }
                 finally {
-                    MEMORY_IO.freeMemory(nativePixels);
+                    UNSAFE.freeMemory(nativePixels);
                 }
             }
             finally {
-                if (locked) AWTSupport.awtUnlock();
+                AWTSupport.awtUnlock();
             }
         }
 
     }
 
     static {
-        if (OperatingSystem.IS_X11 && Xcursor != null) {
+        if (OSInfo.IS_X11 && Xcursor != null) {
             AWTSupport.setDesktopProperty("DnD.Cursor.CopyDrop", getSystemCursor("copy"));
             AWTSupport.setDesktopProperty("DnD.Cursor.MoveDrop", getSystemCursor("move"));
             AWTSupport.setDesktopProperty("DnD.Cursor.LinkDrop", getSystemCursor("alias"));

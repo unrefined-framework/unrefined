@@ -13,7 +13,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = 'uxgl'
+rootProject.name = 'unrefined'
 
 // core
 include ':base'

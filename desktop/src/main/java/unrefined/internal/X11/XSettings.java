@@ -1,7 +1,7 @@
 package unrefined.internal.X11;
 
 import unrefined.desktop.StandardDirectories;
-import unrefined.internal.OperatingSystem;
+import unrefined.desktop.OSInfo;
 import unrefined.util.NotInstantiableError;
 import unrefined.util.StringCompat;
 
@@ -117,7 +117,7 @@ public final class XSettings {
     }
 
     private static void daemon() {
-        if (!OperatingSystem.IS_X11) return;
+        if (!OSInfo.IS_X11) return;
         reload(false);
         Thread thread = new Thread(() -> {
             FileSystem fileSystem = FileSystems.getDefault();
@@ -163,14 +163,14 @@ public final class XSettings {
                 }
             } catch (IOException ignored) {
             }
-        }, "UXGL XSettings Daemon");
+        }, "Unrefined XSettings Daemon");
         thread.setDaemon(true);
         thread.start();
     }
 
     static {
         PROPERTY_CHANGE_SUPPORT = new PropertyChangeSupport(Toolkit.getDefaultToolkit());
-        if (OperatingSystem.IS_X11) {
+        if (OSInfo.IS_X11) {
             XSETTINGS_HOME = new File(StandardDirectories.CONFIG_HOME, "xsettingsd");
             XSETTINGS_NAME = "xsettingsd.conf";
             XSETTINGS_FILE = new File(XSETTINGS_HOME, XSETTINGS_NAME);

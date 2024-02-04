@@ -11,6 +11,7 @@ import unrefined.media.graphics.Graphics;
 import unrefined.media.graphics.Insets;
 import unrefined.runtime.DesktopApplication;
 import unrefined.runtime.DesktopRuntime;
+import unrefined.util.signal.Dispatcher;
 
 import java.awt.EventQueue;
 
@@ -21,9 +22,9 @@ import java.awt.EventQueue;
 public class DrawOnCanvas {
 
     public static void main(String[] args) {
-        DesktopRuntime.setup(args);             // Initialize the UXGL runtime environment
+        DesktopRuntime.setup(args);             // Initialize the Unrefined runtime environment
 
-        // Initialize the UXGL container (on desktop it's a window)
+        // Initialize the Unrefined container (on desktop it's a window)
         DesktopApplication application = new DesktopApplication(new ContainerAdapter() { // The lifecycle listener, it's fully platform-independent
 
             private Context canvas;
@@ -86,7 +87,7 @@ public class DrawOnCanvas {
             }
         });
 
-        EventQueue.invokeLater(application); // Launch the container
+        Dispatcher.defaultInstance().invokeLater(application); // Launch the container
     }
 
 }

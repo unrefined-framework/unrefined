@@ -41,7 +41,7 @@ public abstract class Animation implements Resettable {
 		public static final int ANY_BACKWARD = 0xF0;
 		public static final int ANY = 0xFF;
 		public static int removeUnusedBits(int flags) {
-			return flags << 8 >>> 8;
+			return flags << 24 >>> 24;
 		}
 		public static String toString(int flags) {
 			flags = removeUnusedBits(flags);

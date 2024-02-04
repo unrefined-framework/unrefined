@@ -2,6 +2,7 @@ package unrefined.app;
 
 import unrefined.context.Environment;
 
+import java.io.File;
 import java.nio.ByteOrder;
 
 public abstract class Platform {
@@ -10,99 +11,126 @@ public abstract class Platform {
     private static final Object INSTANCE_LOCK = new Object();
     public static Platform getInstance() {
         if (INSTANCE == null) synchronized (INSTANCE_LOCK) {
-            if (INSTANCE == null) INSTANCE = Environment.global().get("unrefined.runtime.platform", Platform.class);
+            if (INSTANCE == null) INSTANCE = Environment.global.get("unrefined.runtime.platform", Platform.class);
         }
         return INSTANCE;
     }
 
     public String getBackendVendor() {
-        return Environment.properties().getProperty("unrefined.backend.vendor");
+        return Environment.properties.getProperty("unrefined.backend.vendor");
     }
     public String getPlatformVendor() {
-        return Environment.properties().getProperty("unrefined.platform.vendor");
+        return Environment.properties.getProperty("unrefined.platform.vendor");
     }
     public String getSystemVendor() {
-        return Environment.properties().getProperty("unrefined.os.vendor");
+        return Environment.properties.getProperty("unrefined.os.vendor");
     }
     public String getRuntimeVendor() {
-        return Environment.properties().getProperty("unrefined.runtime.vendor");
+        return Environment.properties.getProperty("unrefined.runtime.vendor");
     }
     /**
-     * Gets the name of UXGL backend. e.g. <code>Java Standard Edition</code>
-     * @return the name of UXGL backend
+     * Gets the name of Unrefined backend. e.g. <code>Java Standard Edition</code>
+     * @return the name of Unrefined backend
      */
     public String getBackendName() {
-        return Environment.properties().getProperty("unrefined.backend.name");
+        return Environment.properties.getProperty("unrefined.backend.name");
     }
     /**
      * Gets the name of underlying platform. e.g. <code>Android</code>
      * @return the name of underlying platform
      */
     public String getPlatformName() {
-        return Environment.properties().getProperty("unrefined.platform.name");
+        return Environment.properties.getProperty("unrefined.platform.name");
     }
     /**
      * Gets the name of running operating system. e.g. <code>Linux</code>
      * @return the name of running operating system
      */
     public String getSystemName() {
-        return Environment.properties().getProperty("unrefined.os.name");
+        return Environment.properties.getProperty("unrefined.os.name");
     }
     /**
      * Gets the name of application runtime. e.g. <code>OpenJDK Runtime Environment</code>
      * @return the name of application runtime
      */
     public String getRuntimeName() {
-        return Environment.properties().getProperty("unrefined.runtime.name");
+        return Environment.properties.getProperty("unrefined.runtime.name");
     }
     /**
-     * Gets the version name of UXGL backend. e.g. <code>0.4.0</code>
-     * @return the version name of UXGL backend
+     * Gets the version name of Unrefined backend. e.g. <code>0.4.0</code>
+     * @return the version name of Unrefined backend
      */
     public String getBackendVersionName() {
-        return Environment.properties().getProperty("unrefined.backend.version.name");
+        return Environment.properties.getProperty("unrefined.backend.version.name");
     }
     public String getPlatformVersionName() {
-        return Environment.properties().getProperty("unrefined.platform.version.name");
+        return Environment.properties.getProperty("unrefined.platform.version.name");
     }
     public String getSystemVersionName() {
-        return Environment.properties().getProperty("unrefined.os.version.name");
+        return Environment.properties.getProperty("unrefined.os.version.name");
     }
     public String getRuntimeVersionName() {
-        return Environment.properties().getProperty("unrefined.runtime.version.name");
+        return Environment.properties.getProperty("unrefined.runtime.version.name");
     }
     public String getBackendVersionCode() {
-        return Environment.properties().getProperty("unrefined.backend.version.code");
+        return Environment.properties.getProperty("unrefined.backend.version.code");
     }
     public String getPlatformVersionCode() {
-        return Environment.properties().getProperty("unrefined.platform.version.code");
+        return Environment.properties.getProperty("unrefined.platform.version.code");
     }
     public String getSystemVersionCode() {
-        return Environment.properties().getProperty("unrefined.os.version.code");
+        return Environment.properties.getProperty("unrefined.os.version.code");
     }
     public String getRuntimeVersionCode() {
-        return Environment.properties().getProperty("unrefined.runtime.version.code");
+        return Environment.properties.getProperty("unrefined.runtime.version.code");
     }
     public String getArchitecture() {
-        return Environment.properties().getProperty("unrefined.os.arch.name");
+        return Environment.properties.getProperty("unrefined.os.arch.name");
     }
     public int getIntModelBits() {
-        return Environment.properties().parseIntProperty("unrefined.os.arch.bitmode.int");
+        return Environment.properties.parseIntProperty("unrefined.os.arch.bitmode.int");
     }
     public int getLongModelBits() {
-        return Environment.properties().parseIntProperty("unrefined.os.arch.bitmode.long");
+        return Environment.properties.parseIntProperty("unrefined.os.arch.bitmode.long");
     }
     public int getAddressModelBits() {
-        return Environment.properties().parseIntProperty("unrefined.os.arch.bitmode.address");
+        return Environment.properties.parseIntProperty("unrefined.os.arch.bitmode.address");
     }
     public String getBinaryInterface() {
-        return Environment.properties().getProperty("unrefined.os.arch.abi");
+        return Environment.properties.getProperty("unrefined.os.arch.abi");
     }
     public ByteOrder getEndianness() {
-        return Environment.properties().getProperty("unrefined.os.endian").equalsIgnoreCase("big") ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN;
+        return Environment.properties.getProperty("unrefined.os.endian").equalsIgnoreCase("big") ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN;
     }
     public boolean isHeadless() {
-        return Environment.properties().parseBooleanProperty("unrefined.environment.headless");
+        return Environment.properties.parseBooleanProperty("unrefined.environment.headless");
+    }
+    public String getLineSeparator() {
+        return Environment.properties.getProperty("unrefined.os.separator.line");
+    }
+    public String getFileSeparator() {
+        return Environment.properties.getProperty("unrefined.os.separator.file");
+    }
+    public String getPathSeparator() {
+        return Environment.properties.getProperty("unrefined.os.separator.path");
+    }
+    public File getTempDirectory() {
+        return new File(Environment.properties.getProperty("unrefined.os.directory.tmp"));
+    }
+    public File getUserDirectory() {
+        return new File(Environment.properties.getProperty("unrefined.os.directory.user"));
+    }
+    public File getConfigDirectory() {
+        return new File(Environment.properties.getProperty("unrefined.os.directory.config"));
+    }
+    public File getDataDirectory() {
+        return new File(Environment.properties.getProperty("unrefined.os.directory.data"));
+    }
+    public File getCacheDirectory() {
+        return new File(Environment.properties.getProperty("unrefined.os.directory.cache"));
+    }
+    public File getNullFile() {
+        return new File(Environment.properties.getProperty("unrefined.os.file.null"));
     }
 
 }

@@ -54,8 +54,7 @@ public class HeapPointer extends Pointer {
 
     private final boolean hasMemory;
 
-    public HeapPointer(Allocator allocator, long size) throws IOException {
-        super(allocator);
+    public HeapPointer(long size) throws IOException {
         if (size < 0 || size > MAX_2D_ARRAY_SIZE) throw new IOException(new OutOfMemoryError("Requested array size too large"));
         else if (size <= Integer.MAX_VALUE) arrays = new byte[1][(int) size];
         else {
@@ -74,8 +73,7 @@ public class HeapPointer extends Pointer {
         hasMemory = true;
     }
 
-    public HeapPointer(Allocator allocator, byte[] array, int offset, int length) {
-        super(allocator);
+    public HeapPointer(byte[] array, int offset, int length) {
         this.attachment = null;
         this.arrays = new byte[][] { array };
         this.arraysOffset = offset;
@@ -85,7 +83,6 @@ public class HeapPointer extends Pointer {
     }
 
     protected HeapPointer(HeapPointer attachment, long arraysLength, byte[][] arrays, long arraysOffset, long size) {
-        super(attachment.getAllocator());
         this.attachment = attachment;
         this.arrays = arrays;
         this.size = size;
@@ -155,7 +152,7 @@ public class HeapPointer extends Pointer {
         else if (offset + 1 >= size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset + 1));
         else {
             offset += arraysOffset;
-            return (short) ((getByte0(offset) << 8) + (getByte0(offset + 1)));
+            return (short) (((getByte0(offset) & 0xFF) << 8) + (getByte0(offset + 1) & 0xFF));
         }
     }
 
@@ -170,12 +167,12 @@ public class HeapPointer extends Pointer {
         else if (offset + 1 >= size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset + 1));
         else {
             offset += arraysOffset;
-            return (char) ((getByte0(offset) << 8) + (getByte0(offset + 1)));
+            return (char) (((getByte0(offset) & 0xFF) << 8) + (getByte0(offset + 1) & 0xFF));
         }
     }
 
     private int getInt0(long offset) {
-        return (getByte0(offset) << 24) + (getByte0(offset + 1) << 16) + (getByte0(offset + 2) << 8) + (getByte0(offset + 3));
+        return ((getByte0(offset) & 0xFF) << 24) + ((getByte0(offset + 1) & 0xFF) << 16) + ((getByte0(offset + 2) & 0xFF) << 8) + (getByte0(offset + 3) & 0xFF);
     }
 
     @Override
@@ -199,7 +196,7 @@ public class HeapPointer extends Pointer {
         else if (offset + 7 >= size) throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset + 7));
         else {
             offset += arraysOffset;
-            return ((long) getInt0(offset) << 32) + getInt0(offset + 4);
+            return (((long) getInt0(offset) & 0xFFFFFFFFL) << 32) + (getInt0(offset + 4) & 0xFFFFFFFFL);
         }
     }
 
@@ -419,7 +416,7 @@ public class HeapPointer extends Pointer {
         long l;
         for (int i = index; i < length; i ++) {
             l = (long) i << 1;
-            array[i] = (short) ((getByte0(offset + l) << 8) + (getByte0(offset + l + 1)));
+            array[i] = (short) (((getByte0(offset + l) & 0xFF) << 8) + (getByte0(offset + l + 1)) & 0xFF);
         }
     }
 
@@ -468,7 +465,7 @@ public class HeapPointer extends Pointer {
         long l;
         for (int i = index; i < length; i ++) {
             l = (long) i << 1;
-            array[i] = (char) ((getByte0(offset + l) << 8) + (getByte0(offset + l + 1)));
+            array[i] = (char) (((getByte0(offset + l) & 0xFF) << 8) + (getByte0(offset + l + 1)) & 0xFF);
         }
     }
 
@@ -565,7 +562,7 @@ public class HeapPointer extends Pointer {
         long l;
         for (int i = index; i < length; i ++) {
             l = (long) i << 3;
-            array[i] = ((long) getInt0(offset + l) << 32) + getInt0(offset + l + 4);
+            array[i] = (((long) getInt0(offset + l) & 0xFFFFFFFFL) << 32) + (getInt0(offset + l + 4) & 0xFFFFFFFFL);
         }
     }
 
@@ -662,7 +659,7 @@ public class HeapPointer extends Pointer {
         long l;
         for (int i = index; i < length; i ++) {
             l = (long) i << 3;
-            array[i] = Double.longBitsToDouble(((long) getInt0(offset + l) << 32) + getInt0(offset + l + 4));
+            array[i] = Double.longBitsToDouble((((long) getInt0(offset + l) & 0xFFFFFFFFL) << 32) + (getInt0(offset + l + 4) & 0xFFFFFFFFL));
         }
     }
 
@@ -1020,7 +1017,7 @@ public class HeapPointer extends Pointer {
     @Override
     public Pointer reallocate(long size) throws IOException {
         try {
-            HeapPointer pointer = new HeapPointer(getAllocator(), size);
+            HeapPointer pointer = new HeapPointer(size);
             transferTo(0, pointer, 0, Math.min(size, this.size));
             return pointer;
         }
@@ -1032,6 +1029,42 @@ public class HeapPointer extends Pointer {
     @Override
     public boolean hasMemory() {
         return hasMemory;
+    }
+
+    @Override
+    public boolean isNullPointer() {
+        return arraysLength == 0;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof Pointer)) return false;
+
+        Pointer that = (Pointer) object;
+
+        if (isNullPointer() && that.isNullPointer()) return true;
+        else if (that.hasArrays()) {
+            return arrays() == that.arrays() && size() == that.size() && arraysOffset() == that.arraysOffset();
+        }
+        else return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = arrays.hashCode();
+        result = 31 * result + (int) (size ^ (size >>> 32));
+        result = 31 * result + (int) (arraysOffset ^ (arraysOffset >>> 32));
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getName() + '@' + Integer.toHexString(hashCode())
+                + '{' +
+                "hasMemory=" + hasMemory +
+                ", arrays=" + arrays +
+                '}';
     }
 
     @Override

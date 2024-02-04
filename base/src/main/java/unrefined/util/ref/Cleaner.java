@@ -8,7 +8,7 @@ public abstract class Cleaner {
     private static final Object INSTANCE_LOCK = new Object();
     public static Cleaner getInstance() {
         if (INSTANCE == null) synchronized (INSTANCE_LOCK) {
-            if (INSTANCE == null) INSTANCE = Environment.global().get("unrefined.runtime.cleaner", Cleaner.class);
+            if (INSTANCE == null) INSTANCE = Environment.global.get("unrefined.runtime.cleaner", Cleaner.class);
         }
         return INSTANCE;
     }

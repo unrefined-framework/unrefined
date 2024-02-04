@@ -20,8 +20,7 @@ public class DirectPointer extends Pointer {
     private final DirectPointer attachment;
     private final boolean hasMemory;
 
-    public DirectPointer(Allocator allocator, long address, long size, boolean hasMemory) {
-        super(allocator);
+    public DirectPointer(long address, long size, boolean hasMemory) {
         this.attachment = null;
         this.address = address;
         this.size = size;
@@ -30,7 +29,6 @@ public class DirectPointer extends Pointer {
     }
 
     protected DirectPointer(DirectPointer attachment, long address, long size) {
-        super(attachment.getAllocator());
         this.attachment = attachment;
         this.address = address;
         this.size = size;
@@ -38,8 +36,7 @@ public class DirectPointer extends Pointer {
         bounded = true;
     }
 
-    public DirectPointer(Allocator allocator, long address) {
-        super(allocator);
+    public DirectPointer(long address) {
         this.attachment = null;
         this.address = address;
         this.size = -1;
@@ -48,7 +45,6 @@ public class DirectPointer extends Pointer {
     }
 
     protected DirectPointer(DirectPointer attachment, long address) {
-        super(attachment.getAllocator());
         this.attachment = attachment;
         this.address = address;
         this.size = -1;
@@ -99,427 +95,427 @@ public class DirectPointer extends Pointer {
 
     @Override
     public byte getByte(long offset) {
-        return getAllocator().getByte(address + offset);
+        return Allocator.getInstance().getByte(address + offset);
     }
 
     @Override
     public short getUnsignedByte(long offset) {
-        return getAllocator().getUnsignedByte(address + offset);
+        return Allocator.getInstance().getUnsignedByte(address + offset);
     }
 
     @Override
     public short getShort(long offset) {
-        return getAllocator().getShort(address + offset);
+        return Allocator.getInstance().getShort(address + offset);
     }
 
     @Override
     public int getUnsignedShort(long offset) {
-        return getAllocator().getUnsignedShort(address + offset);
+        return Allocator.getInstance().getUnsignedShort(address + offset);
     }
 
     @Override
     public char getChar(long offset) {
-        return getAllocator().getChar(address + offset);
+        return Allocator.getInstance().getChar(address + offset);
     }
 
     @Override
     public int getInt(long offset) {
-        return getAllocator().getInt(address + offset);
+        return Allocator.getInstance().getInt(address + offset);
     }
 
     @Override
     public long getUnsignedInt(long offset) {
-        return getAllocator().getUnsignedInt(address + offset);
+        return Allocator.getInstance().getUnsignedInt(address + offset);
     }
 
     @Override
     public long getLong(long offset) {
-        return getAllocator().getLong(address + offset);
+        return Allocator.getInstance().getLong(address + offset);
     }
 
     @Override
     public BigInteger getUnsignedLong(long offset) {
-        return getAllocator().getUnsignedLong(address + offset);
+        return Allocator.getInstance().getUnsignedLong(address + offset);
     }
 
     @Override
     public long getNativeInt(long offset) {
-        return getAllocator().getNativeInt(address + offset);
+        return Allocator.getInstance().getNativeInt(address + offset);
     }
 
     @Override
     public long getNativeLong(long offset) {
-        return getAllocator().getNativeLong(address + offset);
+        return Allocator.getInstance().getNativeLong(address + offset);
     }
 
     @Override
     public long getAddress(long offset) {
-        return getAllocator().getAddress(address + offset);
+        return Allocator.getInstance().getAddress(address + offset);
     }
 
     @Override
     public float getFloat(long offset) {
-        return getAllocator().getFloat(address + offset);
+        return Allocator.getInstance().getFloat(address + offset);
     }
 
     @Override
     public double getDouble(long offset) {
-        return getAllocator().getDouble(address + offset);
+        return Allocator.getInstance().getDouble(address + offset);
     }
 
     @Override
     public void putByte(long offset, byte value) {
-        getAllocator().putByte(address + offset, value);
+        Allocator.getInstance().putByte(address + offset, value);
     }
 
     @Override
     public void putByte(long offset, int value) {
-        getAllocator().putByte(address + offset, value);
+        Allocator.getInstance().putByte(address + offset, value);
     }
 
     @Override
     public void putUnsignedByte(long offset, short value) {
-        getAllocator().putUnsignedByte(address + offset, value);
+        Allocator.getInstance().putUnsignedByte(address + offset, value);
     }
 
     @Override
     public void putUnsignedByte(long offset, int value) {
-        getAllocator().putUnsignedByte(address + offset, value);
+        Allocator.getInstance().putUnsignedByte(address + offset, value);
     }
 
     @Override
     public void putShort(long offset, short value) {
-        getAllocator().putShort(address + offset, value);
+        Allocator.getInstance().putShort(address + offset, value);
     }
 
     @Override
     public void putShort(long offset, int value) {
-        getAllocator().putShort(address + offset, value);
+        Allocator.getInstance().putShort(address + offset, value);
     }
 
     @Override
     public void putUnsignedShort(long offset, int value) {
-        getAllocator().putUnsignedShort(address + offset, value);
+        Allocator.getInstance().putUnsignedShort(address + offset, value);
     }
 
     @Override
     public void putInt(long offset, int value) {
-        getAllocator().putInt(address + offset, value);
+        Allocator.getInstance().putInt(address + offset, value);
     }
 
     @Override
     public void putUnsignedInt(long offset, long value) {
-        getAllocator().putUnsignedInt(address + offset, value);
+        Allocator.getInstance().putUnsignedInt(address + offset, value);
     }
 
     @Override
     public void putLong(long offset, long value) {
-        getAllocator().putLong(address + offset, value);
+        Allocator.getInstance().putLong(address + offset, value);
     }
 
     @Override
     public void putUnsignedLong(long offset, BigInteger value) {
-        getAllocator().putUnsignedLong(address + offset, value);
+        Allocator.getInstance().putUnsignedLong(address + offset, value);
     }
 
     @Override
     public void putFloat(long offset, float value) {
-        getAllocator().putFloat(address + offset, value);
+        Allocator.getInstance().putFloat(address + offset, value);
     }
 
     @Override
     public void putDouble(long offset, double value) {
-        getAllocator().putDouble(address + offset, value);
+        Allocator.getInstance().putDouble(address + offset, value);
     }
 
     @Override
     public void putNativeInt(long offset, long value) {
-        getAllocator().putNativeInt(address + offset, value);
+        Allocator.getInstance().putNativeInt(address + offset, value);
     }
 
     @Override
     public void putNativeLong(long offset, long value) {
-        getAllocator().putNativeLong(address + offset, value);
+        Allocator.getInstance().putNativeLong(address + offset, value);
     }
 
     @Override
     public void putAddress(long offset, long value) {
-        getAllocator().putAddress(address + offset, value);
+        Allocator.getInstance().putAddress(address + offset, value);
     }
 
     @Override
     public void getByteArray(long offset, byte[] array, int index, int length) {
-        getAllocator().getByteArray(address + offset, array, index, length);
+        Allocator.getInstance().getByteArray(address + offset, array, index, length);
     }
 
     @Override
     public void getByteArray(long offset, byte[] array) {
-        getAllocator().getByteArray(address + offset, array);
+        Allocator.getInstance().getByteArray(address + offset, array);
     }
 
     @Override
     public void putByteArray(long offset, byte[] array, int index, int length) {
-        getAllocator().putByteArray(address + offset, array, index, length);
+        Allocator.getInstance().putByteArray(address + offset, array, index, length);
     }
 
     @Override
     public void putByteArray(long offset, byte[] array) {
-        getAllocator().putByteArray(address + offset, array);
+        Allocator.getInstance().putByteArray(address + offset, array);
     }
 
     @Override
     public void getShortArray(long offset, short[] array, int index, int length) {
-        getAllocator().getShortArray(address + offset, array, index, length);
+        Allocator.getInstance().getShortArray(address + offset, array, index, length);
     }
 
     @Override
     public void getShortArray(long offset, short[] array) {
-        getAllocator().getShortArray(address + offset, array);
+        Allocator.getInstance().getShortArray(address + offset, array);
     }
 
     @Override
     public void putShortArray(long offset, short[] array, int index, int length) {
-        getAllocator().putShortArray(address + offset, array, index, length);
+        Allocator.getInstance().putShortArray(address + offset, array, index, length);
     }
 
     @Override
     public void putShortArray(long offset, short[] array) {
-        getAllocator().putShortArray(address + offset, array);
+        Allocator.getInstance().putShortArray(address + offset, array);
     }
 
     @Override
     public void getCharArray(long offset, char[] array, int index, int length) {
-        getAllocator().getCharArray(address + offset, array, index, length);
+        Allocator.getInstance().getCharArray(address + offset, array, index, length);
     }
 
     @Override
     public void getCharArray(long offset, char[] array) {
-        getAllocator().getCharArray(address + offset, array);
+        Allocator.getInstance().getCharArray(address + offset, array);
     }
 
     @Override
     public void putCharArray(long offset, char[] array, int index, int length) {
-        getAllocator().putCharArray(address + offset, array, index, length);
+        Allocator.getInstance().putCharArray(address + offset, array, index, length);
     }
 
     @Override
     public void putCharArray(long offset, char[] array) {
-        getAllocator().putCharArray(address + offset, array);
+        Allocator.getInstance().putCharArray(address + offset, array);
     }
 
     @Override
     public void getIntArray(long offset, int[] array, int index, int length) {
-        getAllocator().getIntArray(address + offset, array, index, length);
+        Allocator.getInstance().getIntArray(address + offset, array, index, length);
     }
 
     @Override
     public void getIntArray(long offset, int[] array) {
-        getAllocator().getIntArray(address + offset, array);
+        Allocator.getInstance().getIntArray(address + offset, array);
     }
 
     @Override
     public void putIntArray(long offset, int[] array, int index, int length) {
-        getAllocator().putIntArray(address + offset, array, index, length);
+        Allocator.getInstance().putIntArray(address + offset, array, index, length);
     }
 
     @Override
     public void putIntArray(long offset, int[] array) {
-        getAllocator().putIntArray(address + offset, array);
+        Allocator.getInstance().putIntArray(address + offset, array);
     }
 
     @Override
     public void getLongArray(long offset, long[] array, int index, int length) {
-        getAllocator().getLongArray(address + offset, array, index, length);
+        Allocator.getInstance().getLongArray(address + offset, array, index, length);
     }
 
     @Override
     public void getLongArray(long offset, long[] array) {
-        getAllocator().getLongArray(address + offset, array);
+        Allocator.getInstance().getLongArray(address + offset, array);
     }
 
     @Override
     public void putLongArray(long offset, long[] array, int index, int length) {
-        getAllocator().putLongArray(address + offset, array, index, length);
+        Allocator.getInstance().putLongArray(address + offset, array, index, length);
     }
 
     @Override
     public void putLongArray(long offset, long[] array) {
-        getAllocator().putLongArray(address + offset, array);
+        Allocator.getInstance().putLongArray(address + offset, array);
     }
 
     @Override
     public void getFloatArray(long offset, float[] array, int index, int length) {
-        getAllocator().getFloatArray(address + offset, array, index, length);
+        Allocator.getInstance().getFloatArray(address + offset, array, index, length);
     }
 
     @Override
     public void getFloatArray(long offset, float[] array) {
-        getAllocator().getFloatArray(address + offset, array);
+        Allocator.getInstance().getFloatArray(address + offset, array);
     }
 
     @Override
     public void putFloatArray(long offset, float[] array, int index, int length) {
-        getAllocator().putFloatArray(address + offset, array, index, length);
+        Allocator.getInstance().putFloatArray(address + offset, array, index, length);
     }
 
     @Override
     public void putFloatArray(long offset, float[] array) {
-        getAllocator().putFloatArray(address + offset, array);
+        Allocator.getInstance().putFloatArray(address + offset, array);
     }
 
     @Override
     public void getDoubleArray(long offset, double[] array, int index, int length) {
-        getAllocator().getDoubleArray(address + offset, array, index, length);
+        Allocator.getInstance().getDoubleArray(address + offset, array, index, length);
     }
 
     @Override
     public void getDoubleArray(long offset, double[] array) {
-        getAllocator().getDoubleArray(address + offset, array);
+        Allocator.getInstance().getDoubleArray(address + offset, array);
     }
 
     @Override
     public void putDoubleArray(long offset, double[] array, int index, int length) {
-        getAllocator().putDoubleArray(address + offset, array, index, length);
+        Allocator.getInstance().putDoubleArray(address + offset, array, index, length);
     }
 
     @Override
     public void putDoubleArray(long offset, double[] array) {
-        getAllocator().putDoubleArray(address + offset, array);
+        Allocator.getInstance().putDoubleArray(address + offset, array);
     }
 
     @Override
     public long getZeroTerminatedStringLength(long offset) {
-        return getAllocator().getZeroTerminatedStringLength(address + offset);
+        return Allocator.getInstance().getZeroTerminatedStringLength(address + offset);
     }
 
     @Override
     public long getZeroTerminatedStringLength(long offset, long maxLength) {
-        return getAllocator().getZeroTerminatedWideCharStringLength(address + offset, maxLength);
+        return Allocator.getInstance().getZeroTerminatedWideCharStringLength(address + offset, maxLength);
     }
 
     @Override
     public long getZeroTerminatedWideCharStringLength(long offset) {
-        return getAllocator().getZeroTerminatedWideCharStringLength(address + offset);
+        return Allocator.getInstance().getZeroTerminatedWideCharStringLength(address + offset);
     }
 
     @Override
     public long getZeroTerminatedWideCharStringLength(long offset, long maxLength) {
-        return getAllocator().getZeroTerminatedStringLength(address + offset, maxLength);
+        return Allocator.getInstance().getZeroTerminatedStringLength(address + offset, maxLength);
     }
 
     @Override
     public long getZeroTerminatedStringLength(long offset, Charset charset) {
-        return getAllocator().getZeroTerminatedStringLength(address + offset, charset);
+        return Allocator.getInstance().getZeroTerminatedStringLength(address + offset, charset);
     }
 
     @Override
     public long getZeroTerminatedStringLength(long offset, long maxLength, Charset charset) {
-        return getAllocator().getZeroTerminatedStringLength(address + offset, maxLength, charset);
+        return Allocator.getInstance().getZeroTerminatedStringLength(address + offset, maxLength, charset);
     }
 
     @Override
     public byte[] getZeroTerminatedByteArray(long offset) {
-        return getAllocator().getZeroTerminatedByteArray(address + offset);
+        return Allocator.getInstance().getZeroTerminatedByteArray(address + offset);
     }
 
     @Override
     public byte[] getZeroTerminatedByteArray(long offset, int maxLength) {
-        return getAllocator().getZeroTerminatedByteArray(address + offset, maxLength);
+        return Allocator.getInstance().getZeroTerminatedByteArray(address + offset, maxLength);
     }
 
     @Override
     public byte[] getZeroTerminatedWideCharByteArray(long offset) {
-        return getAllocator().getZeroTerminatedWideCharByteArray(address + offset);
+        return Allocator.getInstance().getZeroTerminatedWideCharByteArray(address + offset);
     }
 
     @Override
     public byte[] getZeroTerminatedWideCharByteArray(long offset, int maxLength) {
-        return getAllocator().getZeroTerminatedWideCharByteArray(address + offset, maxLength);
+        return Allocator.getInstance().getZeroTerminatedWideCharByteArray(address + offset, maxLength);
     }
 
     @Override
     public byte[] getZeroTerminatedByteArray(long offset, Charset charset) {
-        return getAllocator().getZeroTerminatedByteArray(address + offset, charset);
+        return Allocator.getInstance().getZeroTerminatedByteArray(address + offset, charset);
     }
 
     @Override
     public byte[] getZeroTerminatedByteArray(long offset, int maxLength, Charset charset) {
-        return getAllocator().getZeroTerminatedByteArray(address + offset, maxLength, charset);
+        return Allocator.getInstance().getZeroTerminatedByteArray(address + offset, maxLength, charset);
     }
 
     @Override
     public String getZeroTerminatedString(long offset) {
-        return getAllocator().getZeroTerminatedString(address + offset);
+        return Allocator.getInstance().getZeroTerminatedString(address + offset);
     }
 
     @Override
     public String getZeroTerminatedString(long offset, int maxLength) {
-        return getAllocator().getZeroTerminatedString(address + offset, maxLength);
+        return Allocator.getInstance().getZeroTerminatedString(address + offset, maxLength);
     }
 
     @Override
     public String getZeroTerminatedWideCharString(long offset) {
-        return getAllocator().getZeroTerminatedWideCharString(address + offset);
+        return Allocator.getInstance().getZeroTerminatedWideCharString(address + offset);
     }
 
     @Override
     public String getZeroTerminatedWideCharString(long offset, int maxLength) {
-        return getAllocator().getZeroTerminatedWideCharString(address + offset, maxLength);
+        return Allocator.getInstance().getZeroTerminatedWideCharString(address + offset, maxLength);
     }
 
     @Override
     public String getZeroTerminatedString(long offset, Charset charset) {
-        return getAllocator().getZeroTerminatedString(address + offset, charset);
+        return Allocator.getInstance().getZeroTerminatedString(address + offset, charset);
     }
 
     @Override
     public String getZeroTerminatedString(long offset, int maxLength, Charset charset) {
-        return getAllocator().getZeroTerminatedString(address + offset, maxLength, charset);
+        return Allocator.getInstance().getZeroTerminatedString(address + offset, maxLength, charset);
     }
 
     @Override
     public void putZeroTerminatedByteArray(long offset, byte[] array) {
-        getAllocator().putZeroTerminatedByteArray(address + offset, array);
+        Allocator.getInstance().putZeroTerminatedByteArray(address + offset, array);
     }
 
     @Override
     public void putZeroTerminatedByteArray(long offset, byte[] array, int index, int length) {
-        getAllocator().putZeroTerminatedByteArray(address + offset, array, index, length);
+        Allocator.getInstance().putZeroTerminatedByteArray(address + offset, array, index, length);
     }
 
     @Override
     public void putZeroTerminatedWideCharByteArray(long offset, byte[] array) {
-        getAllocator().putZeroTerminatedWideCharByteArray(address + offset, array);
+        Allocator.getInstance().putZeroTerminatedWideCharByteArray(address + offset, array);
     }
 
     @Override
     public void putZeroTerminatedWideCharByteArray(long offset, byte[] array, int index, int length) {
-        getAllocator().putZeroTerminatedWideCharByteArray(address + offset, array, index, length);
+        Allocator.getInstance().putZeroTerminatedWideCharByteArray(address + offset, array, index, length);
     }
 
     @Override
     public void putZeroTerminatedByteArray(long offset, byte[] array, Charset charset) {
-        getAllocator().putZeroTerminatedByteArray(address + offset, array, charset);
+        Allocator.getInstance().putZeroTerminatedByteArray(address + offset, array, charset);
     }
 
     @Override
     public void putZeroTerminatedByteArray(long offset, byte[] array, int index, int length, Charset charset) {
-        getAllocator().putZeroTerminatedByteArray(address + offset, array, index, length, charset);
+        Allocator.getInstance().putZeroTerminatedByteArray(address + offset, array, index, length, charset);
     }
 
     @Override
     public void putZeroTerminatedString(long offset, String string) {
-        getAllocator().putZeroTerminatedString(address + offset, string);
+        Allocator.getInstance().putZeroTerminatedString(address + offset, string);
     }
 
     @Override
     public void putZeroTerminatedWideCharString(long offset, String string) {
-        getAllocator().putZeroTerminatedWideCharString(address + offset, string);
+        Allocator.getInstance().putZeroTerminatedWideCharString(address + offset, string);
     }
 
     @Override
     public void putZeroTerminatedString(long offset, String string, Charset charset) {
-        getAllocator().putZeroTerminatedString(address + offset, string, charset);
+        Allocator.getInstance().putZeroTerminatedString(address + offset, string, charset);
     }
 
     @Override
@@ -550,7 +546,7 @@ public class DirectPointer extends Pointer {
         if (bounded) checkBounds(offset, count);
         if (dstPointer.isBounded()) dstPointer.checkBounds(dstOffset, count);
         if (dstPointer instanceof DirectPointer) {
-            getAllocator().copyMemory(address + offset, dstPointer.address() + dstOffset, count);
+            Allocator.getInstance().copyMemory(address + offset, dstPointer.address() + dstOffset, count);
         }
         else if (count < 0) {
             for (long i = 0; i < Long.MAX_VALUE; i ++) {
@@ -591,61 +587,61 @@ public class DirectPointer extends Pointer {
 
     @Override
     public void setMemory(long offset, long size, byte value) {
-        getAllocator().setMemory(address + offset, size, value);
+        Allocator.getInstance().setMemory(address + offset, size, value);
     }
 
     @Override
     public void setMemory(long offset, long size, int value) {
-        getAllocator().setMemory(address + offset, size, value);
+        Allocator.getInstance().setMemory(address + offset, size, value);
     }
 
     @Override
     public long indexOf(long offset, byte value) {
-        return getAllocator().indexOf(address + offset, value);
+        return Allocator.getInstance().indexOf(address + offset, value);
     }
 
     @Override
     public long indexOf(long offset, int value) {
-        return getAllocator().indexOf(address + offset, value);
+        return Allocator.getInstance().indexOf(address + offset, value);
     }
 
     @Override
     public long indexOf(long offset, byte value, long maxLength) {
-        return getAllocator().indexOf(address + offset, value, maxLength);
+        return Allocator.getInstance().indexOf(address + offset, value, maxLength);
     }
 
     @Override
     public long indexOf(long offset, int value, long maxLength) {
-        return getAllocator().indexOf(address + offset, value, maxLength);
+        return Allocator.getInstance().indexOf(address + offset, value, maxLength);
     }
 
     @Override
     public long indexOf(long offset, byte[] value) {
-        return getAllocator().indexOf(address + offset, value);
+        return Allocator.getInstance().indexOf(address + offset, value);
     }
 
     @Override
     public long indexOf(long offset, byte[] value, int valueOffset, int valueLength) {
-        return getAllocator().indexOf(address + offset, value, valueOffset, valueLength);
+        return Allocator.getInstance().indexOf(address + offset, value, valueOffset, valueLength);
     }
 
     @Override
     public long indexOf(long offset, byte[] value, long maxLength) {
-        return getAllocator().indexOf(address + offset, value, maxLength);
+        return Allocator.getInstance().indexOf(address + offset, value, maxLength);
     }
 
     @Override
     public long indexOf(long offset, byte[] value, int valueOffset, int valueLength, long maxLength) {
-        return getAllocator().indexOf(address + offset, value, valueOffset, valueLength, maxLength);
+        return Allocator.getInstance().indexOf(address + offset, value, valueOffset, valueLength, maxLength);
     }
 
     @Override
     public Pointer reallocate(long size) throws IOException {
         if (!hasMemory) throw new IOException("duplicate or slice");
         else {
-            long address = getAllocator().reallocateMemory(this.address, size);
+            long address = Allocator.getInstance().reallocateMemory(this.address, size);
             if (address == 0) throw new IOException("Unable to allocate native memory, size: " + FastMath.unsign(size));
-            else return new DirectPointer(getAllocator(), address, size, true);
+            else return new DirectPointer(address, size, true);
         }
     }
 
@@ -655,8 +651,39 @@ public class DirectPointer extends Pointer {
     }
 
     @Override
+    public boolean isNullPointer() {
+        return address == 0;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof Pointer)) return false;
+
+        Pointer that = (Pointer) object;
+
+        if (isNullPointer() && that.isNullPointer()) return true;
+        else if (that.isDirect()) return address() == that.address();
+        else return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) (address ^ (address >>> 32));
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getName() + '@' + Integer.toHexString(hashCode())
+                + '{' +
+                "hasMemory=" + hasMemory +
+                ", address=" + address +
+                '}';
+    }
+
+    @Override
     public void close() throws IOException {
-        if (hasMemory) getAllocator().freeMemory(address);
+        if (hasMemory) Allocator.getInstance().freeMemory(address);
     }
 
 }

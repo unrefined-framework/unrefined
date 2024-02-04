@@ -1,5 +1,7 @@
 package unrefined.internal.windows;
 
+import com.kenai.jffi.CallContext;
+import com.kenai.jffi.CallingConvention;
 import com.kenai.jffi.Function;
 import com.kenai.jffi.HeapInvocationBuffer;
 import com.kenai.jffi.Library;
@@ -7,7 +9,7 @@ import com.kenai.jffi.Type;
 import unrefined.desktop.ABI;
 import unrefined.desktop.AWTSupport;
 import unrefined.desktop.ReflectionSupport;
-import unrefined.internal.OperatingSystem;
+import unrefined.desktop.OSInfo;
 import unrefined.util.NotInstantiableError;
 
 import java.awt.Component;
@@ -17,6 +19,7 @@ import java.lang.reflect.Method;
 
 import static unrefined.desktop.ForeignSupport.INVOKER;
 import static unrefined.desktop.ForeignSupport.MEMORY_IO;
+import static unrefined.desktop.UnsafeSupport.UNSAFE;
 import static unrefined.internal.windows.WindowsLibrary.User32;
 
 public final class WindowsAWTSupport {
@@ -27,7 +30,7 @@ public final class WindowsAWTSupport {
 
     private static final Method getHWndMethod;
     static {
-        if (OperatingSystem.IS_WINDOWS) {
+        if (OSInfo.IS_WINDOWS) {
             Method method;
             try {
                 method = Class.forName("sun.awt.windows.WComponentPeer").getDeclaredMethod("getHWnd");
@@ -60,9 +63,10 @@ public final class WindowsAWTSupport {
     private static final Function GetDpiForMonitor;
     private static final long dpiX;
     private static final long dpiY;
+    private static final Object dpiBufferLock = new Object();
 
     static {
-        if (OperatingSystem.IS_WINDOWS) {
+        if (OSInfo.IS_WINDOWS) {
             long address = User32.getSymbolAddress("GetDpiForWindow");
             if (address == 0) {
                 GetDpiForWindow = null;
@@ -75,7 +79,9 @@ public final class WindowsAWTSupport {
                     dpiY = 0;
                 }
                 else {
-                    MonitorFromWindow = new Function(address, Type.POINTER, Type.POINTER, Type.UINT32);
+                    MonitorFromWindow = new Function(address,
+                            CallContext.getCallContext(Type.POINTER, new Type[] {Type.POINTER, Type.UINT32},
+                                    CallingConvention.DEFAULT, false));
                     Shcore = Library.getCachedInstance(System.mapLibraryName("Shcore"), Library.GLOBAL | Library.LAZY);
                     address = Shcore.getSymbolAddress("GetDpiForMonitor");
                     if (address == 0) {
@@ -84,14 +90,17 @@ public final class WindowsAWTSupport {
                         dpiY = 0;
                     }
                     else {
-                        GetDpiForMonitor = new Function(address, Type.UINT, Type.POINTER, Type.UINT, Type.POINTER, Type.POINTER);
-                        dpiX = MEMORY_IO.allocateMemory(ABI.I, true);
-                        dpiY = MEMORY_IO.allocateMemory(ABI.I, true);
+                        GetDpiForMonitor = new Function(address,
+                                CallContext.getCallContext(Type.UINT, new Type[] {Type.POINTER, Type.UINT, Type.POINTER, Type.POINTER},
+                                        CallingConvention.DEFAULT, false));
+                        dpiX = UNSAFE.allocateMemory(ABI.I);
+                        dpiY = UNSAFE.allocateMemory(ABI.I);
                     }
                 }
             }
             else {
-                GetDpiForWindow = new Function(address, Type.UINT, Type.POINTER);
+                GetDpiForWindow = new Function(address,
+                        CallContext.getCallContext(Type.UINT, new Type[] {Type.POINTER}, CallingConvention.DEFAULT, false));
                 MonitorFromWindow = null;
                 GetDpiForMonitor = null;
                 Shcore = null;
@@ -110,31 +119,37 @@ public final class WindowsAWTSupport {
     }
 
     public static int getDotsPerInch(Component component) {
-        long hWnd = getHWnd(component);
-        if (hWnd != 0) {
-            if (GetDpiForWindow != null) {
-                HeapInvocationBuffer heapInvocationBuffer = new HeapInvocationBuffer(GetDpiForWindow);
-                heapInvocationBuffer.putAddress(hWnd);
-                return INVOKER.invokeInt(GetDpiForWindow, heapInvocationBuffer);
-            }
-            if (GetDpiForMonitor != null) {
-                HeapInvocationBuffer heapInvocationBuffer = new HeapInvocationBuffer(MonitorFromWindow);
-                heapInvocationBuffer.putAddress(hWnd);
-                heapInvocationBuffer.putInt(1);
-                long hMonitor = INVOKER.invokeAddress(MonitorFromWindow, heapInvocationBuffer);
-                if (hMonitor != 0) {
-                    heapInvocationBuffer = new HeapInvocationBuffer(GetDpiForMonitor);
-                    heapInvocationBuffer.putAddress(hMonitor);
-                    heapInvocationBuffer.putInt(0);
-                    heapInvocationBuffer.putAddress(dpiX);
-                    heapInvocationBuffer.putAddress(dpiY);
-                    if (INVOKER.invokeInt(GetDpiForMonitor, heapInvocationBuffer) == 0) {
-                        return MEMORY_IO.getInt(dpiX);
+        AWTSupport.awtLock();
+        try {
+            long hWnd = getHWnd(component);
+            if (hWnd != 0) {
+                if (GetDpiForWindow != null) {
+                    HeapInvocationBuffer heapInvocationBuffer = new HeapInvocationBuffer(GetDpiForWindow);
+                    heapInvocationBuffer.putAddress(hWnd);
+                    return INVOKER.invokeInt(GetDpiForWindow, heapInvocationBuffer);
+                }
+                if (GetDpiForMonitor != null) {
+                    HeapInvocationBuffer heapInvocationBuffer = new HeapInvocationBuffer(MonitorFromWindow);
+                    heapInvocationBuffer.putAddress(hWnd);
+                    heapInvocationBuffer.putInt(1);
+                    long hMonitor = INVOKER.invokeAddress(MonitorFromWindow, heapInvocationBuffer);
+                    if (hMonitor != 0) {
+                        heapInvocationBuffer = new HeapInvocationBuffer(GetDpiForMonitor);
+                        heapInvocationBuffer.putAddress(hMonitor);
+                        heapInvocationBuffer.putInt(0);
+                        heapInvocationBuffer.putAddress(dpiX);
+                        heapInvocationBuffer.putAddress(dpiY);
+                        if (INVOKER.invokeInt(GetDpiForMonitor, heapInvocationBuffer) == 0) {
+                            return MEMORY_IO.getInt(dpiX);
+                        }
                     }
                 }
             }
+            return Toolkit.getDefaultToolkit().getScreenResolution();
         }
-        return Toolkit.getDefaultToolkit().getScreenResolution();
+        finally {
+            AWTSupport.awtUnlock();
+        }
     }
 
     public static void patch() {

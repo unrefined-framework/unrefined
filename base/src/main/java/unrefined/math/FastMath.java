@@ -2,8 +2,8 @@ package unrefined.math;
 
 import unrefined.util.NotInstantiableError;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.Random;
 
 public final class FastMath {
@@ -16,40 +16,6 @@ public final class FastMath {
     public static final double PI = Math.PI;
     public static final double PI_HALF = PI * 0.5;
     public static final double TAU = 2.0 * PI;
-
-    public static final class RoundingMode {
-        private RoundingMode() {
-            throw new NotInstantiableError(RoundingMode.class);
-        }
-        public static final int UP = BigDecimal.ROUND_UP;
-        public static final int DOWN = BigDecimal.ROUND_DOWN;
-        public static final int CEILING = BigDecimal.ROUND_CEILING;
-        public static final int FLOOR = BigDecimal.ROUND_FLOOR;
-        public static final int HALF_UP = BigDecimal.ROUND_HALF_UP;
-        public static final int HALF_DOWN = BigDecimal.ROUND_HALF_DOWN;
-        public static final int HALF_EVEN = BigDecimal.ROUND_HALF_EVEN;
-        public static final int UNNECESSARY = BigDecimal.ROUND_UNNECESSARY;
-        public static boolean isValid(int mode) {
-            return mode >= UP && mode <= UNNECESSARY;
-        }
-        public static int checkValid(int mode) {
-            if (mode < UP || mode > UNNECESSARY) throw new IllegalArgumentException("Illegal rounding mode: " + mode);
-            else return mode;
-        }
-        public static String toString(int mode) {
-            switch (mode) {
-                case UP: return "UP";
-                case DOWN: return "DOWN";
-                case CEILING: return "CEILING";
-                case FLOOR: return "FLOOR";
-                case HALF_UP: return "HALF_UP";
-                case HALF_DOWN: return "HALF_DOWN";
-                case HALF_EVEN: return "HALF_EVEN";
-                case UNNECESSARY: return "UNNECESSARY";
-                default: throw new IllegalArgumentException("Illegal rounding mode: " + mode);
-            }
-        }
-    }
 
     public static float sin(float a) {
         return (float) Math.sin(a);
@@ -377,11 +343,11 @@ public final class FastMath {
     }
 
     public static long multiplyHigh(long x, long y) {
-        return ExtendedMath.multiplyHigh(x, y);
+        return Arithmetic.getInstance().multiplyHigh(x, y);
     }
 
     public static long unsignedMultiplyHigh(long x, long y) {
-        return ExtendedMath.unsignedMultiplyHigh(x, y);
+        return Arithmetic.getInstance().unsignedMultiplyHigh(x, y);
     }
 
     public static int floorDiv(int x, int y) {
@@ -525,11 +491,11 @@ public final class FastMath {
     }
 
     public static float fma(float a, float b, float c) {
-        return ExtendedMath.fma(a, b, c);
+        return Arithmetic.getInstance().fma(a, b, c);
     }
 
     public static double fma(double a, double b, double c) {
-        return ExtendedMath.fma(a, b, c);
+        return Arithmetic.getInstance().fma(a, b, c);
     }
 
     public static float ulp(float f) {
@@ -708,30 +674,30 @@ public final class FastMath {
         return ExtendedMath.triLerp(q000, q100, q010, q110, q001, q101, q011, q111, tx, ty, tz);
     }
 
-    public static float round(float value, int mode) {
+    public static float round(float value, RoundingMode mode) {
         switch (mode) {
-            case RoundingMode.UP: return (float) ExtendedMath.up(value);
-            case RoundingMode.DOWN: return (float) ExtendedMath.down(value);
-            case RoundingMode.CEILING: return (float) Math.ceil(value);
-            case RoundingMode.FLOOR: return (float) Math.floor(value);
-            case RoundingMode.HALF_UP: return (float) ExtendedMath.halfUp(value);
-            case RoundingMode.HALF_DOWN: return (float) ExtendedMath.halfDown(value);
-            case RoundingMode.HALF_EVEN: return (float) Math.rint(value);
-            case RoundingMode.UNNECESSARY: return value;
+            case UP: return (float) ExtendedMath.up(value);
+            case DOWN: return (float) ExtendedMath.down(value);
+            case CEILING: return (float) Math.ceil(value);
+            case FLOOR: return (float) Math.floor(value);
+            case HALF_UP: return (float) ExtendedMath.halfUp(value);
+            case HALF_DOWN: return (float) ExtendedMath.halfDown(value);
+            case HALF_EVEN: return (float) Math.rint(value);
+            case UNNECESSARY: return value;
             default: throw new IllegalArgumentException("Illegal rounding mode: " + mode);
         }
     }
 
-    public static double round(double value, int mode) {
+    public static double round(double value, RoundingMode mode) {
         switch (mode) {
-            case RoundingMode.UP: return ExtendedMath.up(value);
-            case RoundingMode.DOWN: return ExtendedMath.down(value);
-            case RoundingMode.CEILING: return Math.ceil(value);
-            case RoundingMode.FLOOR: return Math.floor(value);
-            case RoundingMode.HALF_UP: return ExtendedMath.halfUp(value);
-            case RoundingMode.HALF_DOWN: return ExtendedMath.halfDown(value);
-            case RoundingMode.HALF_EVEN : return Math.rint(value);
-            case RoundingMode.UNNECESSARY: return value;
+            case UP: return ExtendedMath.up(value);
+            case DOWN: return ExtendedMath.down(value);
+            case CEILING: return Math.ceil(value);
+            case FLOOR: return Math.floor(value);
+            case HALF_UP: return ExtendedMath.halfUp(value);
+            case HALF_DOWN: return ExtendedMath.halfDown(value);
+            case HALF_EVEN : return Math.rint(value);
+            case UNNECESSARY: return value;
             default: throw new IllegalArgumentException("Illegal rounding mode: " + mode);
         }
     }
@@ -956,114 +922,6 @@ public final class FastMath {
 
         public static long multiplyFull(int x, int y) {
             return (long)x * (long)y;
-        }
-
-        public static long multiplyHigh(long x, long y) {
-            // Use technique from section 8-2 of Henry S. Warren, Jr.,
-            // Hacker's Delight (2nd ed.) (Addison Wesley, 2013), 173-174.
-            long x1 = x >> 32;
-            long x2 = x & 0xFFFFFFFFL;
-            long y1 = y >> 32;
-            long y2 = y & 0xFFFFFFFFL;
-
-            long z2 = x2 * y2;
-            long t = x1 * y2 + (z2 >>> 32);
-            long z1 = t & 0xFFFFFFFFL;
-            long z0 = t >> 32;
-            z1 += x2 * y1;
-
-            return x1 * y1 + z0 + (z1 >> 32);
-        }
-
-        public static long unsignedMultiplyHigh(long x, long y) {
-            // Compute via multiplyHigh() to leverage the intrinsic
-            long result = ExtendedMath.multiplyHigh(x, y);
-            result += (y & (x >> 63)); // equivalent to `if (x < 0) result += y;`
-            result += (x & (y >> 63)); // equivalent to `if (y < 0) result += x;`
-            return result;
-        }
-
-        public static double fma(double a, double b, double c) {
-            /*
-             * Infinity and NaN arithmetic is not quite the same with two
-             * roundings as opposed to just one so the simple expression
-             * "a * b + c" cannot always be used to compute the correct
-             * result.  With two roundings, the product can overflow and
-             * if the addend is infinite, a spurious NaN can be produced
-             * if the infinity from the overflow and the infinite addend
-             * have opposite signs.
-             */
-
-            // First, screen for and handle non-finite input values whose
-            // arithmetic is not supported by BigDecimal.
-            if (Double.isNaN(a) || Double.isNaN(b) || Double.isNaN(c)) {
-                return Double.NaN;
-            } else { // All inputs non-NaN
-                boolean infiniteA = Double.isInfinite(a);
-                boolean infiniteB = Double.isInfinite(b);
-                boolean infiniteC = Double.isInfinite(c);
-                double result;
-
-                if (infiniteA || infiniteB || infiniteC) {
-                    if (infiniteA && b == 0.0 ||
-                            infiniteB && a == 0.0 ) {
-                        return Double.NaN;
-                    }
-                    double product = a * b;
-                    if (Double.isInfinite(product) && !infiniteA && !infiniteB) {
-                        // Intermediate overflow; might cause a
-                        // spurious NaN if added to infinite c.
-                        /* assert Double.isInfinite(c); */
-                        if (!Double.isInfinite(c)) throw new ArithmeticException("Intermediate overflow");
-                        return c;
-                    } else {
-                        result = product + c;
-                        /* assert !Double.isFinite(result); */
-                        if (Double.isFinite(result)) throw new ArithmeticException("Intermediate overflow");
-                        return result;
-                    }
-                } else { // All inputs finite
-                    BigDecimal product = (new BigDecimal(a)).multiply(new BigDecimal(b));
-                    if (c == 0.0) { // Positive or negative zero
-                        // If the product is an exact zero, use a
-                        // floating-point expression to compute the sign
-                        // of the zero final result. The product is an
-                        // exact zero if and only if at least one of a and
-                        // b is zero.
-                        if (a == 0.0 || b == 0.0) {
-                            return a * b + c;
-                        } else {
-                            // The sign of a zero addend doesn't matter if
-                            // the product is nonzero. The sign of a zero
-                            // addend is not factored in the result if the
-                            // exact product is nonzero but underflows to
-                            // zero; see IEEE-754 2008 section 6.3 "The
-                            // sign bit".
-                            return product.doubleValue();
-                        }
-                    } else {
-                        return product.add(new BigDecimal(c)).doubleValue();
-                    }
-                }
-            }
-        }
-
-        public static float fma(float a, float b, float c) {
-            if (Float.isFinite(a) && Float.isFinite(b) && Float.isFinite(c)) {
-                if (a == 0.0 || b == 0.0) {
-                    return a * b + c; // Handled signed zero cases
-                } else {
-                    return (new BigDecimal((double)a * (double)b) // Exact multiply
-                            .add(new BigDecimal((double)c)))      // Exact sum
-                            .floatValue();                            // One rounding
-                    // to a float value
-                }
-            } else {
-                // At least one of a,b, and c is non-finite. The result
-                // will be non-finite as well and will be the same
-                // non-finite value under double as float arithmetic.
-                return (float)fma((double)a, (double)b, (double)c);
-            }
         }
 
         public static int ceilDiv(int x, int y) {
@@ -1430,11 +1288,11 @@ public final class FastMath {
         }
 
         public static float lerp(float a, float b, float t) {
-            return ExtendedMath.fma(b - a, t, a);
+            return Arithmetic.getInstance().fma(b - a, t, a);
         }
 
         public static double lerp(double a, double b, double t) {
-            return ExtendedMath.fma(b - a, t, a);
+            return Arithmetic.getInstance().fma(b - a, t, a);
         }
 
         public static float biLerp(float q00, float q10, float q01, float q11, float tx, float ty) {
@@ -1809,6 +1667,38 @@ public final class FastMath {
             }
         }
 
+    }
+
+    public static int compare(byte a, byte b) {
+        return Byte.compare(a, b);
+    }
+
+    public static int compareUnsigned(byte a, byte b) {
+        return Byte.toUnsignedInt(a) - Byte.toUnsignedInt(b);
+    }
+
+    public static int compare(short a, short b) {
+        return Short.compare(a, b);
+    }
+
+    public static int compareUnsigned(short a, short b) {
+        return Short.toUnsignedInt(a) - Short.toUnsignedInt(b);
+    }
+
+    public static int compare(int a, int b) {
+        return Integer.compare(a, b);
+    }
+
+    public static int compareUnsigned(int a, int b) {
+        return Integer.compareUnsigned(a, b);
+    }
+
+    public static int compare(long a, long b) {
+        return Long.compare(a, b);
+    }
+
+    public static int compareUnsigned(long a, long b) {
+        return Long.compareUnsigned(a, b);
     }
 
 }

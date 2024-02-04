@@ -80,6 +80,11 @@ public final class Connection {
     final Object slot;
 
     /**
+     * The original connection type.
+     */
+    private final int original;
+
+    /**
      * The connection type.
      */
     final int type;
@@ -101,10 +106,11 @@ public final class Connection {
      */
     private final AtomicBoolean broken;
 
-    Connection(Signal<?> signal, Object slot, int type, Dispatcher dispatcher, boolean singleShot, boolean broken) {
+    Connection(Signal<?> signal, Object slot, int original, int type, Dispatcher dispatcher, boolean singleShot, boolean broken) {
         this.signal = signal;
         this.slot = slot;
         this.dispatcher = dispatcher;
+        this.original = original;
         this.type = type;
         this.singleShot = singleShot;
         this.broken = new AtomicBoolean(broken);
@@ -126,8 +132,24 @@ public final class Connection {
         }
     }
 
-    public boolean isBroken() {
+    boolean isBroken() {
         return broken.get();
+    }
+
+    public Signal<?> getSignal() {
+        return signal;
+    }
+
+    public Object getSlot() {
+        return slot;
+    }
+
+    public Dispatcher getDispatcher() {
+        return dispatcher;
+    }
+
+    public int getType() {
+        return original;
     }
 
     @Override

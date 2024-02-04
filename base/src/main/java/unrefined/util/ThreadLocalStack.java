@@ -6,7 +6,7 @@ import java.nio.ByteBuffer;
 
 public final class ThreadLocalStack {
 
-    private static final int STACK_SIZE = Environment.properties().parseIntProperty("unrefined.util.thread.stack", 1024 * 1024);
+    private static final int STACK_SIZE = Environment.properties.parseIntProperty("unrefined.util.thread.stack", 1024 * 1024);
 
     private final int size;
 

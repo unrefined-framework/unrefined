@@ -1,6 +1,6 @@
 package unrefined.context;
 
-import unrefined.util.ThreadLocalStorage;
+import unrefined.util.ProducerThreadLocal;
 import unrefined.util.concurrent.Producer;
 import unrefined.util.function.Functor;
 
@@ -8,32 +8,30 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Environment implements Map<Object, Object> {
 
-    private static final Environment system = new Environment(() -> new ConcurrentHashMap<>(System.getenv()), "SYSTEM ENVIRONMENT VARIABLES");
-    private static final Environment properties = new Environment(System::getProperties, "JAVA VIRTUAL MACHINE PROPERTIES");
-    private static final Environment global = new Environment(new ConcurrentHashMap<>(), "APPLICATION GLOBAL ENVIRONMENT");
-    private static final Environment threadLocal = new Environment(ThreadLocalStorage.allocateWithInitial(HashMap::new)::get, "THREAD LOCAL ENVIRONMENT");
-
-    public static Environment system() {
-        return system;
+    public static <S> S obtain(Class<S> clazz, ClassLoader classLoader) {
+        Iterator<S> iterator = ServiceLoader.load(clazz, classLoader).iterator();
+        if (iterator.hasNext()) return iterator.next();
+        else return null;
     }
 
-    public static Environment properties() {
-        return properties;
+    public static <S> S obtain(Class<S> clazz) {
+        Iterator<S> iterator = ServiceLoader.load(clazz).iterator();
+        if (iterator.hasNext()) return iterator.next();
+        else return null;
     }
 
-    public static Environment global() {
-        return global;
-    }
-
-    public static Environment threadLocal() {
-        return threadLocal;
-    }
+    public static final Environment system = new Environment(() -> new ConcurrentHashMap<>(System.getenv()), "SYSTEM ENVIRONMENT VARIABLES");
+    public static final Environment properties = new Environment(System::getProperties, "JAVA VIRTUAL MACHINE PROPERTIES");
+    public static final Environment global = new Environment(new ConcurrentHashMap<>(), "APPLICATION GLOBAL ENVIRONMENT");
+    public static final Environment threadLocal = new Environment(new ProducerThreadLocal<>(HashMap::new)::get, "THREAD LOCAL ENVIRONMENT");
 
     @SuppressWarnings("unchecked")
     public <T> T get(Object key, Class<T> clazz) {

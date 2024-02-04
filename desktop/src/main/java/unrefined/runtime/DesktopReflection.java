@@ -318,8 +318,13 @@ public class DesktopReflection extends Reflection {
     }
 
     @Override
-    public void sneakyThrows(Throwable throwable) {
-        ReflectionSupport.sneakyThrows(throwable);
+    public void ensureInitialized(Class<?> clazz) {
+        ReflectionSupport.ensureInitialized(clazz);
+    }
+
+    @Override
+    public boolean shouldBeInitialized(Class<?> clazz) {
+        return ReflectionSupport.shouldBeInitialized(clazz);
     }
 
 }

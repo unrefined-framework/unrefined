@@ -131,7 +131,7 @@ public final class Log {
     private static final String IDENTIFIER;
     static {
         StringBuilder builder = new StringBuilder();
-        builder.append(ProcessIdentifier.CURRENT);
+        builder.append(RuntimeSupport.PID);
         builder.append('@');
         try {
             builder.append(InetAddress.getLocalHost().getHostName());
@@ -160,7 +160,7 @@ public final class Log {
         builder.append(':').append(' ');
         builder.append(msg);
         String log = builder.toString();
-        if (priority == ASSERT && Environment.properties().parseBooleanProperty("unrefined.desktop.log.assert"))
+        if (priority == ASSERT && Environment.properties.parseBooleanProperty("unrefined.desktop.log.assert"))
             throw new AssertionError(log);
         //else System.err.println(log);
         else if (priority > WARN) System.err.println(log);
@@ -177,7 +177,7 @@ public final class Log {
 
     public static int getPriority() {
         try {
-            int priority = Environment.properties().parseIntProperty("unrefined.desktop.log.priority", PRIORITY.get());
+            int priority = Environment.properties.parseIntProperty("unrefined.desktop.log.priority", PRIORITY.get());
             if (isValid(priority)) return priority;
         }
         catch (NumberFormatException ignored) {
