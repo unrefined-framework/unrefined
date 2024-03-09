@@ -2,11 +2,10 @@ package org.example.desktop.foreign;
 
 import unrefined.app.Logger;
 import unrefined.runtime.DesktopRuntime;
-import unrefined.util.StringCompat;
+import unrefined.util.Strings;
 import unrefined.util.concurrent.LongProducer;
 import unrefined.util.foreign.Foreign;
 import unrefined.util.foreign.Library;
-import unrefined.util.foreign.Redirect;
 import unrefined.util.foreign.Symbol;
 
 import java.io.IOException;
@@ -17,11 +16,11 @@ import java.io.IOException;
  */
 public class SymbolManagement {
 
-    public static final boolean IS_WINDOWS = StringCompat.stripLeading(System.getProperty("os.name")).startsWith("Windows");
+    public static final boolean IS_WINDOWS = Strings.stripLeading(System.getProperty("os.name")).startsWith("Windows");
     public static final boolean IS_LINUX = System.getProperty("os.name").equalsIgnoreCase("linux");
 
     public static void main(String[] args) throws IOException {
-        DesktopRuntime.setup(args);              // Initialize the Unrefined runtime environment
+        DesktopRuntime.initialize(args);              // Initialize the Unrefined runtime environment
         Foreign foreign = Foreign.getInstance(); // Get the platform-dependent FFI factory
 
         foreign.loadLibrary(foreign.mapLibraryName(IS_WINDOWS ? "Kernel32" : (IS_LINUX ? "libc.so.6" : "c")),
@@ -34,18 +33,18 @@ public class SymbolManagement {
         LongProducer pidProducer = IS_WINDOWS ? new LongProducer() {
             final Windows windows = foreign.downcallProxy(Windows.class);
             @Override
-            public long get() {
+            public long getAsLong() {
                 return windows.pidInt();
             }
         } : new LongProducer() {
             final POSIX posix = foreign.downcallProxy(POSIX.class);
             @Override
-            public long get() {
+            public long getAsLong() {
                 return posix.pidLong();
             }
         };
         Logger.defaultInstance().info("Unrefined FFI", "PID: " + getpid.invokeNativeLong());
-        Logger.defaultInstance().info("Unrefined FFI", "Library Mapping result == Handle Mapping result: " + (getpid.invokeNativeLong() == pidProducer.get()));
+        Logger.defaultInstance().info("Unrefined FFI", "Library Mapping result == Handle Mapping result: " + (getpid.invokeNativeLong() == pidProducer.getAsLong()));
     }
 
     private interface Windows extends Library {

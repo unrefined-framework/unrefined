@@ -1,5 +1,7 @@
 package unrefined.app;
 
+import unrefined.context.Container;
+import unrefined.context.ContainerListener;
 import unrefined.context.Environment;
 import unrefined.util.NotInstantiableError;
 import unrefined.util.QuietCloseable;
@@ -23,20 +25,80 @@ public abstract class Runtime {
         private Flag() {
             throw new NotInstantiableError(Flag.class);
         }
-        public static final int BASE  = 0;
-        public static final int MEDIA = 1;
-        public static final int ALL   = removeUnusedBits(0xFFFFFFFF);
+        public static final int BASE     = 0;
+        public static final int GRAPHICS = 1;
+        public static final int AUDIO    = 1 << 1;
+        public static final int MEDIA    = GRAPHICS | AUDIO;
+        public static final int ALL      = removeUnusedBits(0xFFFFFFFF);
         public static int removeUnusedBits(int flags) {
             return flags << 31 >>> 31;
         }
         public static String toString(int flags) {
             flags = removeUnusedBits(flags);
             StringBuilder builder = new StringBuilder("[BASE");
-            if ((flags & MEDIA) != 0) builder.append(", MEDIA");
+            if ((flags & GRAPHICS) != 0) builder.append(", GRAPHICS");
+            if ((flags & AUDIO) != 0) builder.append(", AUDIO");
             builder.append("]");
             return builder.toString();
         }
     }
+
+    public abstract Container createContainer(ContainerListener containerListener);
+    public Container createContainer() {
+        return createContainer(null);
+    }
+
+    private volatile String APP_VENDOR;
+    private final Object APP_VENDOR_LOCK = new Object();
+    public String getApplicationVendor() {
+        if (APP_VENDOR == null) synchronized (APP_VENDOR_LOCK) {
+            if (APP_VENDOR == null) APP_VENDOR = Environment.properties.getProperty("unrefined.app.vendor");
+        }
+        return APP_VENDOR;
+    }
+    private volatile String APP_NAME;
+    private final Object APP_NAME_LOCK = new Object();
+    public String getApplicationName() {
+        if (APP_NAME == null) synchronized (APP_NAME_LOCK) {
+            if (APP_NAME == null) APP_NAME = Environment.properties.getProperty("unrefined.app.name");
+        }
+        return APP_NAME;
+    }
+    private volatile String APP_VERSION_NAME;
+    private final Object APP_VERSION_NAME_LOCK = new Object();
+    public String getApplicationVersionName() {
+        if (APP_VERSION_NAME == null) synchronized (APP_VERSION_NAME_LOCK) {
+            if (APP_VERSION_NAME == null) APP_VERSION_NAME = Environment.properties.getProperty("unrefined.app.version.name");
+        }
+        return APP_VERSION_NAME;
+    }
+    private volatile String APP_VERSION_CODE;
+    private final Object APP_VERSION_CODE_LOCK = new Object();
+    public String getApplicationVersionCode() {
+        if (APP_VERSION_CODE == null) synchronized (APP_VERSION_CODE_LOCK) {
+            if (APP_VERSION_CODE == null) APP_VERSION_CODE = Environment.properties.getProperty("unrefined.app.version.code");
+        }
+        return APP_VERSION_CODE;
+    }
+    private volatile String APP_PACKAGE;
+    private final Object APP_PACKAGE_LOCK = new Object();
+    public String getApplicationPackage() {
+        if (APP_PACKAGE == null) synchronized (APP_PACKAGE_LOCK) {
+            if (APP_PACKAGE == null) APP_PACKAGE = Environment.properties.getProperty("unrefined.app.package");
+        }
+        return APP_PACKAGE;
+    }
+    private volatile String APP_IMPLEMENTER;
+    private final Object APP_IMPLEMENTER_LOCK = new Object();
+    public String getApplicationImplementer() {
+        if (APP_IMPLEMENTER == null) synchronized (APP_IMPLEMENTER_LOCK) {
+            if (APP_IMPLEMENTER == null) APP_IMPLEMENTER = Environment.properties.getProperty("unrefined.app.implementer");
+        }
+        return APP_IMPLEMENTER;
+    }
+
+    public abstract Preferences getPreferences(String name);
+    public abstract boolean deletePreferences(String name);
 
     private static final java.lang.Runtime RUNTIME = java.lang.Runtime.getRuntime();
 
@@ -50,6 +112,11 @@ public abstract class Runtime {
         return onShutdown;
     }
 
+    public abstract boolean isShutdownThread(Thread thread);
+    public boolean isShutdownThread() {
+        return isShutdownThread(Thread.currentThread());
+    }
+
     public void exit(int status) {
         RUNTIME.exit(status);
     }
@@ -58,10 +125,9 @@ public abstract class Runtime {
         RUNTIME.halt(status);
     }
 
-    public long managedMemory() {
+    public long usedHeap() {
         return RUNTIME.totalMemory() - RUNTIME.freeMemory();
     }
-
     public long committedHeap() {
         return RUNTIME.totalMemory();
     }
@@ -107,6 +173,10 @@ public abstract class Runtime {
         return reference.get() == null;
     }
 
+    public void suggestCollect() {
+        RUNTIME.gc();
+    }
+
     /**
      * This method guarantees that garbage collection is
      * done after the JVM shutdown is initialized
@@ -119,13 +189,12 @@ public abstract class Runtime {
 
     public abstract int arrayIndexScale(Class<?> clazz);
 
-    public File getCurrentDirectory() {
-        return new File(System.getProperty("user.dir"));
-    }
-
-    public void setCurrentDirectory(File file) {
-        System.setProperty("user.dir", file.getAbsolutePath());
-    }
+    public abstract File getConfigDirectory();
+    public abstract File getCacheDirectory();
+    public abstract File getFilesDirectory(String type);
+    public abstract File getHomeDirectory();
+    public abstract File getTempDirectory();
+    public abstract File getCurrentDirectory();
 
     public abstract void sneakyThrows(Throwable throwable);
     public abstract long sizeOf(Object object);
@@ -172,5 +241,10 @@ public abstract class Runtime {
         FENCE.set(new WeakReference<>(new ReferenceHolder(object)));
         return FENCE.get().get();
     }
+
+    public final Environment system = Environment.system;
+    public final Environment properties = Environment.properties;
+    public final Environment global = Environment.global;
+    public final Environment threadLocal = Environment.threadLocal;
 
 }

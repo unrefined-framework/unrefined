@@ -17,20 +17,22 @@ public class DesktopPlatform extends Platform {
         // FIXME complete these
         /*
         Environment.properties.setProperty("unrefined.platform.vendor", );
+        Environment.properties.setProperty("unrefined.platform.implementer", );
         Environment.properties.setProperty("unrefined.platform.name", );
         Environment.properties.setProperty("unrefined.platform.version.name", );
         Environment.properties.setProperty("unrefined.platform.version.code", );
         Environment.properties.setProperty("unrefined.os.vendor", );
+        Environment.properties.setProperty("unrefined.os.implementer", );
         Environment.properties.setProperty("unrefined.os.name", );
         Environment.properties.setProperty("unrefined.os.version.name", );
         Environment.properties.setProperty("unrefined.os.version.code", );
          */
         Environment.properties.setProperty("unrefined.runtime.vendor", System.getProperty("java.vendor"));
+        Environment.properties.setProperty("unrefined.runtime.implementer", System.getProperty("java.vm.vendor"));
         Environment.properties.setProperty("unrefined.runtime.name", System.getProperty("java.runtime.name"));
         Environment.properties.setProperty("unrefined.runtime.version.name",
                 System.getProperty("java.specification.name") + " " + System.getProperty("java.specification.version"));
         Environment.properties.setProperty("unrefined.runtime.version.code", System.getProperty("java.runtime.version"));
-
         Environment.properties.setProperty("unrefined.os.arch", System.getProperty("os.arch"));
         Environment.properties.putIntProperty("unrefined.os.arch.bitmode.int", ABI.I);
         Environment.properties.putIntProperty("unrefined.os.arch.bitmode.long", ABI.L);
@@ -46,7 +48,7 @@ public class DesktopPlatform extends Platform {
         Environment.properties.putProperty("unrefined.os.separator.file", File.separator);
         Environment.properties.putProperty("unrefined.os.separator.path", File.pathSeparator);
         Environment.properties.putProperty("unrefined.os.directory.tmp", StandardDirectories.TEMP_HOME.getAbsolutePath());
-        Environment.properties.putProperty("unrefined.os.directory.user", StandardDirectories.USER_HOME.getAbsolutePath());
+        Environment.properties.putProperty("unrefined.os.directory.home", StandardDirectories.USER_HOME.getAbsolutePath());
         Environment.properties.putProperty("unrefined.os.directory.config", StandardDirectories.CONFIG_HOME.getAbsolutePath());
         Environment.properties.putProperty("unrefined.os.directory.data", StandardDirectories.DATA_HOME.getAbsolutePath());
         Environment.properties.putProperty("unrefined.os.directory.cache", StandardDirectories.CACHE_HOME.getAbsolutePath());

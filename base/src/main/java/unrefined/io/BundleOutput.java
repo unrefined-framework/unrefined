@@ -1,5 +1,7 @@
 package unrefined.io;
 
+import unrefined.util.Half;
+import unrefined.util.Rational;
 import unrefined.util.function.BiSlot;
 
 import java.io.IOException;
@@ -51,6 +53,12 @@ public interface BundleOutput {
     }
     default void putBigDecimal(String key, BigDecimal value) throws IOException {
         put(key, value.toEngineeringString());
+    }
+    default void putRational(String key, Rational value) throws IOException {
+        put(key, value.toString());
+    }
+    default void putHalf(String key, short value) throws IOException {
+        put(key, Half.toString(value));
     }
 
 }

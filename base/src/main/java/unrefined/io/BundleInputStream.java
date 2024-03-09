@@ -1,5 +1,7 @@
 package unrefined.io;
 
+import unrefined.util.Half;
+import unrefined.util.Rational;
 import unrefined.util.function.BiSlot;
 import unrefined.util.function.FunctionTargetException;
 
@@ -207,6 +209,22 @@ public class BundleInputStream extends FilterInputStream implements BundleInput 
         ensureKey(key);
         String value = bundle.get(key);
         return value == null ? defaultValue : new BigDecimal(value);
+    }
+
+    @Override
+    public Rational getRational(String key, Rational defaultValue) throws IOException {
+        key = getFullKey(key);
+        ensureKey(key);
+        String value = bundle.get(key);
+        return value == null ? defaultValue : Rational.parseRational(value);
+    }
+
+    @Override
+    public short getHalf(String key, short defaultValue) throws IOException {
+        key = getFullKey(key);
+        ensureKey(key);
+        String value = bundle.get(key);
+        return value == null ? defaultValue : Half.parseHalf(value);
     }
 
     @Override

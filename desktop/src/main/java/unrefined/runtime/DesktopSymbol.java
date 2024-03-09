@@ -66,25 +66,6 @@ public class DesktopSymbol extends Symbol {
         closure = null;
     }
 
-    private static byte[] toByteArray(Aggregate aggregate) {
-        byte[] array = new byte[(int) aggregate.getDescriptor().getSize()];
-        aggregate.memory().getByteArray(0, array);
-        return SymbolSupport.reverseIfNeeded(array);
-    }
-
-    private static void push(Closure.Buffer buffer, Object result, Class<?> returnType) {
-        if (result == null) return;
-        if (returnType == boolean.class) buffer.setByteReturn((byte) (((Boolean) result) ? 1 : 0));
-        else if (returnType == byte.class) buffer.setByteReturn(((Number) result).byteValue());
-        else if (returnType == char.class) buffer.setShortReturn((short) ((Character) result).charValue());
-        else if (returnType == short.class) buffer.setShortReturn(((Number) result).shortValue());
-        else if (returnType == int.class) buffer.setIntReturn(((Number) result).intValue());
-        else if (returnType == long.class) buffer.setLongReturn(((Number) result).longValue());
-        else if (returnType == float.class) buffer.setFloatReturn(((Number) result).floatValue());
-        else if (returnType == double.class) buffer.setDoubleReturn(((Number) result).doubleValue());
-        else if (Aggregate.class.isAssignableFrom(returnType)) buffer.setStructReturn(toByteArray((Aggregate) result), 0);
-    }
-
     @SuppressWarnings("unchecked")
     public DesktopSymbol(int options, Object object, Method method, Class<?> returnType, Class<?>... parameterTypes) {
         if (!Modifier.isStatic(method.getModifiers())) Objects.requireNonNull(object);
@@ -139,7 +120,7 @@ public class DesktopSymbol extends Symbol {
                 index ++;
             }
             try {
-                push(buffer, ReflectionSupport.invokeMethod(object, method, args), returnType);
+                SymbolSupport.push(buffer, ReflectionSupport.invokeMethod(object, method, args), returnType);
             } catch (InvocationTargetException e) {
                 throw new UnexpectedError(e);
             }
@@ -147,7 +128,6 @@ public class DesktopSymbol extends Symbol {
         closure.setAutoRelease(true);
         address = closure.getAddress();
         function = new Function(address, context);
-        
     }
 
     @Override

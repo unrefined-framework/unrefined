@@ -6,12 +6,10 @@ import unrefined.media.graphics.Color;
 import unrefined.media.graphics.Cursor;
 import unrefined.media.graphics.CursorNotFoundException;
 import unrefined.media.graphics.Drawing;
-import unrefined.runtime.DesktopApplication;
+import unrefined.runtime.DesktopContainer;
 import unrefined.runtime.DesktopRuntime;
 import unrefined.util.UnexpectedError;
 import unrefined.util.signal.Dispatcher;
-
-import java.awt.EventQueue;
 
 /**
  * One of the main features of Unrefined is creating "canvas" and draw on it. Before doing any drawing, you need to create a container to show the "canvas".
@@ -20,12 +18,10 @@ import java.awt.EventQueue;
 public class CreateContainer {
 
     public static void main(String[] args) {
-        DesktopRuntime.setup(args);             // Initialize the Unrefined runtime environment
+        DesktopRuntime.initialize(args);             // Initialize the Unrefined runtime environment
 
         // Initialize the Unrefined container (on desktop it's a window)
-        DesktopApplication application = new DesktopApplication(new ContainerAdapter() { // The lifecycle listener, it's fully platform-independent
-
-            private Cursor wait;
+        DesktopContainer container = new DesktopContainer(new ContainerAdapter() { // The lifecycle listener, it's fully platform-independent
 
             @Override
             public void onCreate(Container container) {
@@ -34,6 +30,7 @@ public class CreateContainer {
                 // You can set the container's attributes, or allocate resources here
 
                 Drawing drawing = Drawing.getInstance();        // Get the platform-dependent 2D factory instance
+                Cursor wait;
                 try {
                     wait = drawing.getCursor(Cursor.Type.WAIT); // Get the system "wait" cursor
                 } catch (CursorNotFoundException e) {
@@ -57,7 +54,7 @@ public class CreateContainer {
 
         });
 
-        Dispatcher.defaultInstance().invokeLater(application); // Launch the container
+        Dispatcher.defaultInstance().invokeLater(container); // Launch the container
     }
 
 }

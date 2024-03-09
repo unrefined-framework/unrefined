@@ -1,9 +1,9 @@
 # Unrefined
-Version Name: 0.6.0  
-Version Code: 60  
+Version Name: 0.7.0  
+Version Code: 71  
 Version Codename: Claw Hammer
 
-Simple, lightweight, cross-platform utilities library which also provides some common features for application/game development.
+Cross-platform multimedia framework written in pure Java.
 
 This library contains:  
 [Extended Console API](/base/src/main/java/unrefined/io/console)  
@@ -12,6 +12,8 @@ This library contains:
 [Extended Memory Management API](/base/src/main/java/unrefined/nio)  
 [Qt-like Signal/Slot API](/base/src/main/java/unrefined/util/signal)  
 [Pub/sub Event Bus API](/base/src/main/java/unrefined/util/event)  
+[Functional Programming Helper API](/base/src/main/java/unrefined/util/function/Function.java)  
+[Extended Collections API](/base/src/main/java/unrefined/util/)  
 [Animation API](/base/src/main/java/unrefined/util/animation)  
 [Serialization/Deserialization API](/base/src/main/java/unrefined/io/Savable.java)  
 [Logger API](/base/src/main/java/unrefined/app/Logger.java)  

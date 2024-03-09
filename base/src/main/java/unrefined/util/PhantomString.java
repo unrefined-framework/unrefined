@@ -40,8 +40,7 @@ public class PhantomString implements CharSequence {
 
     @Override
     public CharSequence subSequence(int start, int end) {
-        char[] array = Arrays.copyOfRange(this.array, offset + start, offset + end);
-        return new PhantomString(array, 0, array.length);
+        return new PhantomString(array, offset + start, offset + end);
     }
 
     @Override

@@ -1,13 +1,13 @@
 package unrefined.util.function;
 
 @FunctionalInterface
-public interface DoubleOperator extends VarFunctor<Double> {
+public interface DoubleOperator extends Operator<Double> {
 
     @Override
-    default Double actuate(Object... args) {
-        return apply((double) args[0]);
+    default Double apply(Double a) {
+        return applyAsDouble(a);
     }
 
-    double apply(double a);
+    double applyAsDouble(double a);
 
 }

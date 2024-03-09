@@ -1,13 +1,13 @@
 package unrefined.util.function;
 
 @FunctionalInterface
-public interface IntOperator extends VarFunctor<Integer> {
+public interface IntOperator extends Operator<Integer> {
 
     @Override
-    default Integer actuate(Object... args) {
-        return apply((int) args[0]);
+    default Integer apply(Integer a) {
+        return applyAsInt(a);
     }
 
-    int apply(int a);
+    int applyAsInt(int a);
 
 }

@@ -30,7 +30,7 @@ public final class FontSupport {
     public static final Font MONOSPACED_FONT = Font.decode(Font.MONOSPACED);
 
     public static Font getDefaultFont() {
-        if (OSInfo.IS_WINDOWS) return WindowsFontSupport.ICONTITLELOGFONT;
+        if (OSInfo.IS_WINDOWS) return WindowsFontSupport.SYSTEM_FONT;
         else if (OSInfo.IS_MAC) return MacFontSupport.SYSTEM_FONT;
         else return X11FontSupport.getDefaultFont();
     }

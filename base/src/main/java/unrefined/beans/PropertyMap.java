@@ -1,5 +1,7 @@
 package unrefined.beans;
 
+import unrefined.util.Half;
+import unrefined.util.Rational;
 import unrefined.util.event.Event;
 import unrefined.util.event.EventSlot;
 import unrefined.util.signal.Signal;
@@ -83,6 +85,14 @@ public interface PropertyMap extends Map<Object, Object> {
 
     default String putBigDecimalProperty(String key, BigDecimal value) {
         return putProperty(key, value.toEngineeringString());
+    }
+
+    default String putRational(String key, Rational value) {
+        return putProperty(key, value.toString());
+    }
+
+    default String putHalf(String key, short value) {
+        return putProperty(key, Half.toString(value));
     }
 
     default String removeProperty(String key) {
@@ -235,6 +245,34 @@ public interface PropertyMap extends Map<Object, Object> {
 
     default BigDecimal parseBigDecimalProperty(String key) {
         return new BigDecimal(getProperty(key));
+    }
+
+    default Rational parseRationalProperty(String key, Rational defaultValue) {
+        String value = getProperty(key);
+        try {
+            return value == null ? defaultValue : Rational.parseRational(value);
+        }
+        catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    default Rational parseRationalProperty(String key) {
+        return Rational.parseRational(getProperty(key));
+    }
+
+    default short parseHalfProperty(String key, short defaultValue) {
+        String value = getProperty(key);
+        try {
+            return value == null ? defaultValue : Half.parseHalf(value);
+        }
+        catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    default short parseHalfProperty(String key) {
+        return Half.parseHalf(getProperty(key));
     }
 
     Signal<EventSlot<PropertyChangeEvent>> onChange();

@@ -1,13 +1,13 @@
 package unrefined.util.function;
 
 @FunctionalInterface
-public interface LongFunctor<R> extends VarFunctor<R> {
+public interface LongFunctor<R> extends Functor<Long, R> {
 
     @Override
-    default R actuate(Object... args) {
-        return apply((long) args[0]);
+    default R apply(Long t) {
+        return applyOfLong(t);
     }
 
-    R apply(long a);
+    R applyOfLong(long t);
 
 }

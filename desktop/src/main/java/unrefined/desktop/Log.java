@@ -37,7 +37,7 @@ public final class Log {
 
     public static int v(String tag, String msg, Throwable tr) {
         if (getPriority() > VERBOSE) return 0;
-        else return println(VERBOSE, tag, msg + '\n' + getStackTraceString(tr));
+        else return println(VERBOSE, tag, msg + System.lineSeparator() + getStackTraceString(tr));
     }
 
     public static int v(String tag, Throwable tr) {
@@ -52,7 +52,7 @@ public final class Log {
 
     public static int d(String tag, String msg, Throwable tr) {
         if (getPriority() > DEBUG) return 0;
-        else return println(DEBUG, tag, msg + '\n' + getStackTraceString(tr));
+        else return println(DEBUG, tag, msg + System.lineSeparator() + getStackTraceString(tr));
     }
 
     public static int d(String tag, Throwable tr) {
@@ -67,7 +67,7 @@ public final class Log {
 
     public static int i(String tag, String msg, Throwable tr) {
         if (getPriority() > INFO) return 0;
-        else return println(INFO, tag, msg + '\n' + getStackTraceString(tr));
+        else return println(INFO, tag, msg + System.lineSeparator() + getStackTraceString(tr));
     }
 
     public static int i(String tag, Throwable tr) {
@@ -82,7 +82,7 @@ public final class Log {
 
     public static int w(String tag, String msg, Throwable tr) {
         if (getPriority() > WARN) return 0;
-        else return println(WARN, tag, msg + '\n' + getStackTraceString(tr));
+        else return println(WARN, tag, msg + System.lineSeparator() + getStackTraceString(tr));
     }
 
     public static int w(String tag, Throwable tr) {
@@ -97,7 +97,7 @@ public final class Log {
 
     public static int e(String tag, String msg, Throwable tr) {
         if (getPriority() > ERROR) return 0;
-        else return println(ERROR, tag, msg + '\n' + getStackTraceString(tr));
+        else return println(ERROR, tag, msg + System.lineSeparator() + getStackTraceString(tr));
     }
 
     public static int e(String tag, Throwable tr) {
@@ -110,7 +110,7 @@ public final class Log {
     }
 
     public static int wtf(String tag, String msg, Throwable tr) {
-        return println(ASSERT, tag, msg + '\n' + getStackTraceString(tr));
+        return println(ASSERT, tag, msg + System.lineSeparator() + getStackTraceString(tr));
     }
 
     public static int wtf(String tag, Throwable tr) {

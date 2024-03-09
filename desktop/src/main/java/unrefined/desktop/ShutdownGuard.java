@@ -19,16 +19,25 @@ public final class ShutdownGuard {
         SHUTDOWN_HOOKS.remove(runnable);
     }
 
+    public static boolean isShutdownThread(Thread thread) {
+        return thread == SHUTDOWN_THREAD;
+    }
+
+    public static boolean isShutdownThread() {
+        return isShutdownThread(Thread.currentThread());
+    }
+
     private static final Set<Runnable> SHUTDOWN_HOOKS = new ConcurrentHashSet<>();
+    private static final Thread SHUTDOWN_THREAD = new Thread(() -> {
+        synchronized (SHUTDOWN_HOOKS) {
+            for (Runnable hook : SHUTDOWN_HOOKS) {
+                hook.run();
+            }
+        }
+    }, "Unrefined Shutdown Hook");
 
     static {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            synchronized (SHUTDOWN_HOOKS) {
-                for (Runnable runnable : SHUTDOWN_HOOKS) {
-                    runnable.run();
-                }
-            }
-        }, "Unrefined Shutdown Hook"));
+        Runtime.getRuntime().addShutdownHook(SHUTDOWN_THREAD);
     }
 
 }

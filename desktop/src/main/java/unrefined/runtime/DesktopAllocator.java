@@ -5,9 +5,8 @@ import unrefined.desktop.UnsafeSupport;
 import unrefined.desktop.OSInfo;
 import unrefined.math.FastMath;
 import unrefined.nio.Allocator;
-import unrefined.nio.Pointer;
+import unrefined.util.FastArray;
 
-import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
@@ -26,13 +25,11 @@ public class DesktopAllocator extends Allocator {
         return MEMORY_IO.newDirectByteBuffer(address, capacity).order(ByteOrder.nativeOrder());
     }
 
-    private static final long ARRAY_MAX = Integer.MAX_VALUE * 8L;
-
     private static long rangeCheck(Object array, long offset) {
         Class<?> clazz = array.getClass();
         if (clazz.isArray() && clazz.getComponentType().isPrimitive()) {
             if (offset < 0) throw new ArrayIndexOutOfBoundsException("Array index out of range: " + FastMath.unsign(offset));
-            else if (offset >= ARRAY_MAX || offset / UNSAFE.arrayIndexScale(clazz) >= Integer.MAX_VALUE)
+            else if (offset >= FastArray.ARRAY_LENGTH_MAX || offset / UNSAFE.arrayIndexScale(clazz) >= FastArray.ARRAY_LENGTH_MAX)
                 throw new ArrayIndexOutOfBoundsException("Array index out of range: " + FastMath.unsign(offset));
             else return UNSAFE.arrayBaseOffset(clazz) + offset;
         }
@@ -93,7 +90,7 @@ public class DesktopAllocator extends Allocator {
             else {
                 long range = offset + length;
                 if (range < 0) throw new ArrayIndexOutOfBoundsException("Array index out of range: " + FastMath.unsign(range));
-                else if (range >= ARRAY_MAX || range / UNSAFE.arrayIndexScale(clazz) >= Integer.MAX_VALUE)
+                else if (range >= FastArray.ARRAY_LENGTH_MAX || range / UNSAFE.arrayIndexScale(clazz) >= FastArray.ARRAY_LENGTH_MAX)
                     throw new ArrayIndexOutOfBoundsException("Array index out of range: " + FastMath.unsign(offset));
             }
         }
@@ -408,7 +405,7 @@ public class DesktopAllocator extends Allocator {
         if (charset == null) charset = Charset.defaultCharset();
         byte[] terminator = "\0".getBytes(charset);
         int size = terminator.length;
-        if (size == 1 && terminator[0] == '\0') return new String(getZeroTerminatedByteArray(address, maxLength), charset);
+        if (size == 1 && terminator[0] == '\0') return new String(MEMORY_IO.getZeroTerminatedByteArray(address, maxLength), charset);
         else if (OSInfo.isWideCharStringCompatible(terminator)) return new String(getZeroTerminatedWideCharByteArray(address, maxLength), charset);
         else {
             StringBuilder builder = new StringBuilder();

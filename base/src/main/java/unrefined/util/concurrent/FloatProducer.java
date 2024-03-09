@@ -7,9 +7,13 @@ public interface FloatProducer extends Callable<Float> {
 
     @Override
     default Float call() throws Exception {
-        return get();
+        return getAsFloat();
     }
 
-    float get();
+    default Float get() {
+        return getAsFloat();
+    }
+
+    float getAsFloat();
 
 }

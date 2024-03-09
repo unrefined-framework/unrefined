@@ -104,6 +104,7 @@ public final class ConsoleSignal {
         }
     }
 
+    @FunctionalInterface
     public interface Handler {
         void handle(String signal, int identifier);
     }

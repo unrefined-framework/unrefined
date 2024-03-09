@@ -3,6 +3,7 @@ package unrefined.util.reflect;
 import unrefined.context.Environment;
 import unrefined.util.FastArray;
 import unrefined.util.UnexpectedError;
+import unrefined.util.function.Slot;
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Array;
@@ -23,6 +24,15 @@ public abstract class Reflection {
             if (INSTANCE == null) INSTANCE = Environment.global.get("unrefined.runtime.reflection", Reflection.class);
         }
         return INSTANCE;
+    }
+
+    public void capture(InvocationCallback callback, Slot<Throwable> consumer) {
+        try {
+            callback.call();
+        }
+        catch (InvocationTargetException e) {
+            consumer.accept(e.getTargetException());
+        }
     }
 
     /**
@@ -1964,6 +1974,10 @@ public abstract class Reflection {
 
     public abstract Class<?> getCallerClass();
     public abstract String getCallerMethod();
+    public abstract Class<?> getCalleeClass();
+    public abstract String getCalleeMethod();
+    public abstract Class<?> getCallerClass(int depth);
+    public abstract String getCallerMethod(int depth);
 
     public void initialize(Class<?> clazz) {
         try {

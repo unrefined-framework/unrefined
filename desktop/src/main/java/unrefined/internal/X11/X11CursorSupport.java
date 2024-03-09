@@ -35,7 +35,7 @@ import java.util.Set;
 
 import static unrefined.desktop.ForeignSupport.MEMORY_IO;
 import static unrefined.desktop.UnsafeSupport.UNSAFE;
-import static unrefined.internal.X11.X11Library.X11;
+import static unrefined.internal.X11.X11Support.X11;
 
 public final class X11CursorSupport {
 
@@ -589,7 +589,7 @@ public final class X11CursorSupport {
     }
 
     static {
-        if (OSInfo.IS_X11 && Xcursor != null) {
+        if (OSInfo.IS_X11 && Xcursor != null && !GraphicsEnvironment.isHeadless()) {
             AWTSupport.setDesktopProperty("DnD.Cursor.CopyDrop", getSystemCursor("copy"));
             AWTSupport.setDesktopProperty("DnD.Cursor.MoveDrop", getSystemCursor("move"));
             AWTSupport.setDesktopProperty("DnD.Cursor.LinkDrop", getSystemCursor("alias"));

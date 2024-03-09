@@ -4,7 +4,7 @@ import com.kenai.jffi.CallContext;
 import com.kenai.jffi.CallingConvention;
 import com.kenai.jffi.Library;
 import com.kenai.jffi.Type;
-import unrefined.internal.windows.WindowsLibrary;
+import unrefined.internal.windows.WindowsSupport;
 import unrefined.util.NotInstantiableError;
 
 import java.lang.reflect.InvocationTargetException;
@@ -29,7 +29,7 @@ public final class RuntimeSupport {
         }
         catch (NoSuchMethodException | ClassNotFoundException | InvocationTargetException | IllegalAccessException e) {
             if (OSInfo.IS_WINDOWS) {
-                long address = WindowsLibrary.Kernel32.getSymbolAddress("GetCurrentProcessId");
+                long address = WindowsSupport.Kernel32.getSymbolAddress("GetCurrentProcessId");
                 if (address == 0) processId = -1;
                 else {
                     CallContext context = new CallContext(Type.UINT32, new Type[0], CallingConvention.DEFAULT, false);

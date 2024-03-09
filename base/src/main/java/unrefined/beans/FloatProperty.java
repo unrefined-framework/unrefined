@@ -36,7 +36,7 @@ public abstract class FloatProperty {
         return new Instance(initialValue);
     }
 
-    public static FloatProperty ofDefault() {
+    public static FloatProperty of() {
         return new Instance();
     }
 
@@ -83,7 +83,7 @@ public abstract class FloatProperty {
         }
         @Override
         public float get() {
-            return getter.get();
+            return getter.getAsFloat();
         }
     }
 

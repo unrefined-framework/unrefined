@@ -1,13 +1,13 @@
 package unrefined.util.function;
 
 @FunctionalInterface
-public interface FloatBiOperator extends VarFunctor<Float> {
+public interface FloatBiOperator extends BiOperator<Float> {
 
     @Override
-    default Float actuate(Object... args) {
-        return apply((float) args[0], (float) args[1]);
+    default Float apply(Float a, Float b) {
+        return applyAsFloat(a, b);
     }
 
-    float apply(float a, float b);
+    float applyAsFloat(float a, float b);
 
 }

@@ -67,6 +67,10 @@ public final class Connection {
          */
         public static final int SINGLE_SHOT = 0x100;
 
+        public static int unmask(int type) {
+            return type << 29 >>> 29;
+        }
+
     }
 
     /**

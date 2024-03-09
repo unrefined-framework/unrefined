@@ -981,10 +981,42 @@ public class ReflectionSupport {
         return stackTrace[stackTrace.length - 2].getMethodName();
     }
 
+    public static Class<?> getCalleeClass() {
+        StackTraceElement[] stackTrace = new Throwable().getStackTrace();
+        try {
+            return Class.forName(stackTrace[2].getClassName());
+        } catch (ClassNotFoundException e) {
+            throw new UnexpectedError(e);
+        }
+    }
+
+    public static String getCalleeMethod() {
+        StackTraceElement[] stackTrace = new Throwable().getStackTrace();
+        return stackTrace[2].getMethodName();
+    }
+
+    public static Class<?> getCallerClass(int depth) {
+        StackTraceElement[] stackTrace = new Throwable().getStackTrace();
+        depth = Math.min(depth + 1, stackTrace.length - 2);
+        try {
+            return Class.forName(stackTrace[depth].getClassName());
+        } catch (ClassNotFoundException e) {
+            throw new UnexpectedError(e);
+        }
+    }
+
+    public static String getCallerMethod(int depth) {
+        StackTraceElement[] stackTrace = new Throwable().getStackTrace();
+        depth = Math.min(depth + 1, stackTrace.length - 2);
+        return stackTrace[depth].getMethodName();
+    }
+
+    @SuppressWarnings("removal")
     public static void ensureInitialized(Class<?> clazz) {
         UNSAFE.ensureClassInitialized(clazz);
     }
 
+    @SuppressWarnings("removal")
     public static boolean shouldBeInitialized(Class<?> clazz) {
         return UNSAFE.shouldBeInitialized(clazz);
     }

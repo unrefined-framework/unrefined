@@ -20,6 +20,7 @@ public class DesktopWorker extends Worker {
         return nextSerialNumber.getAndIncrement();
     }
 
+    private volatile Thread thread = null;
     private final ExecutorService executor;
     private final String name;
     private final Method main;
@@ -37,10 +38,12 @@ public class DesktopWorker extends Worker {
         if (!Modifier.isPublic(modifiers)) throw new IllegalArgumentException("Illegal method modifier; expected public");
         this.name = name == null ? "DesktopWorker-" + serialNumber() : name;
         executor = Executors.newSingleThreadExecutor(runnable -> {
-            Thread thread = new Thread(runnable);
-            thread.setUncaughtExceptionHandler((t, e) -> DesktopWorker.this.onException().emit(e));
-            thread.setDaemon(true);
-            thread.setName(DesktopWorker.this.name);
+            if (thread == null) {
+                thread = new Thread(runnable);
+                thread.setUncaughtExceptionHandler((t, e) -> DesktopWorker.this.onException().emit(e));
+                thread.setDaemon(true);
+                thread.setName(DesktopWorker.this.name);
+            }
             return thread;
         });
         executor.execute(() -> {
@@ -54,6 +57,11 @@ public class DesktopWorker extends Worker {
 
     public ExecutorService getExecutor() {
         return executor;
+    }
+
+    @Override
+    public boolean isWorkerThread(Thread thread) {
+        return thread != null && thread == this.thread;
     }
 
     @Override

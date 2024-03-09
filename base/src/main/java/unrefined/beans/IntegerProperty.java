@@ -36,7 +36,7 @@ public abstract class IntegerProperty {
         return new Instance(initialValue);
     }
 
-    public static IntegerProperty ofDefault() {
+    public static IntegerProperty of() {
         return new Instance();
     }
 
@@ -83,7 +83,7 @@ public abstract class IntegerProperty {
         }
         @Override
         public int get() {
-            return getter.get();
+            return getter.getAsInt();
         }
     }
 

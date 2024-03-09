@@ -20,7 +20,7 @@ import java.lang.reflect.Method;
 import static unrefined.desktop.ForeignSupport.INVOKER;
 import static unrefined.desktop.ForeignSupport.MEMORY_IO;
 import static unrefined.desktop.UnsafeSupport.UNSAFE;
-import static unrefined.internal.windows.WindowsLibrary.User32;
+import static unrefined.internal.windows.WindowsSupport.User32;
 
 public final class WindowsAWTSupport {
 
@@ -63,7 +63,6 @@ public final class WindowsAWTSupport {
     private static final Function GetDpiForMonitor;
     private static final long dpiX;
     private static final long dpiY;
-    private static final Object dpiBufferLock = new Object();
 
     static {
         if (OSInfo.IS_WINDOWS) {

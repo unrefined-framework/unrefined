@@ -1,13 +1,13 @@
 package unrefined.util.function;
 
 @FunctionalInterface
-public interface FloatFunctor<R> extends VarFunctor<R> {
+public interface FloatFunctor<R> extends Functor<Float, R> {
 
     @Override
-    default R actuate(Object... args) {
-        return apply((float) args[0]);
+    default R apply(Float t) {
+        return applyOfFloat(t);
     }
 
-    R apply(float a);
+    R applyOfFloat(float t);
 
 }

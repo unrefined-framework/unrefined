@@ -1,13 +1,13 @@
 package unrefined.util.function;
 
 @FunctionalInterface
-public interface CharFunctor<R> extends VarFunctor<R> {
+public interface CharFunctor<R> extends Functor<Character, R> {
 
     @Override
-    default R actuate(Object... args) {
-        return apply((char) args[0]);
+    default R apply(Character t) {
+        return applyOfChar(t);
     }
 
-    R apply(char a);
+    R applyOfChar(char t);
 
 }

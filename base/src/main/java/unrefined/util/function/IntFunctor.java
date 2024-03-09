@@ -1,13 +1,13 @@
 package unrefined.util.function;
 
 @FunctionalInterface
-public interface IntFunctor<R> extends VarFunctor<R> {
+public interface IntFunctor<R> extends Functor<Integer, R> {
 
     @Override
-    default R actuate(Object... args) {
-        return apply((int) args[0]);
+    default R apply(Integer t) {
+        return applyOfInt(t);
     }
 
-    R apply(int a);
+    R applyOfInt(int t);
 
 }

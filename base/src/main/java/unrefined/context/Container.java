@@ -2,6 +2,7 @@ package unrefined.context;
 
 import unrefined.app.Logger;
 import unrefined.app.Preferences;
+import unrefined.app.Runtime;
 import unrefined.io.asset.AssetLoader;
 import unrefined.media.graphics.Cursor;
 import unrefined.media.graphics.Dimension;
@@ -19,6 +20,14 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class Container implements Runnable {
+
+    public static Container of() {
+        return Runtime.getInstance().createContainer();
+    }
+
+    public static Container of(ContainerListener containerListener) {
+        return Runtime.getInstance().createContainer(containerListener);
+    }
 
     private volatile ContainerListener containerListener;
 
@@ -38,6 +47,10 @@ public abstract class Container implements Runnable {
     public abstract void invokeLater(Runnable runnable);
     public abstract void invokeAndWait(Runnable runnable) throws InterruptedException;
     public abstract boolean isDispatchThread();
+
+    public void requestLaunch() {
+        Dispatcher.defaultInstance().invokeLater(this);
+    }
 
     private volatile AssetLoader ASSET_LOADER;
     private final Object ASSET_LOADER_LOCK = new Object();
@@ -122,6 +135,14 @@ public abstract class Container implements Runnable {
             if (APP_PACKAGE == null) APP_PACKAGE = properties.getProperty("unrefined.app.package");
         }
         return APP_PACKAGE;
+    }
+    private volatile String APP_IMPLEMENTER;
+    private final Object APP_IMPLEMENTER_LOCK = new Object();
+    public String getApplicationImplementer() {
+        if (APP_IMPLEMENTER == null) synchronized (APP_IMPLEMENTER_LOCK) {
+            if (APP_IMPLEMENTER == null) APP_IMPLEMENTER = properties.getProperty("unrefined.app.implementer");
+        }
+        return APP_IMPLEMENTER;
     }
 
     public abstract int getDotsPerInch();

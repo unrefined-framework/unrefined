@@ -12,7 +12,7 @@ import unrefined.util.foreign.Symbol;
 public class ForeignFunction {
 
     public static void main(String[] args) throws NoSuchMethodException {
-        DesktopRuntime.setup(args);             // Initialize the Unrefined runtime environment
+        DesktopRuntime.initialize(args);             // Initialize the Unrefined runtime environment
 
         // Type mapping:
         // Java void -> void

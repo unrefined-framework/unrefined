@@ -70,7 +70,7 @@ public final class OSInfo {
 
     private static String normalizeToUNIXStyle(String pathname) {
         if (pathname == null) return null;
-        return pathname.toLowerCase(Locale.ENGLISH).replaceAll(" ", "-");
+        return pathname.toLowerCase(Locale.ENGLISH).replace(" ", "-");
     }
 
     public static boolean checkOSVersion(int major, int minor, int micro, int patch) {

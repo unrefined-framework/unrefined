@@ -1,13 +1,13 @@
 package unrefined.util.function;
 
 @FunctionalInterface
-public interface CharSlot extends VarSlot {
+public interface CharSlot extends Slot<Character> {
 
     @Override
-    default void actuate(Object... args) {
-        accept((char) args[0]);
+    default void accept(Character t) {
+        acceptAsChar(t);
     }
 
-    void accept(char value);
+    void acceptAsChar(char value);
 
 }

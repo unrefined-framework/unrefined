@@ -1,13 +1,13 @@
 package unrefined.util.function;
 
 @FunctionalInterface
-public interface CharOperator extends VarFunctor<Character> {
+public interface CharOperator extends Operator<Character> {
 
     @Override
-    default Character actuate(Object... args) {
-        return apply((char) args[0]);
+    default Character apply(Character a) {
+        return applyAsChar(a);
     }
 
-    char apply(char a);
+    char applyAsChar(char a);
 
 }

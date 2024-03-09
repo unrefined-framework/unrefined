@@ -7,9 +7,13 @@ public interface ShortProducer extends Callable<Short> {
 
     @Override
     default Short call() throws Exception {
-        return get();
+        return getAsShort();
     }
 
-    short get();
+    default Short get() {
+        return getAsShort();
+    }
+
+    short getAsShort();
 
 }

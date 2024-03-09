@@ -7,9 +7,13 @@ public interface LongProducer extends Callable<Long> {
 
     @Override
     default Long call() throws Exception {
-        return get();
+        return getAsLong();
     }
 
-    long get();
+    default Long get() {
+        return getAsLong();
+    }
+
+    long getAsLong();
 
 }

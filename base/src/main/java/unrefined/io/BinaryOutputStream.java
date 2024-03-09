@@ -7,6 +7,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 
 public class BinaryOutputStream extends DataOutputStream implements BinaryOutput {
 
@@ -47,6 +48,13 @@ public class BinaryOutputStream extends DataOutputStream implements BinaryOutput
     @Override
     public void writeUnsignedLong(BigInteger v) throws IOException {
         writeLong(v.longValue());
+    }
+
+    @Override
+    public void writeString(String text, Charset charset) throws IOException {
+        if (charset == null) charset = Charset.defaultCharset();
+        write(text.getBytes(charset));
+        write("\0".getBytes(charset));
     }
 
 }

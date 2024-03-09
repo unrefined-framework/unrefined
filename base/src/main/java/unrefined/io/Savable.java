@@ -1,4 +1,11 @@
 package unrefined.io;
 
-public interface Savable extends Portable, Bundleable {
+import unrefined.util.Cacheable;
+
+public interface Savable extends Portable, Bundleable, Cacheable {
+
+    static boolean isCacheable(Object object) {
+        return object instanceof Portable && object instanceof Bundleable && object instanceof Cacheable;
+    }
+
 }

@@ -1,13 +1,13 @@
 package unrefined.util.function;
 
 @FunctionalInterface
-public interface FloatSlot extends VarSlot {
+public interface FloatSlot extends Slot<Float> {
 
     @Override
-    default void actuate(Object... args) {
-        accept((float) args[0]);
+    default void accept(Float t) {
+        acceptAsFloat(t);
     }
 
-    void accept(float value);
+    void acceptAsFloat(float t);
 
 }

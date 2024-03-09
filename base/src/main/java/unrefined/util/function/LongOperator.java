@@ -1,13 +1,13 @@
 package unrefined.util.function;
 
 @FunctionalInterface
-public interface LongOperator extends VarFunctor<Long> {
+public interface LongOperator extends Operator<Long> {
 
     @Override
-    default Long actuate(Object... args) {
-        return apply((long) args[0]);
+    default Long apply(Long a) {
+        return applyAsLong(a);
     }
 
-    long apply(long a);
+    long applyAsLong(long a);
 
 }

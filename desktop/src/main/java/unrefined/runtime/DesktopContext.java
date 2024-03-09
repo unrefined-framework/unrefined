@@ -4,23 +4,26 @@ import unrefined.context.Container;
 import unrefined.context.ContextListener;
 import unrefined.desktop.BitmapSupport;
 import unrefined.media.graphics.Bitmap;
-import unrefined.media.graphics.Graphics;
+import unrefined.util.function.Slot;
 
 import java.awt.Canvas;
 import java.awt.EventQueue;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
+import java.awt.Toolkit;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
-import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
+
+import static unrefined.runtime.DesktopContainer.BUFFERED;
 
 public class DesktopContext extends DesktopEmbeddedContext {
 
+    private final Object graphicsLock = BUFFERED ? null : new Object();
     private volatile DesktopGraphics graphics = null;
-    private final Object graphicsLock = new Object();
 
     public DesktopContext(Container container) {
         this(container, null);
@@ -34,8 +37,15 @@ public class DesktopContext extends DesktopEmbeddedContext {
             public void componentResized(ComponentEvent e) {
                 int width = e.getComponent().getWidth();
                 int height = e.getComponent().getHeight();
-                if (graphics != null) synchronized (graphicsLock) {
-                    if (graphics != null) graphics.setSize(width, height);
+                if (width > 0 && height > 0) {
+                    if (BUFFERED) {
+                        if (graphics != null) ((DesktopContainer) container).lockBufferAndPost(() -> {
+                            if (graphics != null) graphics.setSize(width, height);
+                        });
+                    }
+                    else if (graphics != null) synchronized (graphicsLock) {
+                        if (graphics != null) graphics.setSize(width, height);
+                    }
                 }
                 EventQueue.invokeLater(() -> {
                     ContextListener listener = getContextListener();
@@ -74,8 +84,8 @@ public class DesktopContext extends DesktopEmbeddedContext {
             }
         });
         component.onCreate = () -> {
-            component.createBufferStrategy(2);
-            synchronized (graphicsLock) {
+            if (BUFFERED) ((DesktopContainer) container).lockBufferAndPost(() -> graphics = new DesktopGraphics());
+            else synchronized (graphicsLock) {
                 graphics = new DesktopGraphics();
             }
             EventQueue.invokeLater(() -> {
@@ -84,7 +94,12 @@ public class DesktopContext extends DesktopEmbeddedContext {
             });
         };
         component.onDispose = () -> {
-            synchronized (graphicsLock) {
+            if (BUFFERED) ((DesktopContainer) container).lockBufferAndPost(() -> {
+                graphics.cleanup();
+                graphics = null;
+            });
+            else synchronized (graphicsLock) {
+                graphics.cleanup();
                 graphics = null;
             }
             EventQueue.invokeLater(() -> {
@@ -92,85 +107,109 @@ public class DesktopContext extends DesktopEmbeddedContext {
                 if (listener != null) listener.onDispose(DesktopContext.this);
             });
         };
+        component.onPaint = graphics2D -> {
+            if (graphics == null) return;
+            if (BUFFERED) ((DesktopContainer) container).lockBufferAndPost(buffer -> {
+                if (graphics == null) return;
+                ContextListener listener = getContextListener();
+                if (listener != null) {
+                    int width = getWidth();
+                    int height = getHeight();
+                    if (width > 0 && height > 0) {
+                        graphics.setGraphics2D(buffer.createGraphics());
+                        graphics.clearBackground(component.getBackground());
+                        graphics.reset();
+                        try {
+                            listener.onPaint(DesktopContext.this, graphics, false);
+                        }
+                        finally {
+                            try {
+                                graphics2D.clipRect(0, 0, width, height);
+                                graphics2D.drawImage(buffer, 0, 0, null);
+                            }
+                            finally {
+                                Toolkit.getDefaultToolkit().sync();
+                            }
+                        }
+                    }
+                }
+            });
+            else synchronized (graphicsLock) {
+                if (graphics == null) return;
+                ContextListener listener = getContextListener();
+                if (listener != null) {
+                    int width = getWidth();
+                    int height = getHeight();
+                    if (width > 0 && height > 0) {
+                        graphics.setGraphics2D((Graphics2D) graphics2D.create());
+                        graphics.clearBackground(component.getBackground());
+                        graphics.reset();
+                        try {
+                            listener.onPaint(this, graphics, false);
+                        }
+                        finally {
+                            Toolkit.getDefaultToolkit().sync();
+                        }
+                    }
+                }
+            }
+        };
+    }
+
+    @Override
+    public void paint() {
+        getGraphicsComponent().paint();
+    }
+
+    private void doSnapshot() {
+        if (graphics == null) return;
+        ContextListener listener = getContextListener();
+        if (listener != null) {
+            int width = getWidth();
+            int height = getHeight();
+            if (width > 0 && height > 0) {
+                BufferedImage image = BitmapSupport.createImage(getWidth(), getHeight(), Bitmap.Type.RGBA_8888);
+                try {
+                    graphics.setGraphics2D(image.createGraphics());
+                    graphics.reset();
+                    graphics.clearBackground(getComponent().getBackground());
+                    listener.onPaint(this, graphics, true);
+                }
+                finally {
+                    graphics.cleanup();
+                }
+                EventQueue.invokeLater(() -> listener.onSnapshot(DesktopContext.this, new DesktopBitmap(image)));
+            }
+        }
+    }
+
+    @Override
+    public void snapshot() {
+        if (graphics == null) return;
+        if (BUFFERED) ((DesktopContainer) getContainer()).lockBufferAndPost(this::doSnapshot);
+        else synchronized (graphicsLock) {
+            doSnapshot();
+        }
     }
 
     @Override
     public void requestPaint() {
         if (graphics == null) return;
-        EventQueue.invokeLater(() -> {
-            synchronized (graphicsLock) {
-                if (graphics == null) return;
-                GraphicsComponent canvas = (GraphicsComponent) getCanvas();
-                BufferStrategy bufferStrategy = canvas.getBufferStrategy();
-                if (bufferStrategy == null) return;
-                // Render single frame
-                do {
-                    // The following loop ensures that the contents of the drawing buffer
-                    // are consistent in case the underlying surface was recreated
-                    do {
-                        // Get a new graphics context every time through the loop
-                        // to make sure the strategy is validated
-                        Graphics2D graphics2D = (Graphics2D) bufferStrategy.getDrawGraphics();
-
-                        // Render to graphics
-                        try {
-                            graphics.setGraphics2D(graphics2D);
-                            graphics.reset();
-                            ContextListener listener = getContextListener();
-                            if (listener != null) listener.onPaint(this, graphics, false);
-                        }
-                        finally { // Dispose the graphics
-                            graphics2D.dispose();
-                        }
-
-                        // Repeat the rendering if the drawing buffer contents
-                        // were restored
-                    } while (bufferStrategy.contentsRestored());
-
-                    // Display the buffer
-                    bufferStrategy.show();
-
-                    // Repeat the rendering if the drawing buffer was lost
-                } while (bufferStrategy.contentsLost());
-            }
-        });
+        EventQueue.invokeLater(this::paint);
     }
 
     @Override
     public void requestSnapshot() {
         if (graphics == null) return;
-        EventQueue.invokeLater(() -> {
-            synchronized (graphicsLock) {
-                if (graphics == null) return;
-                BufferedImage image = BitmapSupport.createImage(graphics.getWidth(), graphics.getHeight(), Bitmap.Type.RGBA_8888);
-                Graphics2D graphics2D = image.createGraphics();
-                try {
-                    graphics2D.setBackground(getComponent().getBackground());
-                    graphics2D.clearRect(0, 0, image.getWidth(), image.getHeight());
-                    graphics.setGraphics2D(graphics2D);
-                    graphics.reset();
-                    ContextListener listener = getContextListener();
-                    if (listener != null) listener.onPaint(this, graphics, true);
-                }
-                finally {
-                    graphics2D.dispose();
-                }
-                EventQueue.invokeLater(() -> {
-                    ContextListener listener = getContextListener();
-                    if (listener != null) listener.onSnapshot(DesktopContext.this, new DesktopBitmap(image));
-                });
-            }
-        });
-    }
-
-    @Override
-    public Graphics getGraphics() {
-        return graphics;
+        EventQueue.invokeLater(this::snapshot);
     }
 
     private static final class GraphicsComponent extends Canvas {
+
         private volatile Runnable onCreate;
         private volatile Runnable onDispose;
+        private volatile Slot<Graphics2D> onPaint;
+
         public GraphicsComponent() {
             super();
         }
@@ -184,13 +223,30 @@ public class DesktopContext extends DesktopEmbeddedContext {
         }
         @Override
         public void removeNotify() {
-            super.removeNotify();
             onDispose.run();
+            super.removeNotify();
         }
+
+        @Override
+        public void paint(Graphics g) {
+            if (g == null) return;
+            onPaint.accept((Graphics2D) g);
+        }
+
+        public void paint() {
+            Graphics g = getGraphics();
+            if (g == null) return;
+            onPaint.accept((Graphics2D) g);
+        }
+
     }
 
     public Canvas getCanvas() {
         return (Canvas) getComponent();
+    }
+
+    private GraphicsComponent getGraphicsComponent() {
+        return (GraphicsComponent) getComponent();
     }
 
 }

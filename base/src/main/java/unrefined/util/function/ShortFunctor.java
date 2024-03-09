@@ -1,13 +1,13 @@
 package unrefined.util.function;
 
 @FunctionalInterface
-public interface ShortFunctor<R> extends VarFunctor<R> {
+public interface ShortFunctor<R> extends Functor<Short, R> {
 
     @Override
-    default R actuate(Object... args) {
-        return apply((short) args[0]);
+    default R apply(Short t) {
+        return applyOfShort(t);
     }
 
-    R apply(short a);
+    R applyOfShort(short t);
 
 }

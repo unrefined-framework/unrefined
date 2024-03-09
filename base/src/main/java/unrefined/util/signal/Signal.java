@@ -1,6 +1,7 @@
 package unrefined.util.signal;
 
 import unrefined.util.concurrent.ConcurrentHashSet;
+import unrefined.util.function.Assert;
 import unrefined.util.function.VarFunctor;
 import unrefined.util.function.VarSlot;
 import unrefined.util.reflect.Reflection;
@@ -230,7 +231,7 @@ public abstract class Signal<T> {
 		final boolean unique = (type & UNIQUE) != 0;
 		final boolean singleShot = (type & SINGLE_SHOT) != 0;
 		int original = type;
-		type = type << 29 >>> 29;
+		type = Connection.Type.unmask(type);
 		boolean broken = false;
 		if (uniques.contains(slot)) broken = true;
 		else if (unique) uniques.add(slot);
@@ -328,6 +329,16 @@ public abstract class Signal<T> {
 			return result;
 		}
 		else return null;
+	}
+
+	public Object emitIf(Assert<Signal<T>> predicate, Object... args) {
+		if (predicate.test(this)) return emit(args);
+		else return null;
+	}
+
+	public Object emitIfNotEmpty(Object... args) {
+		if (isEmpty()) return null;
+		else return emit(args);
 	}
 
 	/**

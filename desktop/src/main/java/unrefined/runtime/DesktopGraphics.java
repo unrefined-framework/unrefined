@@ -16,7 +16,7 @@ import unrefined.media.graphics.RectangleF;
 import unrefined.media.graphics.Text;
 import unrefined.media.graphics.Transform;
 import unrefined.util.AlreadyDisposedException;
-import unrefined.util.CharFactory;
+import unrefined.util.CharSequences;
 import unrefined.util.PhantomString;
 
 import java.awt.AlphaComposite;
@@ -60,14 +60,36 @@ public class DesktopGraphics extends Graphics {
         info = new Info();
     }
 
+    void cleanup() {
+        if (this.graphics2D != null) {
+            this.graphics2D.dispose();
+            this.graphics2D = null;
+        }
+        if (this.background != null) {
+            this.background.dispose();
+            this.background = null;
+        }
+    }
+
+    void clearBackground(Color color) {
+        graphics2D.setBackground(color);
+        background.setBackground(color);
+        background.clearRect(0, 0, width, height);
+    }
+
     void setGraphics2D(Graphics2D graphics2D) {
+        cleanup();
         this.graphics2D = graphics2D;
+        graphics2D.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
+        graphics2D.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
         this.background = (Graphics2D) graphics2D.create();
         this.background.setComposite(AlphaComposite.Src);
     }
 
     public DesktopGraphics(Graphics2D graphics2D, int width, int height) {
         this.graphics2D = Objects.requireNonNull(graphics2D);
+        graphics2D.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
+        graphics2D.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
         this.background = (Graphics2D) graphics2D.create();
         this.background.setComposite(AlphaComposite.Src);
         this.width = width;
@@ -87,6 +109,11 @@ public class DesktopGraphics extends Graphics {
     public Graphics2D getGraphics2D() {
         if (isDisposed()) throw new AlreadyDisposedException();
         return graphics2D;
+    }
+
+    public Graphics2D getBackgroundGraphics2D() {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        return background;
     }
 
     public void setWidth(int width) {
@@ -181,7 +208,7 @@ public class DesktopGraphics extends Graphics {
 
     @Override
     public void drawCircle(float x, float y, float radius) {
-        drawShape(new Ellipse2D.Float(x - radius, y - radius, x + radius, y + radius));
+        drawShape(new Ellipse2D.Float(x - radius, y - radius, radius * 2, radius * 2));
     }
 
     @Override
@@ -303,7 +330,7 @@ public class DesktopGraphics extends Graphics {
 
     @Override
     public void drawTextOnPath(CharSequence text, int start, int end, Path path, float startOffset, int x, int y) {
-        drawTextOnPath(CharFactory.toCharArray(text, start, end), path, startOffset, x, y);
+        drawTextOnPath(CharSequences.toCharArray(text, start, end), path, startOffset, x, y);
     }
 
     @Override
@@ -323,7 +350,7 @@ public class DesktopGraphics extends Graphics {
 
     @Override
     public void drawTextOnPath(CharSequence text, int start, int end, Path path, float startOffset, Transform transform) {
-        drawTextOnPath(CharFactory.toCharArray(text, start, end), path, startOffset, transform);
+        drawTextOnPath(CharSequences.toCharArray(text, start, end), path, startOffset, transform);
     }
 
     @Override
@@ -797,7 +824,7 @@ public class DesktopGraphics extends Graphics {
         info.setTextScale(scaleX, scaleY);
         java.awt.Font font = graphics2D.getFont();
         AffineTransform transform = font.getTransform();
-        transform.setToScale(scaleX, scaleY);
+        transform.scale(scaleX, scaleY);
         graphics2D.setFont(font.deriveFont(transform));
     }
 
@@ -835,7 +862,7 @@ public class DesktopGraphics extends Graphics {
         info.setTextSkew(skewX, skewY);
         java.awt.Font font = graphics2D.getFont();
         AffineTransform transform = font.getTransform();
-        transform.setToShear(skewX, skewY);
+        transform.shear(skewX, skewY);
         graphics2D.setFont(font.deriveFont(transform));
     }
 

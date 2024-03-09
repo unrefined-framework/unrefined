@@ -1,13 +1,13 @@
 package unrefined.util.function;
 
 @FunctionalInterface
-public interface DoubleSlot extends VarSlot {
+public interface DoubleSlot extends Slot<Double> {
 
     @Override
-    default void actuate(Object... args) {
-        accept((double) args[0]);
+    default void accept(Double t) {
+        acceptAsDouble(t);
     }
 
-    void accept(double value);
+    void acceptAsDouble(double value);
 
 }

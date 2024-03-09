@@ -1,13 +1,13 @@
 package unrefined.util.function;
 
 @FunctionalInterface
-public interface ByteBiOperator extends VarFunctor<Byte> {
+public interface ByteBiOperator extends BiOperator<Byte> {
 
     @Override
-    default Byte actuate(Object... args) {
-        return apply((byte) args[0], (byte) args[1]);
+    default Byte apply(Byte a, Byte b) {
+        return applyAsByte(a, b);
     }
 
-    byte apply(byte a, byte b);
+    byte applyAsByte(byte a, byte b);
 
 }

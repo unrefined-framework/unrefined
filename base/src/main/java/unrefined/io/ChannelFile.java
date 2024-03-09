@@ -68,11 +68,11 @@ public class ChannelFile implements RandomAccessDataInput, RandomAccessDataOutpu
         return mode;
     }
 
-    public File toFile() {
+    public File asFile() {
         return file;
     }
 
-    public RandomAccessFile toRandomAccessFile() {
+    public RandomAccessFile asRandomAccessFile() {
         return randomAccessFile;
     }
 

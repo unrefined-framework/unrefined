@@ -6,7 +6,7 @@ import com.kenai.jffi.Function;
 import com.kenai.jffi.HeapInvocationBuffer;
 import com.kenai.jffi.Library;
 import com.kenai.jffi.Type;
-import unrefined.internal.posix.POSIXConsoleSupport;
+import unrefined.internal.posix.PosixConsoleSupport;
 import unrefined.internal.windows.WindowsConsoleSupport;
 import unrefined.io.console.Ansi;
 import unrefined.io.console.AnsiOutputStream;
@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
 import static unrefined.desktop.ForeignSupport.INVOKER;
 import static unrefined.desktop.ForeignSupport.MEMORY_IO;
 import static unrefined.desktop.UnsafeSupport.UNSAFE;
-import static unrefined.internal.windows.WindowsLibrary.Kernel32;
+import static unrefined.internal.windows.WindowsSupport.Kernel32;
 
 public final class ConsoleSupport {
 
@@ -71,7 +71,8 @@ public final class ConsoleSupport {
     private static final int SIZE_PRODUCER_TYPE_EXECUTOR = 3;
 
     static {
-        CHARSET = Charset.forName(System.getProperty("stdout.encoding", System.getProperty("sun.stdout.encoding")));
+        CHARSET = Charset.forName(System.getProperty("stdout.encoding", System.getProperty("sun.stdout.encoding",
+                System.getProperty("native.encoding", System.getProperty("sun.jnu.encoding")))));
         int colors = -1; String property;
         if ((property = System.getProperty("unrefined.io.console.colors")) != null) {
             try {
@@ -114,7 +115,7 @@ public final class ConsoleSupport {
             }
         }
         else {
-            CallContext context = CallContext.getCallContext(Type.SINT, new Type[] {Type.SINT}, CallingConvention.DEFAULT, false);
+            CallContext context = CallContext.getCallContext(Type.SINT, new Type[] {Type.SINT}, CallingConvention.DEFAULT, false, true);
             HeapInvocationBuffer heapInvocationBuffer = new HeapInvocationBuffer(context);
             if (ABI.I == 8) heapInvocationBuffer.putLong(1);
             else heapInvocationBuffer.putInt(1);
@@ -123,7 +124,7 @@ public final class ConsoleSupport {
             IS_TERMINAL = tty;
             if (IS_TERMINAL) {
                 ANSI_TYPE = Ansi.Type.NATIVE;
-                SIZE_PRODUCER_TYPE = POSIXConsoleSupport.IOCTL_SUPPORTED ? SIZE_PRODUCER_TYPE_POSIX : SIZE_PRODUCER_TYPE_EXECUTOR;
+                SIZE_PRODUCER_TYPE = PosixConsoleSupport.IOCTL_SUPPORTED ? SIZE_PRODUCER_TYPE_POSIX : SIZE_PRODUCER_TYPE_EXECUTOR;
             }
             else {
                 ANSI_TYPE = Ansi.Type.REDIRECTED;
@@ -180,7 +181,7 @@ public final class ConsoleSupport {
                 long winsize = UNSAFE.allocateMemory(Type.USHORT.size() * 4L);
                 final Function ioctl = new Function(Library.getDefault().getSymbolAddress("ioctl"),
                         CallContext.getCallContext(Type.SINT, new Type[] {Type.SINT, Type.SINT, Type.POINTER},
-                                CallingConvention.DEFAULT, false));
+                                CallingConvention.DEFAULT, false, true));
                 HeapInvocationBuffer ioctlBuffer = new HeapInvocationBuffer(ioctl);
                 if (ABI.I == 8) {
                     ioctlBuffer.putLong(1);
@@ -189,10 +190,10 @@ public final class ConsoleSupport {
                     ioctlBuffer.putInt(1);
                 }
                 if (ABI.I == 8) {
-                    ioctlBuffer.putLong(POSIXConsoleSupport.TIOCGWINSZ);
+                    ioctlBuffer.putLong(PosixConsoleSupport.TIOCGWINSZ);
                 }
                 else {
-                    ioctlBuffer.putInt(POSIXConsoleSupport.TIOCGWINSZ);
+                    ioctlBuffer.putInt(PosixConsoleSupport.TIOCGWINSZ);
                 }
                 ioctlBuffer.putAddress(winsize);
                 SIZE_PRODUCER = new SizeProducer() {
@@ -222,7 +223,7 @@ public final class ConsoleSupport {
             case SIZE_PRODUCER_TYPE_WINDOWS:
                 long lpConsoleScreenBufferInfo = UNSAFE.allocateMemory(32);
                 final Function GetConsoleScreenBufferInfo = new Function(Kernel32.getSymbolAddress("GetConsoleScreenBufferInfo"),
-                        CallContext.getCallContext(Type.SINT, new Type[] {Type.POINTER, Type.POINTER}, CallingConvention.STDCALL, false));
+                        CallContext.getCallContext(Type.SINT, new Type[] {Type.POINTER, Type.POINTER}, CallingConvention.STDCALL, false, true));
                 HeapInvocationBuffer heapInvocationBuffer = new HeapInvocationBuffer(GetConsoleScreenBufferInfo);
                 heapInvocationBuffer.putAddress(WindowsConsoleSupport.OUTPUT);
                 heapInvocationBuffer.putAddress(lpConsoleScreenBufferInfo);

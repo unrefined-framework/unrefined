@@ -1,13 +1,13 @@
 package unrefined.util.function;
 
 @FunctionalInterface
-public interface BooleanSlot extends VarSlot {
+public interface BooleanSlot extends Slot<Boolean> {
 
     @Override
-    default void actuate(Object... args) {
-        accept((boolean) args[0]);
+    default void accept(Boolean t) {
+        acceptAsBoolean(t);
     }
 
-    void accept(boolean value);
+    void acceptAsBoolean(boolean t);
 
 }

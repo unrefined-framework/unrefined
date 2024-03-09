@@ -27,6 +27,7 @@ import unrefined.media.graphics.Transform;
 import unrefined.util.function.IntBiOperator;
 
 import java.awt.Color;
+import java.awt.GraphicsEnvironment;
 import java.awt.LinearGradientPaint;
 import java.awt.Point;
 import java.io.File;
@@ -131,17 +132,20 @@ public class DesktopDrawing extends Drawing {
 
     @Override
     public Cursor getCursor(int type) throws CursorNotFoundException {
-        return DesktopCursor.getSystemCursor(type);
+        if (GraphicsEnvironment.isHeadless()) return null;
+        else return DesktopCursor.getSystemCursor(type);
     }
 
     @Override
     public Cursor createCursor(Bitmap bitmap, int hotSpotX, int hotSpotY) {
-        return new DesktopCursor(bitmap, new Point(hotSpotX, hotSpotY));
+        if (GraphicsEnvironment.isHeadless()) return null;
+        else return new DesktopCursor(bitmap, new Point(hotSpotX, hotSpotY));
     }
 
     @Override
     public int getMaximumCursorColors() {
-        return CursorSupport.getMaximumCursorColors();
+        if (GraphicsEnvironment.isHeadless()) return 0;
+        else return CursorSupport.getMaximumCursorColors();
     }
 
 }

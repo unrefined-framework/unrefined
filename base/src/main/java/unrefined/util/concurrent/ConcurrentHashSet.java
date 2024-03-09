@@ -1,13 +1,16 @@
 package unrefined.util.concurrent;
 
+import java.io.Serializable;
 import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ConcurrentHashSet<E> extends AbstractSet<E> {
+public class ConcurrentHashSet<E> extends AbstractSet<E> implements Serializable {
 
-    private static final Object DUMMY = new Object();
+    private static final long serialVersionUID = 1484496066646560523L;
+
+    private static final Boolean PRESENT = true;
 
     private final ConcurrentHashMap<E, Object> backMap;
 
@@ -49,12 +52,12 @@ public class ConcurrentHashSet<E> extends AbstractSet<E> {
 
     @Override
     public boolean add(E o) {
-        return backMap.put(o, DUMMY) == null;
+        return backMap.put(o, PRESENT) == null;
     }
 
     @Override
     public boolean remove(Object o) {
-        return backMap.remove(o) == DUMMY;
+        return PRESENT.equals(backMap.remove(o));
     }
 
     @Override

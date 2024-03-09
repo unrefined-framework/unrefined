@@ -1,0 +1,3 @@
+org.example.desktop.i18n.tag=Unrefined I18N
+org.example.desktop.i18n.helloworld=Hello, World!
+org.example.desktop.i18n.plus=%d plus %d is %d

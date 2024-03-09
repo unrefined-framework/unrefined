@@ -52,7 +52,7 @@ public abstract class Property<V> {
         return new Instance<>(initialValue);
     }
 
-    public static <V> Property<V> ofDefault() {
+    public static <V> Property<V> of() {
         return new Instance<>();
     }
 

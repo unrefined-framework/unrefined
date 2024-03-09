@@ -64,7 +64,7 @@ public class SparseLongArray implements Cloneable, Iterable<Long> {
             keys = EmptyArray.INT;
             values = EmptyArray.LONG;
         } else {
-            initialCapacity = FastArray.sparseIntArraySize(initialCapacity);
+            initialCapacity = SparseArray.sparseIntArraySize(initialCapacity);
             keys = new int[initialCapacity];
             values = new long[initialCapacity];
         }
@@ -127,6 +127,22 @@ public class SparseLongArray implements Cloneable, Iterable<Long> {
     }
 
     /**
+     * Remove a range of mappings as a batch.
+     *
+     * @param index Index to begin at
+     * @param size Number of mappings to remove
+     *
+     * <p>For indices outside of the range <code>0...size()-1</code>,
+     * the behavior is undefined.</p>
+     */
+    public void removeAtRange(int index, int size) {
+        final int end = Math.min(this.size, index + size);
+        for (int i = index; i < end; i++) {
+            removeAt(i);
+        }
+    }
+
+    /**
      * Adds a mapping from the specified key to the specified value,
      * replacing the previous mapping from the specified key if there
      * was one.
@@ -140,7 +156,7 @@ public class SparseLongArray implements Cloneable, Iterable<Long> {
             i = ~i;
 
             if (size >= keys.length) {
-                int n = FastArray.sparseIntArraySize(size + 1);
+                int n = SparseArray.sparseIntArraySize(size + 1);
 
                 int[] nkeys = new int[n];
                 long[] nvalues = new long[n];
@@ -280,7 +296,7 @@ public class SparseLongArray implements Cloneable, Iterable<Long> {
 
         int pos = size;
         if (pos >= keys.length) {
-            int n =  FastArray.sparseIntArraySize(pos + 1);
+            int n =  SparseArray.sparseIntArraySize(pos + 1);
 
             int[] nkeys = new int[n];
             long[] nvalues = new long[n];

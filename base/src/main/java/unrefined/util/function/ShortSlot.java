@@ -1,13 +1,13 @@
 package unrefined.util.function;
 
 @FunctionalInterface
-public interface ShortSlot extends VarSlot {
+public interface ShortSlot extends Slot<Short> {
 
     @Override
-    default void actuate(Object... args) {
-        accept((short) args[0]);
+    default void accept(Short t) {
+        acceptAsShort(t);
     }
 
-    void accept(short value);
+    void acceptAsShort(short t);
 
 }

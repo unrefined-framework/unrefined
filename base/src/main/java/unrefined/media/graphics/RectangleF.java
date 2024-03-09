@@ -5,6 +5,7 @@ import unrefined.io.BinaryOutput;
 import unrefined.io.BundleInput;
 import unrefined.io.BundleOutput;
 import unrefined.io.Savable;
+import unrefined.math.FastMath;
 
 import java.io.IOException;
 
@@ -65,6 +66,13 @@ public class RectangleF implements Savable {
         this.height = rectangle.height;
     }
 
+    public void setRectangle(Rectangle rectangle) {
+        this.x = rectangle.getX();
+        this.y = rectangle.getY();
+        this.width = rectangle.getWidth();
+        this.height = rectangle.getHeight();
+    }
+
     public float getX() {
         return x;
     }
@@ -95,6 +103,46 @@ public class RectangleF implements Savable {
 
     public void setHeight(float height) {
         this.height = height;
+    }
+
+    public void setBounds(float x, float y, float width, float height) {
+        setRectangle(x, y, width, height);
+    }
+
+    public void getBounds(RectangleF bounds) {
+        bounds.setRectangle(this);
+    }
+
+    public void getBounds(Rectangle bounds) {
+        float left = FastMath.floor(x);
+        float top = FastMath.floor(y);
+        float right = FastMath.ceil(x + width);
+        float bottom = FastMath.ceil(y + height);
+        bounds.setRectangle((int) left, (int) top, (int) (right - left), (int) (bottom - top));
+    }
+
+    public boolean contains(float x, float y) {
+        return x >= this.x && x < this.x + this.width && y >= this.y && y < this.y + this.height;
+    }
+
+    public boolean contains(int x, int y) {
+        return x >= this.x && x < this.x + this.width && y >= this.y && y < this.y + this.height;
+    }
+
+    public boolean contains(float x, float y, float width, float height) {
+        return x >= this.x && x + width < this.x + this.width && y >= this.y && y + height < this.y + this.height;
+    }
+
+    public boolean contains(int x, int y, int width, int height) {
+        return x >= this.x && x + width < this.x + this.width && y >= this.y && y + height < this.y + this.height;
+    }
+
+    public boolean intersects(float x, float y, float width, float height) {
+        return x >= this.x && x + width < this.x + this.width && y >= this.y && y + height < this.y + this.height;
+    }
+
+    public boolean intersects(int x, int y, int width, int height) {
+        return x >= this.x && x + width < this.x + this.width && y >= this.y && y + height < this.y + this.height;
     }
 
     @Override

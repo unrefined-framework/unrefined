@@ -1,13 +1,13 @@
 package unrefined.util.function;
 
 @FunctionalInterface
-public interface LongSlot extends VarSlot {
+public interface LongSlot extends Slot<Long> {
 
     @Override
-    default void actuate(Object... args) {
-        accept((long) args[0]);
+    default void accept(Long t) {
+        acceptAsLong(t);
     }
 
-    void accept(long value);
+    void acceptAsLong(long t);
 
 }

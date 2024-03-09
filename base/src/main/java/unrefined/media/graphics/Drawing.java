@@ -1,9 +1,10 @@
 package unrefined.media.graphics;
 
+import unrefined.app.Platform;
 import unrefined.context.Environment;
 import unrefined.io.UnsupportedFormatException;
 import unrefined.io.asset.Asset;
-import unrefined.runtime.AnimatedCursor;
+import unrefined.base.AnimatedCursor;
 import unrefined.util.concurrent.ConcurrentHashSet;
 import unrefined.util.function.IntBiOperator;
 
@@ -273,6 +274,7 @@ public abstract class Drawing {
     public abstract Cursor getCursor(int type) throws CursorNotFoundException;
     public abstract Cursor createCursor(Bitmap bitmap, int hotSpotX, int hotSpotY);
     public Cursor createCursor(Cursor[] cursors, int cursorsOffset, long[] durations, int durationsOffset, int length) {
+        if (Platform.getInstance().isHeadless()) return null;
         return new AnimatedCursor(cursors, cursorsOffset, durations, durationsOffset, length);
     }
     public Cursor createCursor(Cursor[] cursors, long[] durations) {
@@ -280,6 +282,7 @@ public abstract class Drawing {
         return createCursor(cursors, 0, durations, 0, cursors.length);
     }
     public Cursor createCursor(Bitmap.MultiFrame frames) {
+        if (Platform.getInstance().isHeadless()) return null;
         Cursor[] cursors = new Cursor[frames.size()];
         long[] durations = new long[frames.size()];
         Bitmap background = createBitmap(frames.getCompatibleWidth(), frames.getCompatibleHeight(), frames.getCompatibleType());

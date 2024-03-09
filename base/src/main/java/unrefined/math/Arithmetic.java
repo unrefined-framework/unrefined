@@ -1,7 +1,7 @@
 package unrefined.math;
 
 import unrefined.context.Environment;
-import unrefined.util.CharFactory;
+import unrefined.util.CharSequences;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -170,19 +170,19 @@ public class Arithmetic {
     }
 
     public BigDecimal parseBigDecimal(CharSequence value, int start, int end) {
-        return new BigDecimal(CharFactory.toCharArray(value, start, end));
+        return new BigDecimal(CharSequences.toCharArray(value, start, end));
     }
 
     public BigDecimal parseBigDecimal(CharSequence value, int start, int end, MathContext mathContext) {
-        return new BigDecimal(CharFactory.toCharArray(value, start, end), mathContext == null ? MathContext.UNLIMITED : mathContext);
+        return new BigDecimal(CharSequences.toCharArray(value, start, end), mathContext == null ? MathContext.UNLIMITED : mathContext);
     }
 
     public BigDecimal parseBigDecimal(CharSequence value) {
-        return new BigDecimal(CharFactory.toCharArray(value));
+        return new BigDecimal(CharSequences.toCharArray(value));
     }
 
     public BigDecimal parseBigDecimal(CharSequence value, MathContext mathContext) {
-        return new BigDecimal(CharFactory.toCharArray(value), mathContext == null ? MathContext.UNLIMITED : mathContext);
+        return new BigDecimal(CharSequences.toCharArray(value), mathContext == null ? MathContext.UNLIMITED : mathContext);
     }
 
     public BigDecimal fastBigDecimal(double value) {

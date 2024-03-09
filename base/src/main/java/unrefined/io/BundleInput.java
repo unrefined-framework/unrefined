@@ -1,5 +1,6 @@
 package unrefined.io;
 
+import unrefined.util.Rational;
 import unrefined.util.function.BiSlot;
 
 import java.io.IOException;
@@ -23,5 +24,7 @@ public interface BundleInput {
     double getDouble(String key, double defaultValue) throws IOException;
     BigInteger getBigInteger(String key, BigInteger defaultValue) throws IOException;
     BigDecimal getBigDecimal(String key, BigDecimal defaultValue) throws IOException;
+    Rational getRational(String key, Rational defaultValue) throws IOException;
+    short getHalf(String key, short defaultValue) throws IOException;
 
 }

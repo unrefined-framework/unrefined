@@ -7,9 +7,13 @@ public interface ByteProducer extends Callable<Byte> {
 
     @Override
     default Byte call() throws Exception {
-        return get();
+        return getAsByte();
     }
 
-    byte get();
+    default Byte get() {
+        return getAsByte();
+    }
+
+    byte getAsByte();
 
 }

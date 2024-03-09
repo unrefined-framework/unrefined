@@ -36,7 +36,7 @@ public abstract class LongProperty {
         return new Instance(initialValue);
     }
 
-    public static LongProperty ofDefault() {
+    public static LongProperty of() {
         return new Instance();
     }
 
@@ -83,7 +83,7 @@ public abstract class LongProperty {
         }
         @Override
         public long get() {
-            return getter.get();
+            return getter.getAsLong();
         }
     }
 

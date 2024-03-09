@@ -10,6 +10,7 @@ public class Asset {
 
     private final AssetLoader assetLoader;
     private final String pathname;
+    private final String name;
     private volatile long length = -1;
 
     public Asset(String pathname) {
@@ -20,6 +21,7 @@ public class Asset {
         Objects.requireNonNull(pathname);
         this.assetLoader = assetLoader == null ? AssetLoader.defaultInstance() : assetLoader;
         this.pathname = pathname;
+        this.name = pathname.substring(pathname.lastIndexOf('/') + 1);
     }
 
     public AssetLoader getAssetLoader() {
@@ -28,6 +30,10 @@ public class Asset {
 
     public String getPathname() {
         return pathname;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public InputStream openStream() throws IOException {

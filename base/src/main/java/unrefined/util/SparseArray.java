@@ -77,11 +77,30 @@ public class SparseArray<E> implements Cloneable, Iterable<E> {
             keys = EmptyArray.INT;
             values = EmptyArray.OBJECT;
         } else {
-            initialCapacity = FastArray.sparseIntArraySize(initialCapacity);
+            initialCapacity = sparseIntArraySize(initialCapacity);
             keys = new int[initialCapacity];
             values = new Object[initialCapacity];
         }
         size = 0;
+    }
+
+    static int sparseLongArraySize(int need) {
+        return sparseByteArraySize(need * 8) / 8;
+    }
+
+    static int sparseIntArraySize(int need) {
+        return sparseByteArraySize(need * 4) / 4;
+    }
+
+    static int sparseShortArraySize(int need) {
+        return sparseByteArraySize(need * 2) / 2;
+    }
+
+    static int sparseByteArraySize(int need) {
+        for (int i = 4; i < 32; i ++) {
+            if (need <= (1 << i) - 12) return (1 << i) - 12;
+        }
+        return need;
     }
 
     @SuppressWarnings("unchecked")
@@ -235,7 +254,7 @@ public class SparseArray<E> implements Cloneable, Iterable<E> {
             }
 
             if (size >= keys.length) {
-                int n =  FastArray.sparseIntArraySize(size + 1);
+                int n =  sparseIntArraySize(size + 1);
 
                 int[] nkeys = new int[n];
                 Object[] nvalues = new Object[n];
@@ -415,7 +434,7 @@ public class SparseArray<E> implements Cloneable, Iterable<E> {
 
         int pos = size;
         if (pos >= keys.length) {
-            int n =  FastArray.sparseIntArraySize(pos + 1);
+            int n =  sparseIntArraySize(pos + 1);
 
             int[] nkeys = new int[n];
             Object[] nvalues = new Object[n];

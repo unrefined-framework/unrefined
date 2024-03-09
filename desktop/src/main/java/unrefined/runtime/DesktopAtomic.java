@@ -23,16 +23,6 @@ public class DesktopAtomic extends Atomic {
     }
 
     @Override
-    public void loadLoadFence() {
-        AtomicSupport.loadLoadFence();
-    }
-
-    @Override
-    public void storeStoreFence() {
-        AtomicSupport.storeStoreFence();
-    }
-
-    @Override
     public Object getObjectFieldVolatile(Object object, Field field) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
         return AtomicSupport.getObjectFieldVolatile(object, field);
     }
@@ -168,48 +158,48 @@ public class DesktopAtomic extends Atomic {
     }
 
     @Override
-    public void lazySetObjectFieldVolatile(Object object, Field field, Object value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        AtomicSupport.lazySetObjectFieldVolatile(object, field, value);
+    public void lazySetObjectField(Object object, Field field, Object value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        AtomicSupport.lazySetObjectField(object, field, value);
     }
 
     @Override
-    public void lazySetBooleanFieldVolatile(Object object, Field field, boolean value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        AtomicSupport.lazySetBooleanFieldVolatile(object, field, value);
+    public void lazySetBooleanField(Object object, Field field, boolean value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        AtomicSupport.lazySetBooleanField(object, field, value);
     }
 
     @Override
-    public void lazySetByteFieldVolatile(Object object, Field field, byte value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        AtomicSupport.lazySetByteFieldVolatile(object, field, value);
+    public void lazySetByteField(Object object, Field field, byte value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        AtomicSupport.lazySetByteField(object, field, value);
     }
 
     @Override
-    public void lazySetCharFieldVolatile(Object object, Field field, char value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        AtomicSupport.lazySetCharFieldVolatile(object, field, value);
+    public void lazySetCharField(Object object, Field field, char value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        AtomicSupport.lazySetCharField(object, field, value);
     }
 
     @Override
-    public void lazySetShortFieldVolatile(Object object, Field field, short value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        AtomicSupport.lazySetShortFieldVolatile(object, field, value);
+    public void lazySetShortField(Object object, Field field, short value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        AtomicSupport.lazySetShortField(object, field, value);
     }
 
     @Override
-    public void lazySetIntFieldVolatile(Object object, Field field, int value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        AtomicSupport.lazySetIntFieldVolatile(object, field, value);
+    public void lazySetIntField(Object object, Field field, int value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        AtomicSupport.lazySetIntField(object, field, value);
     }
 
     @Override
-    public void lazySetLongFieldVolatile(Object object, Field field, long value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        AtomicSupport.lazySetLongFieldVolatile(object, field, value);
+    public void lazySetLongField(Object object, Field field, long value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        AtomicSupport.lazySetLongField(object, field, value);
     }
 
     @Override
-    public void lazySetFloatFieldVolatile(Object object, Field field, float value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        AtomicSupport.lazySetFloatFieldVolatile(object, field, value);
+    public void lazySetFloatField(Object object, Field field, float value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        AtomicSupport.lazySetFloatField(object, field, value);
     }
 
     @Override
-    public void lazySetDoubleFieldVolatile(Object object, Field field, double value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
-        AtomicSupport.lazySetDoubleFieldVolatile(object, field, value);
+    public void lazySetDoubleField(Object object, Field field, double value) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
+        AtomicSupport.lazySetDoubleField(object, field, value);
     }
 
     @Override
@@ -480,6 +470,456 @@ public class DesktopAtomic extends Atomic {
     @Override
     public double decrementAndGetDoubleField(Object object, Field field) throws IllegalArgumentException, NullPointerException, ExceptionInInitializerError {
         return AtomicSupport.decrementAndGetDoubleField(object, field);
+    }
+
+    @Override
+    public Object getArrayObjectElementVolatile(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getArrayObjectElementVolatile(array, index);
+    }
+
+    @Override
+    public boolean getArrayBooleanElementVolatile(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getArrayBooleanElementVolatile(array, index);
+    }
+
+    @Override
+    public byte getArrayByteElementVolatile(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getArrayByteElementVolatile(array, index);
+    }
+
+    @Override
+    public char getArrayCharElementVolatile(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getArrayCharElementVolatile(array, index);
+    }
+
+    @Override
+    public short getArrayShortElementVolatile(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getArrayShortElementVolatile(array, index);
+    }
+
+    @Override
+    public int getArrayIntElementVolatile(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getArrayIntElementVolatile(array, index);
+    }
+
+    @Override
+    public long getArrayLongElementVolatile(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getArrayLongElementVolatile(array, index);
+    }
+
+    @Override
+    public float getArrayFloatElementVolatile(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getArrayFloatElementVolatile(array, index);
+    }
+
+    @Override
+    public double getArrayDoubleElementVolatile(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getArrayDoubleElementVolatile(array, index);
+    }
+
+    @Override
+    public Object getAndSetArrayObjectElement(Object array, int index, Object value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndSetArrayObjectElement(array, index, value);
+    }
+
+    @Override
+    public boolean getAndSetArrayBooleanElement(Object array, int index, boolean value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndSetArrayBooleanElement(array, index, value);
+    }
+
+    @Override
+    public byte getAndSetArrayByteElement(Object array, int index, byte value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndSetArrayByteElement(array, index, value);
+    }
+
+    @Override
+    public char getAndSetArrayCharElement(Object array, int index, char value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndSetArrayCharElement(array, index, value);
+    }
+
+    @Override
+    public short getAndSetArrayShortElement(Object array, int index, short value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndSetArrayShortElement(array, index, value);
+    }
+
+    @Override
+    public int getAndSetArrayIntElement(Object array, int index, int value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndSetArrayIntElement(array, index, value);
+    }
+
+    @Override
+    public long getAndSetArrayLongElement(Object array, int index, long value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndSetArrayLongElement(array, index, value);
+    }
+
+    @Override
+    public float getAndSetArrayFloatElement(Object array, int index, float value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndSetArrayFloatElement(array, index, value);
+    }
+
+    @Override
+    public double getAndSetArrayDoubleElement(Object array, int index, double value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndSetArrayDoubleElement(array, index, value);
+    }
+
+    @Override
+    public void setArrayObjectElementVolatile(Object array, int index, Object value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        AtomicSupport.setArrayObjectElementVolatile(array, index, value);
+    }
+
+    @Override
+    public void setArrayBooleanElementVolatile(Object array, int index, boolean value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        AtomicSupport.setArrayBooleanElementVolatile(array, index, value);
+    }
+
+    @Override
+    public void setArrayByteElementVolatile(Object array, int index, byte value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        AtomicSupport.setArrayByteElementVolatile(array, index, value);
+    }
+
+    @Override
+    public void setArrayCharElementVolatile(Object array, int index, char value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        AtomicSupport.setArrayCharElementVolatile(array, index, value);
+    }
+
+    @Override
+    public void setArrayShortElementVolatile(Object array, int index, short value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        AtomicSupport.setArrayShortElementVolatile(array, index, value);
+    }
+
+    @Override
+    public void setArrayIntElementVolatile(Object array, int index, int value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        AtomicSupport.setArrayIntElementVolatile(array, index, value);
+    }
+
+    @Override
+    public void setArrayLongElementVolatile(Object array, int index, long value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        AtomicSupport.setArrayLongElementVolatile(array, index, value);
+    }
+
+    @Override
+    public void setArrayFloatElementVolatile(Object array, int index, float value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        AtomicSupport.setArrayFloatElementVolatile(array, index, value);
+    }
+
+    @Override
+    public void setArrayDoubleElementVolatile(Object array, int index, double value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        AtomicSupport.setArrayDoubleElementVolatile(array, index, value);
+    }
+
+    @Override
+    public void lazySetArrayObjectElement(Object array, int index, Object value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        AtomicSupport.lazySetArrayObjectElement(array, index, value);
+    }
+
+    @Override
+    public void lazySetArrayBooleanElement(Object array, int index, boolean value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        AtomicSupport.lazySetArrayBooleanElement(array, index, value);
+    }
+
+    @Override
+    public void lazySetArrayByteElement(Object array, int index, byte value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        AtomicSupport.lazySetArrayByteElement(array, index, value);
+    }
+
+    @Override
+    public void lazySetArrayCharElement(Object array, int index, char value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        AtomicSupport.lazySetArrayCharElement(array, index, value);
+    }
+
+    @Override
+    public void lazySetArrayShortElement(Object array, int index, short value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        AtomicSupport.lazySetArrayShortElement(array, index, value);
+    }
+
+    @Override
+    public void lazySetArrayIntElement(Object array, int index, int value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        AtomicSupport.lazySetArrayIntElement(array, index, value);
+    }
+
+    @Override
+    public void lazySetArrayLongElement(Object array, int index, long value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        AtomicSupport.lazySetArrayLongElement(array, index, value);
+    }
+
+    @Override
+    public void lazySetArrayFloatElement(Object array, int index, float value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        AtomicSupport.lazySetArrayFloatElement(array, index, value);
+    }
+
+    @Override
+    public void lazySetArrayDoubleElement(Object array, int index, double value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        AtomicSupport.lazySetArrayDoubleElement(array, index, value);
+    }
+
+    @Override
+    public boolean compareAndSetArrayObjectElement(Object array, int index, Object expected, Object value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.compareAndSetArrayObjectElement(array, index, expected, value);
+    }
+
+    @Override
+    public boolean compareAndSetArrayBooleanElement(Object array, int index, boolean expected, boolean value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.compareAndSetArrayBooleanElement(array, index, expected, value);
+    }
+
+    @Override
+    public boolean compareAndSetArrayByteElement(Object array, int index, byte expected, byte value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.compareAndSetArrayByteElement(array, index, expected, value);
+    }
+
+    @Override
+    public boolean compareAndSetArrayCharElement(Object array, int index, char expected, char value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.compareAndSetArrayCharElement(array, index, expected, value);
+    }
+
+    @Override
+    public boolean compareAndSetArrayShortElement(Object array, int index, short expected, short value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.compareAndSetArrayShortElement(array, index, expected, value);
+    }
+
+    @Override
+    public boolean compareAndSetArrayIntElement(Object array, int index, int expected, int value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.compareAndSetArrayIntElement(array, index, expected, value);
+    }
+
+    @Override
+    public boolean compareAndSetArrayLongElement(Object array, int index, long expected, long value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.compareAndSetArrayLongElement(array, index, expected, value);
+    }
+
+    @Override
+    public boolean compareAndSetArrayFloatElement(Object array, int index, float expected, float value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.compareAndSetArrayFloatElement(array, index, expected, value);
+    }
+
+    @Override
+    public boolean compareAndSetArrayDoubleElement(Object array, int index, double expected, double value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.compareAndSetArrayDoubleElement(array, index, expected, value);
+    }
+
+    @Override
+    public boolean weakCompareAndSetArrayObjectElement(Object array, int index, Object expected, Object value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.weakCompareAndSetArrayObjectElement(array, index, expected, value);
+    }
+
+    @Override
+    public boolean weakCompareAndSetArrayBooleanElement(Object array, int index, boolean expected, boolean value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.weakCompareAndSetArrayBooleanElement(array, index, expected, value);
+    }
+
+    @Override
+    public boolean weakCompareAndSetArrayByteElement(Object array, int index, byte expected, byte value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.weakCompareAndSetArrayByteElement(array, index, expected, value);
+    }
+
+    @Override
+    public boolean weakCompareAndSetArrayCharElement(Object array, int index, char expected, char value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.weakCompareAndSetArrayCharElement(array, index, expected, value);
+    }
+
+    @Override
+    public boolean weakCompareAndSetArrayShortElement(Object array, int index, short expected, short value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.weakCompareAndSetArrayShortElement(array, index, expected, value);
+    }
+
+    @Override
+    public boolean weakCompareAndSetArrayIntElement(Object array, int index, int expected, int value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.weakCompareAndSetArrayIntElement(array, index, expected, value);
+    }
+
+    @Override
+    public boolean weakCompareAndSetArrayLongElement(Object array, int index, long expected, long value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.weakCompareAndSetArrayLongElement(array, index, expected, value);
+    }
+
+    @Override
+    public boolean weakCompareAndSetArrayFloatElement(Object array, int index, float expected, float value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.weakCompareAndSetArrayFloatElement(array, index, expected, value);
+    }
+
+    @Override
+    public boolean weakCompareAndSetArrayDoubleElement(Object array, int index, double expected, double value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.weakCompareAndSetArrayDoubleElement(array, index, expected, value);
+    }
+
+    @Override
+    public byte getAndAddArrayByteElement(Object array, int index, byte delta) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndAddArrayByteElement(array, index, delta);
+    }
+
+    @Override
+    public short getAndAddArrayShortElement(Object array, int index, short delta) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndAddArrayShortElement(array, index, delta);
+    }
+
+    @Override
+    public int getAndAddArrayIntElement(Object array, int index, int delta) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndAddArrayIntElement(array, index, delta);
+    }
+
+    @Override
+    public long getAndAddArrayLongElement(Object array, int index, long delta) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndAddArrayLongElement(array, index, delta);
+    }
+
+    @Override
+    public float getAndAddArrayFloatElement(Object array, int index, float delta) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndAddArrayFloatElement(array, index, delta);
+    }
+
+    @Override
+    public double getAndAddArrayDoubleElement(Object array, int index, double delta) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndAddArrayDoubleElement(array, index, delta);
+    }
+
+    @Override
+    public byte getAndIncrementArrayByteElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndIncrementArrayByteElement(array, index);
+    }
+
+    @Override
+    public short getAndIncrementArrayShortElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndIncrementArrayShortElement(array, index);
+    }
+
+    @Override
+    public int getAndIncrementArrayIntElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndIncrementArrayIntElement(array, index);
+    }
+
+    @Override
+    public long getAndIncrementArrayLongElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndIncrementArrayLongElement(array, index);
+    }
+
+    @Override
+    public float getAndIncrementArrayFloatElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndIncrementArrayFloatElement(array, index);
+    }
+
+    @Override
+    public double getAndIncrementArrayDoubleElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndIncrementArrayDoubleElement(array, index);
+    }
+
+    @Override
+    public byte getAndDecrementArrayByteElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndDecrementArrayByteElement(array, index);
+    }
+
+    @Override
+    public short getAndDecrementArrayShortElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndDecrementArrayShortElement(array, index);
+    }
+
+    @Override
+    public int getAndDecrementArrayIntElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndDecrementArrayIntElement(array, index);
+    }
+
+    @Override
+    public long getAndDecrementArrayLongElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndDecrementArrayLongElement(array, index);
+    }
+
+    @Override
+    public float getAndDecrementArrayFloatElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndDecrementArrayFloatElement(array, index);
+    }
+
+    @Override
+    public double getAndDecrementArrayDoubleElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.getAndDecrementArrayDoubleElement(array, index);
+    }
+
+    @Override
+    public byte addAndGetArrayByteElement(Object array, int index, byte delta) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.addAndGetArrayByteElement(array, index, delta);
+    }
+
+    @Override
+    public short addAndGetArrayShortElement(Object array, int index, short delta) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.addAndGetArrayShortElement(array, index, delta);
+    }
+
+    @Override
+    public int addAndGetArrayIntElement(Object array, int index, int delta) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.addAndGetArrayIntElement(array, index, delta);
+    }
+
+    @Override
+    public long addAndGetArrayLongElement(Object array, int index, long delta) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.addAndGetArrayLongElement(array, index, delta);
+    }
+
+    @Override
+    public float addAndGetArrayFloatElement(Object array, int index, float delta) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.addAndGetArrayFloatElement(array, index, delta);
+    }
+
+    @Override
+    public double addAndGetArrayDoubleElement(Object array, int index, double delta) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.addAndGetArrayDoubleElement(array, index, delta);
+    }
+
+    @Override
+    public byte incrementAndGetArrayByteElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.incrementAndGetArrayByteElement(array, index);
+    }
+
+    @Override
+    public short incrementAndGetArrayShortElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.incrementAndGetArrayShortElement(array, index);
+    }
+
+    @Override
+    public int incrementAndGetArrayIntElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.incrementAndGetArrayIntElement(array, index);
+    }
+
+    @Override
+    public long incrementAndGetArrayLongElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.incrementAndGetArrayLongElement(array, index);
+    }
+
+    @Override
+    public float incrementAndGetArrayFloatElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.incrementAndGetArrayFloatElement(array, index);
+    }
+
+    @Override
+    public double incrementAndGetArrayDoubleElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.incrementAndGetArrayDoubleElement(array, index);
+    }
+
+    @Override
+    public byte decrementAndGetArrayByteElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.decrementAndGetArrayByteElement(array, index);
+    }
+
+    @Override
+    public short decrementAndGetArrayShortElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.decrementAndGetArrayShortElement(array, index);
+    }
+
+    @Override
+    public int decrementAndGetArrayIntElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.decrementAndGetArrayIntElement(array, index);
+    }
+
+    @Override
+    public long decrementAndGetArrayLongElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.decrementAndGetArrayLongElement(array, index);
+    }
+
+    @Override
+    public float decrementAndGetArrayFloatElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.decrementAndGetArrayFloatElement(array, index);
+    }
+
+    @Override
+    public double decrementAndGetArrayDoubleElement(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
+        return AtomicSupport.decrementAndGetArrayDoubleElement(array, index);
     }
 
 }

@@ -12,7 +12,7 @@ import java.nio.charset.Charset;
 import java.util.Locale;
 import java.util.Objects;
 
-import static unrefined.io.IOFactory.getFilteredOutputStream;
+import static unrefined.io.IOStreams.getFilteredOutputStream;
 
 public class ConsoleStream extends OutputStream {
 

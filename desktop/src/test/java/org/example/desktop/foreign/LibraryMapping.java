@@ -22,7 +22,7 @@ public class LibraryMapping {
     }
 
     public static void main(String[] args) {
-        DesktopRuntime.setup(args);              // Initialize the Unrefined runtime environment
+        DesktopRuntime.initialize(args);              // Initialize the Unrefined runtime environment
         Foreign foreign = Foreign.getInstance(); // Get the platform-dependent FFI factory
 
         Random random = ThreadLocalRandom.current();

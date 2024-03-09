@@ -7,15 +7,16 @@ import unrefined.context.ContextAdapter;
 import unrefined.media.graphics.Bitmap;
 import unrefined.media.graphics.Brush;
 import unrefined.media.graphics.Color;
+import unrefined.media.graphics.Cursor;
+import unrefined.media.graphics.CursorNotFoundException;
 import unrefined.media.graphics.Drawing;
 import unrefined.media.graphics.Graphics;
 import unrefined.media.graphics.Insets;
 import unrefined.media.graphics.Path;
-import unrefined.runtime.DesktopApplication;
+import unrefined.runtime.DesktopContainer;
 import unrefined.runtime.DesktopRuntime;
+import unrefined.util.UnexpectedError;
 import unrefined.util.signal.Dispatcher;
-
-import java.awt.EventQueue;
 
 /**
  * This class creates a simple graffiti board, with a white background and a "plain black" brush.
@@ -23,10 +24,10 @@ import java.awt.EventQueue;
 public class GraffitiBoard {
 
     public static void main(String[] args) {
-        DesktopRuntime.setup(args);             // Initialize the Unrefined runtime environment
+        DesktopRuntime.initialize(args);             // Initialize the Unrefined runtime environment
 
         // Initialize the Unrefined container (on desktop it's a window)
-        DesktopApplication application = new DesktopApplication(new ContainerAdapter() { // The lifecycle listener, it's fully platform-independent
+        DesktopContainer container = new DesktopContainer(new ContainerAdapter() { // The lifecycle listener, it's fully platform-independent
 
             private Context canvas;
             private Brush black;
@@ -44,6 +45,14 @@ public class GraffitiBoard {
 
                 Drawing drawing = Drawing.getInstance();  // Get the platform-dependent 2D factory instance
                 black = drawing.createBrush(Color.BLACK); // Create the "plain black" brush
+
+                Cursor pointing;
+                try {
+                    pointing = drawing.getCursor(Cursor.Type.POINTING_HAND); // Get the "pointing hand" cursor
+                } catch (CursorNotFoundException e) {
+                    throw new UnexpectedError(e);
+                }
+                container.setCursor(pointing);
 
                 path = drawing.createPath();              // Create the path
 
@@ -135,7 +144,7 @@ public class GraffitiBoard {
             }
         });
 
-        Dispatcher.defaultInstance().invokeLater(application); // Launch the container
+        Dispatcher.defaultInstance().invokeLater(container); // Launch the container
     }
 
 }

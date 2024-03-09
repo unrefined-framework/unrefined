@@ -28,8 +28,20 @@ public abstract class Platform {
     public String getRuntimeVendor() {
         return Environment.properties.getProperty("unrefined.runtime.vendor");
     }
+    public String getBackendImplementer() {
+        return Environment.properties.getProperty("unrefined.backend.implementer");
+    }
+    public String getPlatformImplementer() {
+        return Environment.properties.getProperty("unrefined.platform.implementer");
+    }
+    public String getSystemImplementer() {
+        return Environment.properties.getProperty("unrefined.os.implementer");
+    }
+    public String getRuntimeImplementer() {
+        return Environment.properties.getProperty("unrefined.runtime.implementer");
+    }
     /**
-     * Gets the name of Unrefined backend. e.g. <code>Java Standard Edition</code>
+     * Gets the name of Unrefined backend. e.g. <code>Unrefined For Java Standard Edition</code>
      * @return the name of Unrefined backend
      */
     public String getBackendName() {
@@ -117,8 +129,8 @@ public abstract class Platform {
     public File getTempDirectory() {
         return new File(Environment.properties.getProperty("unrefined.os.directory.tmp"));
     }
-    public File getUserDirectory() {
-        return new File(Environment.properties.getProperty("unrefined.os.directory.user"));
+    public File getHomeDirectory() {
+        return new File(Environment.properties.getProperty("unrefined.os.directory.home"));
     }
     public File getConfigDirectory() {
         return new File(Environment.properties.getProperty("unrefined.os.directory.config"));

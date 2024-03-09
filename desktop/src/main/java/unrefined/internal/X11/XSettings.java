@@ -3,9 +3,10 @@ package unrefined.internal.X11;
 import unrefined.desktop.StandardDirectories;
 import unrefined.desktop.OSInfo;
 import unrefined.util.NotInstantiableError;
-import unrefined.util.StringCompat;
+import unrefined.util.Strings;
 
 import java.awt.Color;
+import java.awt.GraphicsEnvironment;
 import java.awt.Toolkit;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -31,15 +32,11 @@ public final class XSettings {
         throw new NotInstantiableError(XSettings.class);
     }
 
-    private static final File XSETTINGS_HOME;
-    private static final String XSETTINGS_NAME;
-    private static final File XSETTINGS_FILE;
-    private static final Path XSETTINGS_PATH;
     private static final Map<String, Object> XSETTINGS;
     private static final PropertyChangeSupport PROPERTY_CHANGE_SUPPORT;
 
-    private static void reload(boolean notify) {
-        if (!XSETTINGS_FILE.exists()) {
+    private static void reload(File file, Path path, boolean notify) {
+        if (!file.exists()) {
             synchronized (XSETTINGS) {
                 if (notify) {
                     for (Map.Entry<String, Object> entry : XSETTINGS.entrySet()) {
@@ -49,8 +46,8 @@ public final class XSettings {
                 XSETTINGS.clear();
             }
         }
-        else if (XSETTINGS_FILE.canRead()) {
-            try (BufferedReader reader = Files.newBufferedReader(XSETTINGS_PATH)) {
+        else if (file.canRead()) {
+            try (BufferedReader reader = Files.newBufferedReader(file.toPath())) {
                 synchronized (XSETTINGS) {
                     Map<String, Object> buffer;
                     if (notify) buffer = new HashMap<>();
@@ -62,10 +59,10 @@ public final class XSettings {
                     reader.lines().forEach(line -> {
                         int comment = line.indexOf('#');
                         if (comment != -1) line = line.substring(0, comment);
-                        if (!StringCompat.isBlank(line)) {
+                        if (!Strings.isBlank(line)) {
                             String key = line.substring(0, line.indexOf(' '));
                             String value = line.substring(line.indexOf(' ')).trim();
-                            if (StringCompat.isBlank(value)) return;
+                            if (Strings.isBlank(value)) return;
                             Object current = null;
                             if (value.startsWith("\"") && value.endsWith("\"")) {
                                 // String value
@@ -116,73 +113,45 @@ public final class XSettings {
         }
     }
 
-    private static void daemon() {
-        if (!OSInfo.IS_X11) return;
-        reload(false);
-        Thread thread = new Thread(() -> {
-            FileSystem fileSystem = FileSystems.getDefault();
-            try {
-                WatchService watcher = fileSystem.newWatchService();
-                Path dir = XSETTINGS_HOME.toPath();
-                dir.register(watcher, ENTRY_MODIFY);
-                while (true) {
-
-                    // wait for key to be signaled
-                    WatchKey key;
-                    try {
-                        key = watcher.take();
-                    } catch (InterruptedException e) {
-                        return;
-                    }
-
-                    for (WatchEvent<?> event : key.pollEvents()) {
-                        WatchEvent.Kind<?> kind = event.kind();
-
-                        // This key is registered only
-                        // for ENTRY_CREATE events,
-                        // but an OVERFLOW event can
-                        // occur regardless if events
-                        // are lost or discarded.
-                        if (kind == OVERFLOW) continue;
-
-                        // The filename is the
-                        // context of the event.
-                        @SuppressWarnings("unchecked")
-                        Path path = ((WatchEvent<Path>) event).context();
-
-                        // Verify that the new file is the xsettingsd.conf file.
-                        if (path.getFileName().equals(XSETTINGS_PATH.getFileName())) {
-                            reload(true);
-                        }
-                    }
-
-                    // Reset the key -- this step is critical if you want to
-                    // receive further watch events.  If the key is no longer valid,
-                    // the directory is inaccessible so exit the loop.
-                    if (!key.reset()) break;
-                }
-            } catch (IOException ignored) {
-            }
-        }, "Unrefined XSettings Daemon");
-        thread.setDaemon(true);
-        thread.start();
-    }
-
     static {
         PROPERTY_CHANGE_SUPPORT = new PropertyChangeSupport(Toolkit.getDefaultToolkit());
-        if (OSInfo.IS_X11) {
-            XSETTINGS_HOME = new File(StandardDirectories.CONFIG_HOME, "xsettingsd");
-            XSETTINGS_NAME = "xsettingsd.conf";
-            XSETTINGS_FILE = new File(XSETTINGS_HOME, XSETTINGS_NAME);
-            XSETTINGS_PATH = XSETTINGS_FILE.toPath();
+        if (OSInfo.IS_X11 && !GraphicsEnvironment.isHeadless()) {
+            File settingsHome = new File(StandardDirectories.CONFIG_HOME, "xsettingsd");
+            File settingsFile = new File(settingsHome, "xsettingsd.conf");
+            Path settingsPath = settingsFile.toPath();
             XSETTINGS = new HashMap<>();
-            daemon();
+            reload(settingsFile, settingsPath, false);
+            Thread thread = new Thread(() -> {
+                FileSystem fileSystem = FileSystems.getDefault();
+                try {
+                    WatchService watcher = fileSystem.newWatchService();
+                    Path dir = settingsHome.toPath();
+                    dir.register(watcher, ENTRY_MODIFY);
+                    while (true) {
+                        WatchKey key;
+                        try {
+                            key = watcher.take();
+                        } catch (InterruptedException e) {
+                            continue;
+                        }
+                        for (WatchEvent<?> event : key.pollEvents()) {
+                            WatchEvent.Kind<?> kind = event.kind();
+                            if (kind == OVERFLOW) continue;
+                            @SuppressWarnings("unchecked")
+                            Path path = ((WatchEvent<Path>) event).context();
+                            if (path.getFileName().equals(settingsPath.getFileName())) {
+                                reload(settingsFile, settingsPath, true);
+                            }
+                        }
+                        if (!key.reset()) break;
+                    }
+                } catch (IOException ignored) {
+                }
+            }, "Unrefined XSettings Daemon");
+            thread.setDaemon(true);
+            thread.start();
         }
         else {
-            XSETTINGS_HOME = null;
-            XSETTINGS_NAME = null;
-            XSETTINGS_FILE = null;
-            XSETTINGS_PATH = null;
             XSETTINGS = null;
         }
     }

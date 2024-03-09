@@ -12,8 +12,8 @@ import static unrefined.desktop.ForeignSupport.INVOKER;
 import static unrefined.desktop.ForeignSupport.MEMORY_IO;
 import static unrefined.desktop.UnsafeSupport.UNSAFE;
 import static unrefined.desktop.OSInfo.IS_WINDOWS;
-import static unrefined.internal.posix.POSIXConsoleSupport.IS_CYGWIN;
-import static unrefined.internal.windows.WindowsLibrary.Kernel32;
+import static unrefined.internal.posix.PosixConsoleSupport.IS_CYGWIN;
+import static unrefined.internal.windows.WindowsSupport.Kernel32;
 
 public final class WindowsConsoleSupport {
 

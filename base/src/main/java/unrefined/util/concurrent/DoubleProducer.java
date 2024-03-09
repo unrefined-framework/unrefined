@@ -7,9 +7,13 @@ public interface DoubleProducer extends Callable<Double> {
 
     @Override
     default Double call() throws Exception {
-        return get();
+        return getAsDouble();
     }
 
-    double get();
+    default Double get() {
+        return getAsDouble();
+    }
+
+    double getAsDouble();
 
 }

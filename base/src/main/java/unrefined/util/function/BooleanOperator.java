@@ -1,13 +1,17 @@
 package unrefined.util.function;
 
 @FunctionalInterface
-public interface BooleanOperator extends VarFunctor<Boolean> {
+public interface BooleanOperator extends Operator<Boolean> {
 
     @Override
-    default Boolean actuate(Object... args) {
-        return apply((boolean) args[0]);
+    default Boolean apply(Boolean a) {
+        return applyAsBoolean(a);
     }
 
-    boolean apply(boolean a);
+    default boolean test(boolean t) {
+        return applyAsBoolean(t);
+    }
+
+    boolean applyAsBoolean(boolean a);
 
 }

@@ -1,16 +1,21 @@
 package unrefined.runtime;
 
 import unrefined.app.Preferences;
+import unrefined.desktop.PreferencesSupport;
+import unrefined.util.Half;
+import unrefined.util.Rational;
 import unrefined.util.event.EventSlot;
-import unrefined.util.signal.Signal;
 import unrefined.util.signal.SignalSlot;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,55 +29,56 @@ import static java.nio.file.StandardOpenOption.*;
 
 public class DesktopPreferences extends Preferences {
 
-    private final Properties properties = new Properties();
+    private static final Map<File, DesktopPreferences> preferencesMap = new HashMap<>();
 
-    private final Map<Object, Object> cache = new HashMap<>();
-    private final Set<Object> removed = new HashSet<>();
+    public static DesktopPreferences get(File parent, String name) {
+        Objects.requireNonNull(name);
+        File file = new File(parent, name + ".properties");
+        if (!preferencesMap.containsKey(file)) synchronized (preferencesMap) {
+            if (!preferencesMap.containsKey(file)) preferencesMap.put(file, new DesktopPreferences(file));
+        }
+        return preferencesMap.get(file);
+    }
+
+    public static boolean delete(File parent, String name) {
+        Objects.requireNonNull(name);
+        File file = new File(parent, name + ".properties");
+        synchronized (preferencesMap) {
+            preferencesMap.remove(file);
+        }
+        return file.delete();
+    }
+
+    private final Properties properties = new Properties();
 
     private final String name;
     private final File file;
     private final File bakFile;
-    private final Object fileLock = new Object();
-    private final Object cacheLock = new Object();
 
-    private final Signal<Runnable> onApply = Signal.ofRunnable();
-    private static final BaseDispatcher DISPATCHER = new BaseDispatcher("Unrefined Desktop Preferences");
-
-    private final Editor editor;
-
-    public DesktopPreferences(File parent, String name) {
-        Objects.requireNonNull(name);
-        onApply.connect(this::write, DISPATCHER);
-        this.file = new File(parent, name + ".xml");
+    private DesktopPreferences(File file) {
+        this.file = file;
         String fileName = file.getName();
         this.name = fileName.substring(0, fileName.lastIndexOf('.'));
         this.bakFile = new File(file.getAbsolutePath() + ".bak");
-        synchronized (fileLock) {
-            try {
-                if (bakFile.exists() && bakFile.isFile()) {
-                    Files.copy(bakFile.toPath(), file.toPath(), REPLACE_EXISTING);
-                    Files.delete(bakFile.toPath());
-                }
-                if (file.exists() && file.isFile()) {
-                    try (InputStream stream = Files.newInputStream(file.toPath(), READ)) {
-                        properties.load(stream);
-                    }
-                    catch (IOException ignored) {
-                    }
-                }
+        try {
+            if (bakFile.exists() && bakFile.isFile()) {
+                Files.copy(bakFile.toPath(), file.toPath(), REPLACE_EXISTING);
+                Files.delete(bakFile.toPath());
             }
-            catch (IOException ignored) {
+            if (file.exists() && file.isFile()) {
+                try (InputStream stream = Files.newInputStream(file.toPath(), READ)) {
+                    properties.load(new InputStreamReader(stream, StandardCharsets.UTF_8));
+                }
+                catch (IOException ignored) {
+                }
             }
         }
-        editor = new Editor();
+        catch (IOException ignored) {
+        }
     }
 
     public Properties getProperties() {
         return properties;
-    }
-
-    public Map<Object, Object> getCache() {
-        return cache;
     }
 
     public File getFile() {
@@ -86,20 +92,26 @@ public class DesktopPreferences extends Preferences {
 
     @Override
     public Preferences.Editor edit() {
-        return editor;
+        return new Editor(this);
     }
 
-    private class Editor extends Preferences.Editor {
+    private static class Editor extends Preferences.Editor {
+        private final DesktopPreferences preferences;
+        public Editor(DesktopPreferences preferences) {
+            this.preferences = preferences;
+        }
+        private final Set<String> removed = new HashSet<>();
+        private final Map<String, String> cache = new HashMap<>();
         private Editor put(String key, String value) {
-            synchronized (cacheLock) {
-                if (!value.equals(cache.put(key, value)) && !DesktopPreferences.this.onChange().isEmpty())
-                    DesktopPreferences.this.onChange().emit(new ChangeEvent(DesktopPreferences.this, key));
+            synchronized (this) {
+                removed.remove(key);
+                cache.put(key, value);
             }
             return this;
         }
         @Override
         public Editor onChange(SignalSlot<EventSlot<ChangeEvent>> consumer) {
-            consumer.accept(DesktopPreferences.this.onChange());
+            consumer.accept(preferences.onChange());
             return this;
         }
         @Override
@@ -147,30 +159,54 @@ public class DesktopPreferences extends Preferences {
             return put(key, value.toEngineeringString());
         }
         @Override
+        public Editor putRational(String key, Rational value) {
+            return put(key, value.toString());
+        }
+        @Override
+        public Editor putHalf(String key, short value) {
+            return put(key, Half.toString(value));
+        }
+        @Override
         public Editor remove(String key) {
-            synchronized (cacheLock) {
-                cache.remove(key);
+            synchronized (this) {
                 removed.add(key);
+                cache.remove(key);
             }
             return this;
         }
         @Override
         public Editor clear() {
-            synchronized (cacheLock) {
-                removed.addAll(properties.keySet());
+            synchronized (this) {
+                removed.addAll(preferences.properties.stringPropertyNames());
                 cache.clear();
             }
             return this;
         }
+        private void flush() {
+            synchronized (this) {
+                for (String key : removed) {
+                    if (preferences.properties.remove(key) != null)
+                        preferences.onChange().emit(new ChangeEvent(preferences, key));
+                }
+                removed.clear();
+                for (Map.Entry<String, String> entry : cache.entrySet()) {
+                    String key = entry.getKey();
+                    String value = entry.getValue();
+                    if (!value.equals(preferences.properties.put(key, value)))
+                        preferences.onChange().emit(new ChangeEvent(preferences, key));
+                }
+                cache.clear();
+            }
+        }
         @Override
         public boolean commit() {
             flush();
-            return write();
+            return preferences.write();
         }
         @Override
         public void apply() {
             flush();
-            onApply.emit();
+            PreferencesSupport.enqueueWrite(preferences::write);
         }
     }
 
@@ -252,6 +288,18 @@ public class DesktopPreferences extends Preferences {
     }
 
     @Override
+    public Rational getRational(String key, Rational defaultValue) {
+        String value = properties.getProperty(key);
+        return value == null ? defaultValue : Rational.parseRational(value);
+    }
+
+    @Override
+    public short getHalf(String key, short defaultValue) {
+        String value = properties.getProperty(key);
+        return value == null ? defaultValue : Half.parseHalf(value);
+    }
+
+    @Override
     public int size() {
         return properties.size();
     }
@@ -261,26 +309,16 @@ public class DesktopPreferences extends Preferences {
         return properties.containsKey(key);
     }
 
-    private void flush() {
-        synchronized (cacheLock) {
-            removed.removeAll(cache.keySet());
-            properties.putAll(cache);
-            cache.clear();
-            properties.keySet().removeAll(removed);
-            removed.clear();
-        }
-    }
-
     private boolean write() {
-        synchronized (fileLock) {
+        synchronized (properties) {
             try {
                 if (file.exists()) {
                     if (createFileIfNotExists(bakFile)) Files.copy(file.toPath(), bakFile.toPath(), REPLACE_EXISTING);
                     else return false;
                 }
                 if (createFileIfNotExists(file)) {
-                    try (OutputStream stream = Files.newOutputStream(file.toPath(), WRITE, CREATE, SYNC)) {
-                        properties.storeToXML(stream, null, "UTF-8");
+                    try (OutputStream stream = Files.newOutputStream(file.toPath(), WRITE, TRUNCATE_EXISTING, CREATE, SYNC)) {
+                        properties.store(new OutputStreamWriter(stream, StandardCharsets.UTF_8), null);
                         Files.delete(bakFile.toPath());
                         return true;
                     }

@@ -36,7 +36,7 @@ public abstract class ShortProperty {
         return new Instance(initialValue);
     }
 
-    public static ShortProperty ofDefault() {
+    public static ShortProperty of() {
         return new Instance();
     }
 
@@ -83,7 +83,7 @@ public abstract class ShortProperty {
         }
         @Override
         public short get() {
-            return getter.get();
+            return getter.getAsShort();
         }
     }
 

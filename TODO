@@ -27,12 +27,24 @@ JavaScript Engine [macOS/iOS JavaScriptCore (JIT disabled), other QuickJS]
 --------------------------------
 Utilities
 --------------------------------
+Single Instance Checker
+Stream API
 Process API
 String Template API
 File Monitor
 Collection/Map Utilities
-String/Text Utilities
+String/CharSequence Utilities
 InputStream/OutputStream Utilities
+--------------------------------
+
+--------------------------------
+Foreign
+--------------------------------
+Component Object Model
+D-Bus
+GObject Introspection
+Bridge between JVM and .NET CLR
+Bridge between JVM and Objective-C Runtime
 --------------------------------
 
 --------------------------------
@@ -45,10 +57,11 @@ Attributed Text
 --------------------------------
 Networking
 --------------------------------
-TCP/UDP/SSL Socket
+TCP/UDP/SSL/ICMP Socket
 HTTP/HTTPS
 WebSocket
-Networking [Single-instance factory]
+UNIX Domain Socket
+Network [Single-instance factory]
 --------------------------------
 
 --------------------------------
@@ -64,25 +77,22 @@ Data Serialization/Deserialization
 --------------------------------
 JSON [Desktop modified org.json, Android/RoboVM SDK JSON API, TeaVM HTML5 JSON API]
 XML DOM SAX XPath [Desktop javax.xml, Android/RoboVM SDK XML API, TeaVM HTML5 XML API]
-INI
-Properties
+Preferences
 Binary [Bit-based I/O as enhancement required]
+SQLite
 --------------------------------
 
 --------------------------------
 Embedded Native Widgets
 --------------------------------
-Video Player [Windows Media Player Control, macOS/iOS AVPlayer, UNIX GStreamer, Android VideoView]
 WebView [Windows WebView2, macOS/iOS WKWebView, UNIX WebKitGTK, Android WebView]
 --------------------------------
 
 --------------------------------
 Music/Sound Effects
 --------------------------------
-Music [Long, streaming-playing music]
-Sound [Short, memory-buffered sound effects]
-AudioTrack [Directly read pcm from microphone or write pcm to speaker]
-Sampled [Single-instance factory, create audio instances, decoder/encoder for several audio formats]
+Microphone [Directly read pcm from microphone]
+Speaker [Directly write pcm to speaker]
 --------------------------------
 
 --------------------------------

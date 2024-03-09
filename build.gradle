@@ -16,11 +16,11 @@ subprojects {
         libraryName = 'Unrefined'
         libraryGroupName = 'unrefined'
         libraryPublishGroupName = 'com.tianscar.unrefined'
-        libraryDescription = 'Simple, lightweight, cross-platform utilities library which also provides some common features for application/game development.'
+        libraryDescription = 'Cross-platform multimedia framework written in pure Java.'
         libraryUrl = 'https://github.com/Tianscar/unrefined'
 
-        libraryVersionCode = 60
-        libraryVersionName = '0.6.0-SNAPSHOT'
+        libraryVersionCode = 70
+        libraryVersionName = '0.7.1-SNAPSHOT'
         libraryVersionCodeName = 'Claw Hammer'
 
         libraryLicenseName = 'The Apache License, Version 2.0'
@@ -28,6 +28,7 @@ subprojects {
         libraryScmConnection = 'scm:git:git@github.com/Tianscar/unrefined.git'
         libraryScmDeveloperConnection = libraryScmConnection
         libraryScmUrl = libraryUrl
+        libraryDevelopersId = 'Unrefined'
         libraryDevelopersName = 'Unrefined Contributors'
         libraryDeveloperId = 'Tianscar'
         libraryDeveloperName = 'Karstian Lee'
@@ -94,10 +95,11 @@ configure (baseProjects + desktopProjects) {
 
     jar {
         manifest {
-            attributes 'Unrefined-Specification-Vendor': libraryDeveloperName
+            attributes 'Unrefined-Specification-Vendor': libraryDevelopersName
             attributes 'Unrefined-Specification-Title': libraryName
             attributes 'Unrefined-Specification-Version': libraryVersionCodeName
-            attributes 'Unrefined-Implementation-Vendor': libraryDevelopersName
+            attributes 'Unrefined-Implementation-Vendor': libraryDevelopersId
+            attributes 'Unrefined-Implementation-Title': libraryGroupName
             attributes 'Unrefined-Implementation-Version': libraryVersionName
         }
     }

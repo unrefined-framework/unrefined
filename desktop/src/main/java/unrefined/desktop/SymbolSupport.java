@@ -1,12 +1,14 @@
 package unrefined.desktop;
 
 import com.kenai.jffi.CallContext;
+import com.kenai.jffi.Closure;
 import com.kenai.jffi.HeapInvocationBuffer;
 import com.kenai.jffi.Library;
 import com.kenai.jffi.Type;
 import unrefined.nio.Pointer;
+import unrefined.util.FastArray;
 import unrefined.util.NotInstantiableError;
-import unrefined.util.StringCompat;
+import unrefined.util.Strings;
 import unrefined.util.UnexpectedError;
 import unrefined.util.foreign.Aggregate;
 
@@ -24,7 +26,7 @@ public class SymbolSupport {
     }
 
     public static long find(Library library, String name) {
-        if (StringCompat.isBlank(Objects.requireNonNull(name))) throw new IllegalArgumentException("blank symbol name");
+        if (Strings.isBlank(Objects.requireNonNull(name))) throw new IllegalArgumentException("blank symbol name");
         return library.getSymbolAddress(name);
     }
 
@@ -40,7 +42,7 @@ public class SymbolSupport {
     }
 
     public static long find(ClassLoader classLoader, String name) {
-        if (StringCompat.isBlank(Objects.requireNonNull(name))) throw new IllegalArgumentException("blank symbol name");
+        if (Strings.isBlank(Objects.requireNonNull(name))) throw new IllegalArgumentException("blank symbol name");
         try {
             return ReflectionSupport.invokeLongMethod(null, findNativeMethod, classLoader, name);
         } catch (InvocationTargetException e) {
@@ -49,7 +51,7 @@ public class SymbolSupport {
     }
 
     public static long find(String name) {
-        if (StringCompat.isBlank(Objects.requireNonNull(name))) throw new IllegalArgumentException("blank symbol name");
+        if (Strings.isBlank(Objects.requireNonNull(name))) throw new IllegalArgumentException("blank symbol name");
         return find(ReflectionSupport.getCallerClass().getClassLoader(), name);
     }
 
@@ -201,10 +203,10 @@ public class SymbolSupport {
         else if (pointer.hasArrays()) {
             if (!LITTLE_ENDIAN) {
                 if (pointer.size() == arg.getDescriptor().getSize()) {
-                    if (pointer.arraysOffset() % Integer.MAX_VALUE + pointer.size() <= Integer.MAX_VALUE) {
+                    if (pointer.arraysOffset() % FastArray.ARRAY_LENGTH_MAX + pointer.size() <= FastArray.ARRAY_LENGTH_MAX) {
                         heapInvocationBuffer.putStruct(
-                                pointer.arrays()[(int) (pointer.arraysOffset() / Integer.MAX_VALUE)],
-                                (int) (pointer.arraysOffset() % Integer.MAX_VALUE));
+                                pointer.arrays()[(int) (pointer.arraysOffset() / FastArray.ARRAY_LENGTH_MAX)],
+                                (int) (pointer.arraysOffset() % FastArray.ARRAY_LENGTH_MAX));
                     }
                     else {
                         byte[] array = new byte[(int) arg.getDescriptor().getSize()];
@@ -396,4 +398,22 @@ public class SymbolSupport {
         return heapInvocationBuffer;
     }
 
+    private static byte[] toByteArray(Aggregate aggregate) {
+        byte[] array = new byte[(int) aggregate.getDescriptor().getSize()];
+        aggregate.memory().getByteArray(0, array);
+        return reverseIfNeeded(array);
+    }
+
+    public static void push(Closure.Buffer buffer, Object result, Class<?> returnType) {
+        if (result == null) return;
+        if (returnType == boolean.class) buffer.setByteReturn((byte) (((Boolean) result) ? 1 : 0));
+        else if (returnType == byte.class) buffer.setByteReturn(((Number) result).byteValue());
+        else if (returnType == char.class) buffer.setShortReturn((short) ((Character) result).charValue());
+        else if (returnType == short.class) buffer.setShortReturn(((Number) result).shortValue());
+        else if (returnType == int.class) buffer.setIntReturn(((Number) result).intValue());
+        else if (returnType == long.class) buffer.setLongReturn(((Number) result).longValue());
+        else if (returnType == float.class) buffer.setFloatReturn(((Number) result).floatValue());
+        else if (returnType == double.class) buffer.setDoubleReturn(((Number) result).doubleValue());
+        else if (Aggregate.class.isAssignableFrom(returnType)) buffer.setStructReturn(toByteArray((Aggregate) result), 0);
+    }
 }

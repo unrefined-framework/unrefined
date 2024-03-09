@@ -36,7 +36,7 @@ public abstract class CharacterProperty {
         return new Instance(initialValue);
     }
 
-    public static CharacterProperty ofDefault() {
+    public static CharacterProperty of() {
         return new Instance();
     }
 
@@ -85,7 +85,7 @@ public abstract class CharacterProperty {
         }
         @Override
         public char get() {
-            return getter.get();
+            return getter.getAsChar();
         }
     }
 

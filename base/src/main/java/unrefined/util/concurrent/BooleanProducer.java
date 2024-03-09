@@ -7,9 +7,13 @@ public interface BooleanProducer extends Callable<Boolean> {
 
     @Override
     default Boolean call() throws Exception {
-        return get();
+        return getAsBoolean();
     }
 
-    boolean get();
+    default Boolean get() {
+        return getAsBoolean();
+    }
+
+    boolean getAsBoolean();
 
 }

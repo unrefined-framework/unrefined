@@ -9,11 +9,9 @@ import unrefined.media.graphics.Color;
 import unrefined.media.graphics.Drawing;
 import unrefined.media.graphics.Graphics;
 import unrefined.media.graphics.Insets;
-import unrefined.runtime.DesktopApplication;
+import unrefined.runtime.DesktopContainer;
 import unrefined.runtime.DesktopRuntime;
 import unrefined.util.signal.Dispatcher;
-
-import java.awt.EventQueue;
 
 /**
  * After create and add, then you can draw content to the canvas, and it will show to user.
@@ -22,10 +20,10 @@ import java.awt.EventQueue;
 public class DrawOnCanvas {
 
     public static void main(String[] args) {
-        DesktopRuntime.setup(args);             // Initialize the Unrefined runtime environment
+        DesktopRuntime.initialize(args);             // Initialize the Unrefined runtime environment
 
         // Initialize the Unrefined container (on desktop it's a window)
-        DesktopApplication application = new DesktopApplication(new ContainerAdapter() { // The lifecycle listener, it's fully platform-independent
+        DesktopContainer container = new DesktopContainer(new ContainerAdapter() { // The lifecycle listener, it's fully platform-independent
 
             private Context canvas;
             private Brush black;
@@ -87,7 +85,7 @@ public class DrawOnCanvas {
             }
         });
 
-        Dispatcher.defaultInstance().invokeLater(application); // Launch the container
+        Dispatcher.defaultInstance().invokeLater(container); // Launch the container
     }
 
 }

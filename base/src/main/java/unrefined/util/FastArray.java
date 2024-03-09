@@ -3,12 +3,28 @@ package unrefined.util;
 import unrefined.math.FastMath;
 
 import java.lang.reflect.Array;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
 public final class FastArray {
+
+    public static final int ARRAY_DIMENSIONS_MAX = 255;
+    public static final int ARRAY_LENGTH_MAX = Integer.MAX_VALUE - 8;
+    public static final long ARRAY_2D_LENGTH_MAX = (long) ARRAY_LENGTH_MAX * ARRAY_LENGTH_MAX;
+
+    private static final BigInteger ARRAY_LENGTH_MAX_BIGINTEGER = BigInteger.valueOf(ARRAY_LENGTH_MAX);
+    private static final BigInteger ARRAY_2D_LENGTH_MAX_BIGINTEGER = BigInteger.valueOf(ARRAY_2D_LENGTH_MAX);
+
+    public static BigInteger getMaxArrayLength(int dimensions) {
+        if (dimensions == 0) throw new IllegalArgumentException("dimensions == 0");
+        else if (dimensions == 1) return ARRAY_LENGTH_MAX_BIGINTEGER;
+        else if (dimensions == 2) return ARRAY_2D_LENGTH_MAX_BIGINTEGER;
+        else if (dimensions < 2 || dimensions >= 255) throw new IllegalArgumentException("dimensions too large");
+        else return BigInteger.valueOf(ARRAY_LENGTH_MAX).pow(dimensions);
+    }
 
     private FastArray() {
         throw new NotInstantiableError(FastArray.class);
@@ -24,6 +40,10 @@ public final class FastArray {
     @SuppressWarnings("varargs")
     public static <T> List<T> toList(T... array) {
         return Arrays.asList(array.clone());
+    }
+
+    public static <T> List<T> toList(T[] array, int offset, int length) {
+        return Arrays.asList(Arrays.copyOfRange(array, offset, offset + length));
     }
     
     public static List<Boolean> toBoxedList(boolean... array) {
@@ -56,6 +76,38 @@ public final class FastArray {
 
     public static List<Double> toBoxedList(double... array) {
         return Arrays.asList(box(array));
+    }
+
+    public static List<Boolean> toBoxedList(boolean[] array, int offset, int length) {
+        return Arrays.asList(box(array, offset, length));
+    }
+
+    public static List<Byte> toBoxedList(byte[] array, int offset, int length) {
+        return Arrays.asList(box(array, offset, length));
+    }
+
+    public static List<Character> toBoxedList(char[] array, int offset, int length) {
+        return Arrays.asList(box(array, offset, length));
+    }
+
+    public static List<Short> toBoxedList(short[] array, int offset, int length) {
+        return Arrays.asList(box(array, offset, length));
+    }
+
+    public static List<Integer> toBoxedList(int[] array, int offset, int length) {
+        return Arrays.asList(box(array, offset, length));
+    }
+
+    public static List<Long> toBoxedList(long[] array, int offset, int length) {
+        return Arrays.asList(box(array, offset, length));
+    }
+
+    public static List<Float> toBoxedList(float[] array, int offset, int length) {
+        return Arrays.asList(box(array, offset, length));
+    }
+
+    public static List<Double> toBoxedList(double[] array, int offset, int length) {
+        return Arrays.asList(box(array, offset, length));
     }
 
     public static Class<?> getComponentType(Class<?> arrayType) {
@@ -640,7 +692,6 @@ public final class FastArray {
         int newLength = to - from;
         if (newLength < 0)
             throw new ArrayIndexOutOfBoundsException(from + " > " + to);
-        if (original == null) return null;
         T[] copy = (T[]) Array.newInstance(original.getClass().getComponentType(), newLength);
         for (int i = 0, len = Math.min(original.length - from, newLength); i < len; i ++) {
             copy[i] = (T) original[from + i].clone();
@@ -695,8 +746,7 @@ public final class FastArray {
         return original.clone();
     }
 
-    public static Boolean[] box(boolean[] array) {
-        if (array == null) return null;
+    public static Boolean[] box(boolean... array) {
         Boolean[] boxed = new Boolean[array.length];
         for (int i = 0; i < array.length; i ++) {
             boxed[i] = array[i];
@@ -704,8 +754,7 @@ public final class FastArray {
         return boxed;
     }
 
-    public static Byte[] box(byte[] array) {
-        if (array == null) return null;
+    public static Byte[] box(byte... array) {
         Byte[] boxed = new Byte[array.length];
         for (int i = 0; i < array.length; i ++) {
             boxed[i] = array[i];
@@ -713,8 +762,7 @@ public final class FastArray {
         return boxed;
     }
 
-    public static Character[] box(char[] array) {
-        if (array == null) return null;
+    public static Character[] box(char... array) {
         Character[] boxed = new Character[array.length];
         for (int i = 0; i < array.length; i ++) {
             boxed[i] = array[i];
@@ -722,8 +770,7 @@ public final class FastArray {
         return boxed;
     }
 
-    public static Short[] box(short[] array) {
-        if (array == null) return null;
+    public static Short[] box(short... array) {
         Short[] boxed = new Short[array.length];
         for (int i = 0; i < array.length; i ++) {
             boxed[i] = array[i];
@@ -731,8 +778,7 @@ public final class FastArray {
         return boxed;
     }
 
-    public static Integer[] box(int[] array) {
-        if (array == null) return null;
+    public static Integer[] box(int... array) {
         Integer[] boxed = new Integer[array.length];
         for (int i = 0; i < array.length; i ++) {
             boxed[i] = array[i];
@@ -740,8 +786,7 @@ public final class FastArray {
         return boxed;
     }
 
-    public static Long[] box(long[] array) {
-        if (array == null) return null;
+    public static Long[] box(long... array) {
         Long[] boxed = new Long[array.length];
         for (int i = 0; i < array.length; i ++) {
             boxed[i] = array[i];
@@ -749,8 +794,7 @@ public final class FastArray {
         return boxed;
     }
 
-    public static Float[] box(float[] array) {
-        if (array == null) return null;
+    public static Float[] box(float... array) {
         Float[] boxed = new Float[array.length];
         for (int i = 0; i < array.length; i ++) {
             boxed[i] = array[i];
@@ -758,8 +802,7 @@ public final class FastArray {
         return boxed;
     }
 
-    public static Double[] box(double[] array) {
-        if (array == null) return null;
+    public static Double[] box(double... array) {
         Double[] boxed = new Double[array.length];
         for (int i = 0; i < array.length; i ++) {
             boxed[i] = array[i];
@@ -767,8 +810,7 @@ public final class FastArray {
         return boxed;
     }
 
-    public static boolean[] unbox(Boolean[] boxed) {
-        if (boxed == null) return null;
+    public static boolean[] unbox(Boolean... boxed) {
         boolean[] unboxed = new boolean[boxed.length];
         for (int i = 0; i < boxed.length; i ++) {
             unboxed[i] = boxed[i];
@@ -776,8 +818,7 @@ public final class FastArray {
         return unboxed;
     }
 
-    public static byte[] unbox(Byte[] boxed) {
-        if (boxed == null) return null;
+    public static byte[] unbox(Byte... boxed) {
         byte[] unboxed = new byte[boxed.length];
         for (int i = 0; i < boxed.length; i ++) {
             unboxed[i] = boxed[i];
@@ -785,8 +826,7 @@ public final class FastArray {
         return unboxed;
     }
 
-    public static char[] unbox(Character[] boxed) {
-        if (boxed == null) return null;
+    public static char[] unbox(Character... boxed) {
         char[] unboxed = new char[boxed.length];
         for (int i = 0; i < boxed.length; i ++) {
             unboxed[i] = boxed[i];
@@ -794,8 +834,7 @@ public final class FastArray {
         return unboxed;
     }
 
-    public static short[] unbox(Short[] boxed) {
-        if (boxed == null) return null;
+    public static short[] unbox(Short... boxed) {
         short[] unboxed = new short[boxed.length];
         for (int i = 0; i < boxed.length; i ++) {
             unboxed[i] = boxed[i];
@@ -803,8 +842,7 @@ public final class FastArray {
         return unboxed;
     }
 
-    public static int[] unbox(Integer[] boxed) {
-        if (boxed == null) return null;
+    public static int[] unbox(Integer... boxed) {
         int[] unboxed = new int[boxed.length];
         for (int i = 0; i < boxed.length; i ++) {
             unboxed[i] = boxed[i];
@@ -812,8 +850,7 @@ public final class FastArray {
         return unboxed;
     }
 
-    public static long[] unbox(Long[] boxed) {
-        if (boxed == null) return null;
+    public static long[] unbox(Long... boxed) {
         long[] unboxed = new long[boxed.length];
         for (int i = 0; i < boxed.length; i ++) {
             unboxed[i] = boxed[i];
@@ -821,8 +858,7 @@ public final class FastArray {
         return unboxed;
     }
 
-    public static float[] unbox(Float[] boxed) {
-        if (boxed == null) return null;
+    public static float[] unbox(Float... boxed) {
         float[] unboxed = new float[boxed.length];
         for (int i = 0; i < boxed.length; i ++) {
             unboxed[i] = boxed[i];
@@ -830,8 +866,7 @@ public final class FastArray {
         return unboxed;
     }
 
-    public static double[] unbox(Double[] boxed) {
-        if (boxed == null) return null;
+    public static double[] unbox(Double... boxed) {
         double[] unboxed = new double[boxed.length];
         for (int i = 0; i < boxed.length; i ++) {
             unboxed[i] = boxed[i];
@@ -839,23 +874,132 @@ public final class FastArray {
         return unboxed;
     }
 
-    public static int sparseLongArraySize(int need) {
-        return sparseByteArraySize(need * 8) / 8;
-    }
-
-    public static int sparseIntArraySize(int need) {
-        return sparseByteArraySize(need * 4) / 4;
-    }
-
-    public static int sparseShortArraySize(int need) {
-        return sparseByteArraySize(need * 2) / 2;
-    }
-
-    public static int sparseByteArraySize(int need) {
-        for (int i = 4; i < 32; i ++) {
-            if (need <= (1 << i) - 12) return (1 << i) - 12;
+    public static Boolean[] box(boolean[] array, int offset, int length) {
+        Boolean[] boxed = new Boolean[length];
+        for (int i = 0; i < length; i ++) {
+            boxed[i] = array[offset + i];
         }
-        return need;
+        return boxed;
+    }
+
+    public static Byte[] box(byte[] array, int offset, int length) {
+        Byte[] boxed = new Byte[length];
+        for (int i = 0; i < length; i ++) {
+            boxed[i] = array[offset + i];
+        }
+        return boxed;
+    }
+
+    public static Character[] box(char[] array, int offset, int length) {
+        Character[] boxed = new Character[length];
+        for (int i = 0; i < length; i ++) {
+            boxed[i] = array[offset + i];
+        }
+        return boxed;
+    }
+
+    public static Short[] box(short[] array, int offset, int length) {
+        Short[] boxed = new Short[length];
+        for (int i = 0; i < length; i ++) {
+            boxed[i] = array[offset + i];
+        }
+        return boxed;
+    }
+
+    public static Integer[] box(int[] array, int offset, int length) {
+        Integer[] boxed = new Integer[length];
+        for (int i = 0; i < length; i ++) {
+            boxed[i] = array[offset + i];
+        }
+        return boxed;
+    }
+
+    public static Long[] box(long[] array, int offset, int length) {
+        Long[] boxed = new Long[length];
+        for (int i = 0; i < length; i ++) {
+            boxed[i] = array[offset + i];
+        }
+        return boxed;
+    }
+
+    public static Float[] box(float[] array, int offset, int length) {
+        Float[] boxed = new Float[length];
+        for (int i = 0; i < length; i ++) {
+            boxed[i] = array[offset + i];
+        }
+        return boxed;
+    }
+
+    public static Double[] box(double[] array, int offset, int length) {
+        Double[] boxed = new Double[length];
+        for (int i = 0; i < length; i ++) {
+            boxed[i] = array[offset + i];
+        }
+        return boxed;
+    }
+
+    public static boolean[] unbox(Boolean[] boxed, int offset, int length) {
+        boolean[] unboxed = new boolean[length];
+        for (int i = 0; i < length; i ++) {
+            unboxed[i] = boxed[offset + i];
+        }
+        return unboxed;
+    }
+
+    public static byte[] unbox(Byte[] boxed, int offset, int length) {
+        byte[] unboxed = new byte[length];
+        for (int i = 0; i < length; i ++) {
+            unboxed[i] = boxed[offset + i];
+        }
+        return unboxed;
+    }
+
+    public static char[] unbox(Character[] boxed, int offset, int length) {
+        char[] unboxed = new char[length];
+        for (int i = 0; i < length; i ++) {
+            unboxed[i] = boxed[offset + i];
+        }
+        return unboxed;
+    }
+
+    public static short[] unbox(Short[] boxed, int offset, int length) {
+        short[] unboxed = new short[length];
+        for (int i = 0; i < length; i ++) {
+            unboxed[i] = boxed[offset + i];
+        }
+        return unboxed;
+    }
+
+    public static int[] unbox(Integer[] boxed, int offset, int length) {
+        int[] unboxed = new int[length];
+        for (int i = 0; i < length; i ++) {
+            unboxed[i] = boxed[offset + i];
+        }
+        return unboxed;
+    }
+
+    public static long[] unbox(Long[] boxed, int offset, int length) {
+        long[] unboxed = new long[length];
+        for (int i = 0; i < length; i ++) {
+            unboxed[i] = boxed[offset + i];
+        }
+        return unboxed;
+    }
+
+    public static float[] unbox(Float[] boxed, int offset, int length) {
+        float[] unboxed = new float[length];
+        for (int i = 0; i < length; i ++) {
+            unboxed[i] = boxed[offset + i];
+        }
+        return unboxed;
+    }
+
+    public static double[] unbox(Double[] boxed, int offset, int length) {
+        double[] unboxed = new double[length];
+        for (int i = 0; i < length; i ++) {
+            unboxed[i] = boxed[offset + i];
+        }
+        return unboxed;
     }
 
     public static int binarySearch(byte[] array, int fromIndex, int toIndex, byte key) {
@@ -2729,6 +2873,205 @@ public final class FastArray {
 
     public static <T> int mismatch(T[] a, int aOffset, T[] b, int bOffset, int length, Comparator<? super T> comparator) {
         return mismatch(a, aOffset, aOffset + length, b, bOffset, bOffset + length, comparator);
+    }
+    
+    public static void reverse(boolean[] array) {
+        if (array == null) {
+            return;
+        }
+        reverse(array, 0, array.length);
+    }
+    
+    public static void reverse(boolean[] array, int fromIndex, int toIndex) {
+        if (array == null) {
+            return;
+        }
+        int i = Math.max(fromIndex, 0);
+        int j = Math.min(array.length, toIndex) - 1;
+        boolean tmp;
+        while (j > i) {
+            tmp = array[j];
+            array[j] = array[i];
+            array[i] = tmp;
+            j--;
+            i++;
+        }
+    }
+    
+    public static void reverse(byte[] array) {
+        if (array != null) {
+            reverse(array, 0, array.length);
+        }
+    }
+    
+    public static void reverse(byte[] array, int fromIndex, int toIndex) {
+        if (array == null) {
+            return;
+        }
+        int i = Math.max(fromIndex, 0);
+        int j = Math.min(array.length, toIndex) - 1;
+        byte tmp;
+        while (j > i) {
+            tmp = array[j];
+            array[j] = array[i];
+            array[i] = tmp;
+            j--;
+            i++;
+        }
+    }
+    
+    public static void reverse(char[] array) {
+        if (array != null) {
+            reverse(array, 0, array.length);
+        }
+    }
+    
+    public static void reverse(char[] array, int fromIndex, int toIndex) {
+        if (array == null) {
+            return;
+        }
+        int i = Math.max(fromIndex, 0);
+        int j = Math.min(array.length, toIndex) - 1;
+        char tmp;
+        while (j > i) {
+            tmp = array[j];
+            array[j] = array[i];
+            array[i] = tmp;
+            j--;
+            i++;
+        }
+    }
+    
+    public static void reverse(double[] array) {
+        if (array != null) {
+            reverse(array, 0, array.length);
+        }
+    }
+    
+    public static void reverse(double[] array, int fromIndex, int toIndex) {
+        if (array == null) {
+            return;
+        }
+        int i = Math.max(fromIndex, 0);
+        int j = Math.min(array.length, toIndex) - 1;
+        double tmp;
+        while (j > i) {
+            tmp = array[j];
+            array[j] = array[i];
+            array[i] = tmp;
+            j--;
+            i++;
+        }
+    }
+    
+    public static void reverse(float[] array) {
+        if (array != null) {
+            reverse(array, 0, array.length);
+        }
+    }
+    
+    public static void reverse(float[] array, int fromIndex, int toIndex) {
+        if (array == null) {
+            return;
+        }
+        int i = Math.max(fromIndex, 0);
+        int j = Math.min(array.length, toIndex) - 1;
+        float tmp;
+        while (j > i) {
+            tmp = array[j];
+            array[j] = array[i];
+            array[i] = tmp;
+            j--;
+            i++;
+        }
+    }
+    
+    public static void reverse(int[] array) {
+        if (array != null) {
+            reverse(array, 0, array.length);
+        }
+    }
+    
+    public static void reverse(int[] array, int fromIndex, int toIndex) {
+        if (array == null) {
+            return;
+        }
+        int i = Math.max(fromIndex, 0);
+        int j = Math.min(array.length, toIndex) - 1;
+        int tmp;
+        while (j > i) {
+            tmp = array[j];
+            array[j] = array[i];
+            array[i] = tmp;
+            j--;
+            i++;
+        }
+    }
+    
+    public static void reverse(long[] array) {
+        if (array != null) {
+            reverse(array, 0, array.length);
+        }
+    }
+    
+    public static void reverse(long[] array, int fromIndex, int toIndex) {
+        if (array == null) {
+            return;
+        }
+        int i = Math.max(fromIndex, 0);
+        int j = Math.min(array.length, toIndex) - 1;
+        long tmp;
+        while (j > i) {
+            tmp = array[j];
+            array[j] = array[i];
+            array[i] = tmp;
+            j--;
+            i++;
+        }
+    }
+    
+    public static void reverse(Object[] array) {
+        if (array != null) {
+            reverse(array, 0, array.length);
+        }
+    }
+    
+    public static void reverse(Object[] array, int fromIndex, int toIndex) {
+        if (array == null) {
+            return;
+        }
+        int i = Math.max(fromIndex, 0);
+        int j = Math.min(array.length, toIndex) - 1;
+        Object tmp;
+        while (j > i) {
+            tmp = array[j];
+            array[j] = array[i];
+            array[i] = tmp;
+            j--;
+            i++;
+        }
+    }
+    
+    public static void reverse(short[] array) {
+        if (array != null) {
+            reverse(array, 0, array.length);
+        }
+    }
+    
+    public static void reverse(short[] array, int fromIndex, int toIndex) {
+        if (array == null) {
+            return;
+        }
+        int i = Math.max(fromIndex, 0);
+        int j = Math.min(array.length, toIndex) - 1;
+        short tmp;
+        while (j > i) {
+            tmp = array[j];
+            array[j] = array[i];
+            array[i] = tmp;
+            j--;
+            i++;
+        }
     }
 
 }

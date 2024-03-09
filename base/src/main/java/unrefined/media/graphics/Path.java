@@ -11,7 +11,7 @@ public abstract class Path implements Cacheable {
         return Drawing.getInstance().createPath(fillRule);
     }
 
-    public static Path ofDefault() {
+    public static Path of() {
         return Drawing.getInstance().createPath();
     }
 
@@ -143,6 +143,7 @@ public abstract class Path implements Cacheable {
     public abstract void close();
 
     public abstract void getBounds(RectangleF bounds);
+    public abstract void getBounds(Rectangle bounds);
 
     public abstract boolean contains(float x, float y);
     public abstract boolean contains(float x, float y, float width, float height);

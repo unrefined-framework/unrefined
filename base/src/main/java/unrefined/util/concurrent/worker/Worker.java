@@ -37,6 +37,11 @@ public abstract class Worker {
         return onMessage;
     }
 
+    public abstract boolean isWorkerThread(Thread thread);
+    public boolean isWorkerThread() {
+        return isWorkerThread(Thread.currentThread());
+    }
+
     private final Signal<Slot<Throwable>> onException = Signal.ofSlot();
 
     public Signal<Slot<Throwable>> onException() {

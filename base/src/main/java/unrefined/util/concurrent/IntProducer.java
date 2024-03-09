@@ -7,9 +7,13 @@ public interface IntProducer extends Callable<Integer> {
 
     @Override
     default Integer call() throws Exception {
-        return get();
+        return getAsInt();
     }
 
-    int get();
+    default Integer get() {
+        return getAsInt();
+    }
+
+    int getAsInt();
 
 }

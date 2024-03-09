@@ -2,13 +2,20 @@ package unrefined.context;
 
 import unrefined.media.graphics.Cursor;
 import unrefined.media.graphics.Dimension;
-import unrefined.media.graphics.Graphics;
 import unrefined.media.graphics.Point;
 import unrefined.media.graphics.Rectangle;
 
 import java.util.Objects;
 
 public abstract class Context {
+
+    public static Context of(Container container) {
+        return container.createContext();
+    }
+
+    public static Context of(Container container, ContextListener contextListener) {
+        return container.createContext(contextListener);
+    }
 
     private final Container container;
     private volatile ContextListener contextListener;
@@ -80,6 +87,12 @@ public abstract class Context {
     public abstract void setBackgroundColor(int color);
     public abstract int getBackgroundColor();
 
+    public abstract void paint();
+    public abstract void snapshot();
+    public void paint(boolean snapshot) {
+        if (snapshot) requestSnapshot();
+        else requestPaint();
+    }
     public abstract void requestPaint();
     public abstract void requestSnapshot();
     public void requestPaint(boolean snapshot) {
@@ -90,7 +103,5 @@ public abstract class Context {
 
     public abstract void setCursor(Cursor cursor);
     public abstract Cursor getCursor();
-
-    public abstract Graphics getGraphics();
 
 }

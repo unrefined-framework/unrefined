@@ -1,13 +1,13 @@
 package unrefined.util.function;
 
 @FunctionalInterface
-public interface ShortBiOperator extends VarFunctor<Short> {
+public interface ShortBiOperator extends BiOperator<Short> {
 
     @Override
-    default Short actuate(Object... args) {
-        return apply((short) args[0], (short) args[1]);
+    default Short apply(Short a, Short b) {
+        return applyAsShort(a, b);
     }
 
-    short apply(short a, short b);
+    short applyAsShort(short a, short b);
 
 }

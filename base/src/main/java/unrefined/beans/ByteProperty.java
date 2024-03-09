@@ -36,7 +36,7 @@ public abstract class ByteProperty {
         return new Instance(initialValue);
     }
 
-    public static ByteProperty ofDefault() {
+    public static ByteProperty of() {
         return new Instance();
     }
 
@@ -83,7 +83,7 @@ public abstract class ByteProperty {
         }
         @Override
         public byte get() {
-            return getter.get();
+            return getter.getAsByte();
         }
     }
 

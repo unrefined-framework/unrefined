@@ -7,9 +7,13 @@ public interface CharProducer extends Callable<Character> {
 
     @Override
     default Character call() throws Exception {
-        return get();
+        return getAsChar();
     }
 
-    char get();
+    default Character get() {
+        return getAsChar();
+    }
+
+    char getAsChar();
 
 }

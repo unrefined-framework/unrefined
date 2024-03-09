@@ -22,7 +22,7 @@ public class GlobalVariables {
     }
 
     public static void main(String[] args) {
-        DesktopRuntime.setup(args);              // Initialize the Unrefined runtime environment
+        DesktopRuntime.initialize(args);              // Initialize the Unrefined runtime environment
         Foreign foreign = Foreign.getInstance(); // Get the platform-dependent FFI factory
 
         long stdout = Allocator.getInstance().getAddress(foreign.getSymbolAddress("stdout")); // Get stdout FILE*

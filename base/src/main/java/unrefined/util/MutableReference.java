@@ -16,8 +16,16 @@ public class MutableReference<T> implements Serializable {
         return value;
     }
 
-    public MutableReference(T value) {
-        this.value = value;
+    public MutableReference() {
+    }
+
+    public MutableReference(T initialValue) {
+        this.value = initialValue;
+    }
+
+    @Override
+    public String toString() {
+        return String.valueOf(value);
     }
 
 }

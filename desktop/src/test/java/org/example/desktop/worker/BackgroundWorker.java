@@ -18,7 +18,7 @@ public class BackgroundWorker {
     }
 
     public static void main(String[] args) {
-        DesktopRuntime.setup(args);
+        DesktopRuntime.initialize(args);
 
         Threading threading = Threading.getInstance();
         Worker worker = threading.createWorker("Test", BackgroundWorker.class);

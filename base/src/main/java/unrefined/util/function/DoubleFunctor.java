@@ -1,13 +1,13 @@
 package unrefined.util.function;
 
 @FunctionalInterface
-public interface DoubleFunctor<R> extends VarFunctor<R> {
+public interface DoubleFunctor<R> extends Functor<Double, R> {
 
     @Override
-    default R actuate(Object... args) {
-        return apply((double) args[0]);
+    default R apply(Double t) {
+        return applyOfDouble(t);
     }
 
-    R apply(double a);
+    R applyOfDouble(double t);
 
 }

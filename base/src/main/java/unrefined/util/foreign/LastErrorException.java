@@ -6,6 +6,11 @@ public class LastErrorException extends RuntimeException {
 
     private final int errno;
 
+    public LastErrorException(String message, int errno) {
+        super(message + Foreign.getInstance().getErrorString(errno));
+        this.errno = errno;
+    }
+
     public LastErrorException(int errno) {
         super(Foreign.getInstance().getErrorString(errno));
         this.errno = errno;

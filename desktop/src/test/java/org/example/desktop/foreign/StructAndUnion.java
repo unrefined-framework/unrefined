@@ -73,7 +73,7 @@ public class StructAndUnion {
     }
 
     public static void main(String[] args) throws NoSuchMethodException, IOException {
-        DesktopRuntime.setup(args);
+        DesktopRuntime.initialize(args);
         Foreign foreign = Foreign.getInstance();
         Symbol symbol = foreign.upcallStub(StructAndUnion.class.getDeclaredMethod("passInt128", Int128.class), void.class, Int128.class);
         Int128 int128 = Int128.allocate();

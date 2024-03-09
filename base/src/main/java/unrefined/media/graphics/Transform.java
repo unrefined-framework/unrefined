@@ -7,7 +7,7 @@ import static unrefined.media.graphics.Transform.Index.*;
 
 public abstract class Transform implements Savable {
 
-    public static Transform ofDefault() {
+    public static Transform of() {
         return Drawing.getInstance().createTransform();
     }
 
@@ -159,9 +159,41 @@ public abstract class Transform implements Savable {
     }
 
     public abstract void transformPoints(float[] src, int srcOffset, float[] dst, int dstOffset, int pointCount);
+    public void transformPoints(float[] src, int srcOffset, float[] dst, int dstOffset) {
+        if (src.length != dst.length || (src.length - srcOffset) % 2 != 0) throw new IndexOutOfBoundsException("Array length mismatch");
+        else transformPoints(src, srcOffset, dst, dstOffset, (src.length - srcOffset) / 2);
+    }
+    public void transformPoints(float[] src, int srcOffset, PointF[] dst, int dstOffset) {
+        int pointCount = dst.length - dstOffset;
+        if (src.length - srcOffset != pointCount * 2) throw new IndexOutOfBoundsException("Array length mismatch");
+        transformPoints(src, srcOffset, dst, dstOffset, pointCount);
+    }
+    public void transformPoints(PointF[] src, int srcOffset, float[] dst, int dstOffset) {
+        int pointCount = src.length - srcOffset;
+        if (dst.length - dstOffset != pointCount * 2) throw new IndexOutOfBoundsException("Array length mismatch");
+        transformPoints(src, srcOffset, dst, dstOffset, pointCount);
+    }
+    public void transformPoints(float[] points, int offset, int pointCount) {
+        transformPoints(points, offset, points, offset, pointCount);
+    }
     public void transformPoints(float[] src, float[] dst) {
         if (src.length != dst.length || src.length % 2 != 0) throw new IndexOutOfBoundsException("Array length mismatch");
         else transformPoints(src, 0, dst, 0, src.length / 2);
+    }
+    public void transformPoints(float[] src, float[] dst, int pointCount) {
+        transformPoints(src, 0, dst, 0, pointCount);
+    }
+    public void transformPoints(float[] src, PointF[] dst, int pointCount) {
+        transformPoints(src, 0, dst, 0, pointCount);
+    }
+    public void transformPoints(PointF[] src, float[] dst, int pointCount) {
+        transformPoints(src, 0, dst, 0, pointCount);
+    }
+    public void transformPoints(float[] points) {
+        transformPoints(points, points);
+    }
+    public void transformPoints(float[] points, int offset) {
+        transformPoints(points, offset, points, offset);
     }
     public abstract void transformPoints(PointF[] src, int srcOffset, float[] dst, int dstOffset, int pointCount);
     public void transformPoints(PointF[] src, float[] dst) {
@@ -174,12 +206,25 @@ public abstract class Transform implements Savable {
         else transformPoints(src, 0, dst, 0, dst.length);
     }
     public abstract void transformPoints(PointF[] src, int srcOffset, PointF[] dst, int dstOffset, int pointCount);
+    public void transformPoints(PointF[] src, int srcOffset, PointF[] dst, int dstOffset) {
+        if (src.length != dst.length) throw new IndexOutOfBoundsException("Array length mismatch");
+        transformPoints(src, srcOffset, dst, dstOffset, src.length - srcOffset);
+    }
     public void transformPoints(PointF[] src, PointF[] dst, int pointCount) {
         transformPoints(src, 0, dst, 0, pointCount);
+    }
+    public void transformPoints(PointF[] points, int offset, int pointCount) {
+        transformPoints(points, offset, points, offset, pointCount);
+    }
+    public void transformPoints(PointF[] points, int offset) {
+        transformPoints(points, offset, points, offset);
     }
     public void transformPoints(PointF[] src, PointF[] dst) {
         if (src.length != dst.length) throw new IndexOutOfBoundsException("Array length mismatch");
         else transformPoints(src, 0, dst, 0, src.length);
+    }
+    public void transformPoints(PointF[] points) {
+        transformPoints(points, points);
     }
     public abstract void transformPoint(float x, float y, float[] dst, int dstOffset);
     public void transformPoint(float x, float y, float[] dst) {

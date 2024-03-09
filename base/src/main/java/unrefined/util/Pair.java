@@ -156,12 +156,12 @@ public abstract class Pair<K, V> implements Map.Entry<K, V>, Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof Map.Entry<?, ?>)) return false;
 
-        Pair<?, ?> pair = (Pair<?, ?>) o;
+        Map.Entry<?, ?> that = (Map.Entry<?, ?>) o;
 
-        if (!Objects.equals(getKey(), pair.getKey())) return false;
-        return Objects.equals(getValue(), pair.getValue());
+        if (!Objects.equals(getKey(), that.getKey())) return false;
+        return Objects.equals(getValue(), that.getValue());
     }
 
     /**

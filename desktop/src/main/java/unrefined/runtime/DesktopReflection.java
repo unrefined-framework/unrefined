@@ -318,6 +318,26 @@ public class DesktopReflection extends Reflection {
     }
 
     @Override
+    public Class<?> getCalleeClass() {
+        return ReflectionSupport.getCallerClass(0);
+    }
+
+    @Override
+    public String getCalleeMethod() {
+        return ReflectionSupport.getCallerMethod(0);
+    }
+
+    @Override
+    public Class<?> getCallerClass(int depth) {
+        return ReflectionSupport.getCallerClass(depth + 1);
+    }
+
+    @Override
+    public String getCallerMethod(int depth) {
+        return ReflectionSupport.getCallerMethod(depth + 1);
+    }
+
+    @Override
     public void ensureInitialized(Class<?> clazz) {
         ReflectionSupport.ensureInitialized(clazz);
     }

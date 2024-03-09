@@ -6,6 +6,7 @@ import unrefined.util.concurrent.worker.Worker;
 import unrefined.util.signal.Dispatcher;
 
 import java.util.Map;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 public abstract class Threading {
@@ -33,8 +34,123 @@ public abstract class Threading {
      * The maximum priority that a thread can have.
      */
     public static final int MAX_PRIORITY = Thread.MAX_PRIORITY;
+    
+    public PlatformThreadBuilder buildPlatformThread() {
+        if (!isPlatformThreadSupported()) throw new UnsupportedOperationException("Platform thread not supported");
+        return new PlatformThreadBuilder();
+    }
 
-    public Thread current() {
+    public static class PlatformThreadBuilder {
+        private PlatformThreadBuilder() {
+        }
+        private ThreadGroup group = null;
+        private String name = null;
+        private boolean daemon = false;
+        private int priority = -1;
+        private Thread.UncaughtExceptionHandler exceptionHandler = null;
+        public PlatformThreadBuilder group(ThreadGroup group) {
+            this.group = group;
+            return this;
+        }
+        public PlatformThreadBuilder name(String name) {
+            this.name = name;
+            return this;
+        }
+        public PlatformThreadBuilder daemon(boolean daemon) {
+            this.daemon = daemon;
+            return this;
+        }
+        public PlatformThreadBuilder priority(int priority) {
+            this.priority = priority;
+            return this;
+        }
+        public PlatformThreadBuilder onUncaughtException(Thread.UncaughtExceptionHandler exceptionHandler) {
+            this.exceptionHandler = exceptionHandler;
+            return this;
+        }
+        public Thread unstarted(Runnable task) {
+            return Threading.getInstance().createPlatformThread(group, task, name, daemon, priority, exceptionHandler);
+        }
+        public Thread start(Runnable task) {
+            Thread thread = Threading.getInstance().createPlatformThread(group, task, name, daemon, priority, exceptionHandler);
+            thread.start();
+            return thread;
+        }
+        public ThreadFactory factory() {
+            return this::unstarted;
+        }
+    }
+
+    public VirtualThreadBuilder buildVirtualThread() {
+        if (!isVirtualThreadSupported()) throw new UnsupportedOperationException("Virtual thread not supported");
+        return new VirtualThreadBuilder();
+    }
+
+    public static class VirtualThreadBuilder {
+        private VirtualThreadBuilder() {
+        }
+        private String name = null;
+        private Thread.UncaughtExceptionHandler exceptionHandler = null;
+        public VirtualThreadBuilder name(String name) {
+            this.name = name;
+            return this;
+        }
+        public VirtualThreadBuilder onUncaughtException(Thread.UncaughtExceptionHandler exceptionHandler) {
+            this.exceptionHandler = exceptionHandler;
+            return this;
+        }
+        public Thread unstarted(Runnable task) {
+            return Threading.getInstance().createVirtualThread(task, name, exceptionHandler);
+        }
+        public Thread start(Runnable task) {
+            Thread thread = Threading.getInstance().createVirtualThread(task, name, exceptionHandler);
+            thread.start();
+            return thread;
+        }
+        public ThreadFactory factory() {
+            return this::unstarted;
+        }
+    }
+    
+    public abstract boolean isPlatformThreadSupported();
+    public abstract boolean isVirtualThreadSupported();
+
+    public ThreadGroup createThreadGroup(String name) {
+        return new ThreadGroup(name);
+    }
+
+    public ThreadGroup createThreadGroup(ThreadGroup parent, String name) {
+        return new ThreadGroup(parent, name);
+    }
+    
+    public abstract Thread createPlatformThread(ThreadGroup group, Runnable task, String name, boolean daemon, int priority, Thread.UncaughtExceptionHandler exceptionHandler);
+    public Thread createPlatformThread(ThreadGroup group, Runnable task, String name, boolean daemon, int priority) {
+        return createPlatformThread(group, task, name, daemon, priority, null);
+    }
+    public Thread createPlatformThread(Runnable task, String name, boolean daemon, int priority) {
+        return createPlatformThread(null, task, name, daemon, priority);
+    }
+    public Thread createPlatformThread(Runnable task, String name, boolean daemon) {
+        return createPlatformThread(task, name, daemon, -1);
+    }
+    public Thread createPlatformThread(Runnable task, boolean daemon) {
+        return createPlatformThread(task, null, daemon);
+    }
+    public Thread createPlatformThread(Runnable task) {
+        return createPlatformThread(task, false);
+    }
+    public abstract Thread createVirtualThread(Runnable task, String name, Thread.UncaughtExceptionHandler exceptionHandler);
+    public Thread createVirtualThread(Runnable task, String name) {
+        return createVirtualThread(task, name, null);
+    }
+    public Thread createVirtualThread(Runnable task) {
+        return createVirtualThread(task, null);
+    }
+    
+    public abstract boolean isVirtualThread(Thread thread);
+    public abstract boolean isPlatformThread(Thread thread);
+
+    public Thread currentThread() {
         return Thread.currentThread();
     }
 
@@ -58,12 +174,12 @@ public abstract class Threading {
         return Thread.holdsLock(object);
     }
 
-    public abstract void park(boolean absolute, long time);
+    public abstract void park(long time, boolean absolute);
     public void park(long timestamp) {
-        park(true, timestamp);
+        park(timestamp, true);
     }
     public void park(long timeout, TimeUnit timeUnit) {
-        park(false, timeUnit.toMillis(timeout));
+        park(timeUnit == null ? timeout : timeUnit.toMillis(timeout), false);
     }
     public abstract void unpark(Thread thread);
     public void unpark() {
@@ -83,13 +199,6 @@ public abstract class Threading {
         return Dispatcher.defaultInstance().isDispatchThread();
     }
 
-    public Thread createThread(String name, boolean daemon, int priority, Runnable runnable) {
-        Thread thread = new Thread(runnable, name);
-        thread.setDaemon(daemon);
-        thread.setPriority(priority);
-        return thread;
-    }
-
     public abstract Worker createWorker(String name, Class<?> clazz);
     public Worker createWorker(Class<?> clazz) {
         return createWorker(null, clazz);
@@ -105,14 +214,6 @@ public abstract class Threading {
 
     public ThreadLocalBuffer createThreadLocalBuffer() {
         return new ThreadLocalBuffer();
-    }
-
-    public ThreadLocalStack createThreadLocalStack(int size) {
-        return new ThreadLocalStack(size);
-    }
-
-    public ThreadLocalStack createThreadLocalStack() {
-        return new ThreadLocalStack();
     }
 
 }

@@ -1,5 +1,6 @@
 package unrefined.runtime;
 
+import unrefined.base.AnimatedCursor;
 import unrefined.context.Container;
 import unrefined.context.Context;
 import unrefined.context.ContextListener;
@@ -69,16 +70,19 @@ public abstract class DesktopEmbeddedContext extends Context implements KeyListe
     @Override
     public void setWidth(int width) {
         component.setSize(width, component.getHeight());
+        component.setPreferredSize(new java.awt.Dimension(width, component.getHeight()));
     }
 
     @Override
     public void setHeight(int height) {
         component.setSize(component.getWidth(), height);
+        component.setPreferredSize(new java.awt.Dimension(component.getWidth(), height));
     }
 
     @Override
     public void setSize(int width, int height) {
         component.setSize(width, height);
+        component.setPreferredSize(new java.awt.Dimension(width, height));
     }
 
     @Override

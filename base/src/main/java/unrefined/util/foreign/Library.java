@@ -10,6 +10,13 @@ public interface Library {
 
     @Documented
     @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.PARAMETER, ElementType.METHOD})
+    @interface Marshal {
+        String value();
+    }
+
+    @Documented
+    @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.METHOD})
     @interface Options {
         int value();
@@ -17,8 +24,8 @@ public interface Library {
 
     @Documented
     @Retention(RetentionPolicy.RUNTIME)
-    @Target({ElementType.PARAMETER, ElementType.METHOD})
-    @interface Marshal {
+    @Target({ElementType.METHOD})
+    @interface Redirect {
         String value();
     }
 

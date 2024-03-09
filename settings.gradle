@@ -15,12 +15,12 @@ dependencyResolutionManagement {
 
 rootProject.name = 'unrefined'
 
-// core
+// base
 include ':base'
 
 // desktop
 include ':desktop'
-//include ':winui' //TODO
+//include ':ikvm' //TODO
 
 // mobile
 include ':android'

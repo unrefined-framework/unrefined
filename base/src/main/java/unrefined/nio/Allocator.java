@@ -2,6 +2,7 @@ package unrefined.nio;
 
 import unrefined.context.Environment;
 import unrefined.math.FastMath;
+import unrefined.util.FastArray;
 import unrefined.util.foreign.Foreign;
 
 import java.io.IOException;
@@ -1157,7 +1158,7 @@ public abstract class Allocator {
      * {@code byte} is stripped from the end.
      */
     public byte[] getZeroTerminatedByteArray(long address) {
-        return getZeroTerminatedByteArray(address, Integer.MAX_VALUE);
+        return getZeroTerminatedByteArray(address, FastArray.ARRAY_LENGTH_MAX);
     }
 
     /**
@@ -1182,7 +1183,7 @@ public abstract class Allocator {
      * {@code byte} is stripped from the end.
      */
     public byte[] getZeroTerminatedWideCharByteArray(long address) {
-        return getZeroTerminatedWideCharByteArray(address, Integer.MAX_VALUE);
+        return getZeroTerminatedWideCharByteArray(address, FastArray.ARRAY_LENGTH_MAX);
     }
 
     /**
@@ -1208,7 +1209,7 @@ public abstract class Allocator {
      * {@code byte} is stripped from the end.
      */
     public byte[] getZeroTerminatedByteArray(long address, Charset charset) {
-        return getZeroTerminatedByteArray(address, Integer.MAX_VALUE, charset);
+        return getZeroTerminatedByteArray(address, FastArray.ARRAY_LENGTH_MAX, charset);
     }
 
     /**
@@ -1224,7 +1225,7 @@ public abstract class Allocator {
     public byte[] getZeroTerminatedByteArray(long address, int maxLength, Charset charset) {
         if (charset == null) charset = Charset.defaultCharset();
         long stringLength = getZeroTerminatedStringLength(address, maxLength, charset) * "\0".getBytes(charset).length;
-        if (stringLength < 0 || stringLength > Integer.MAX_VALUE) stringLength = Integer.MAX_VALUE;
+        if (stringLength < 0 || stringLength > FastArray.ARRAY_LENGTH_MAX) stringLength = FastArray.ARRAY_LENGTH_MAX;
         byte[] array = new byte[(int) stringLength];
         getByteArray(address, array);
         return array;
@@ -1239,7 +1240,7 @@ public abstract class Allocator {
      * {@code byte} is stripped from the end.
      */
     public String getZeroTerminatedString(long address) {
-        return getZeroTerminatedString(address, Integer.MAX_VALUE);
+        return getZeroTerminatedString(address, FastArray.ARRAY_LENGTH_MAX);
     }
 
     /**
@@ -1264,7 +1265,7 @@ public abstract class Allocator {
      * {@code byte} is stripped from the end.
      */
     public String getZeroTerminatedWideCharString(long address) {
-        return getZeroTerminatedWideCharString(address, Integer.MAX_VALUE);
+        return getZeroTerminatedWideCharString(address, FastArray.ARRAY_LENGTH_MAX);
     }
 
     /**
@@ -1290,7 +1291,7 @@ public abstract class Allocator {
      * {@code byte} is stripped from the end.
      */
     public String getZeroTerminatedString(long address, Charset charset) {
-        return getZeroTerminatedString(address, Integer.MAX_VALUE, charset);
+        return getZeroTerminatedString(address, FastArray.ARRAY_LENGTH_MAX, charset);
     }
 
     /**

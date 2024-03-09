@@ -36,7 +36,7 @@ public abstract class DoubleProperty {
         return new Instance(initialValue);
     }
 
-    public static DoubleProperty ofDefault() {
+    public static DoubleProperty of() {
         return new Instance();
     }
 
@@ -83,7 +83,7 @@ public abstract class DoubleProperty {
         }
         @Override
         public double get() {
-            return getter.get();
+            return getter.getAsDouble();
         }
     }
 

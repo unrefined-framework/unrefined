@@ -96,12 +96,72 @@ public class Rectangle implements Savable {
         this.height = height;
     }
 
-    public boolean contains(int x, int y) {
-        return x >= this.x && x < this.x + this.width && y >= this.y && y < this.y + this.height;
+    public void setBounds(int x, int y, int width, int height) {
+        setRectangle(x, y, width, height);
+    }
+
+    public void getBounds(RectangleF bounds) {
+        bounds.setRectangle(this);
+    }
+
+    public void getBounds(Rectangle bounds) {
+        bounds.setRectangle(this);
     }
 
     public boolean contains(float x, float y) {
         return x >= this.x && x < this.x + this.width && y >= this.y && y < this.y + this.height;
+    }
+
+    public boolean contains(int x, int y) {
+        return x >= this.x && x < this.x + this.width && y >= this.y && y < this.y + this.height;
+    }
+
+    public boolean contains(float x, float y, float width, float height) {
+        return x >= this.x && x + width < this.x + this.width && y >= this.y && y + height < this.y + this.height;
+    }
+
+    public boolean contains(int x, int y, int width, int height) {
+        return x >= this.x && x + width < this.x + this.width && y >= this.y && y + height < this.y + this.height;
+    }
+
+    public int getLeft() {
+        return x;
+    }
+
+    public int getTop() {
+        return y;
+    }
+
+    public int getRight() {
+        return x + width;
+    }
+
+    public int getBottom() {
+        return y + height;
+    }
+
+    public boolean isEmpty() {
+        return width <= 0 || height <= 0;
+    }
+
+    public boolean intersects(float x, float y, float width, float height) {
+        if (isEmpty() || width <= 0 || height <= 0) {
+            return false;
+        }
+        else return (x + width > this.x &&
+                y + height > this.y &&
+                x < this.x + this.width &&
+                y < this.y + this.height);
+    }
+
+    public boolean intersects(int x, int y, int width, int height) {
+        if (isEmpty() || width <= 0 || height <= 0) {
+            return false;
+        }
+        else return (x + width > this.x &&
+                y + height > this.y &&
+                x < this.x + this.width &&
+                y < this.y + this.height);
     }
 
     @Override

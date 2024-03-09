@@ -3,6 +3,7 @@ package unrefined.runtime;
 import unrefined.desktop.AWTSupport;
 import unrefined.media.graphics.Path;
 import unrefined.media.graphics.PointF;
+import unrefined.media.graphics.Rectangle;
 import unrefined.media.graphics.RectangleF;
 import unrefined.media.graphics.Transform;
 
@@ -193,6 +194,18 @@ public class DesktopPath extends Path {
                 (float) bounds2D.getY(),
                 (float) bounds2D.getWidth(),
                 (float) bounds2D.getHeight());
+    }
+
+    @Override
+    public void getBounds(Rectangle bounds) {
+        Rectangle2D bounds2D = path2D.getBounds2D();
+        double x = bounds2D.getX();
+        double y = bounds2D.getY();
+        double left = Math.floor(x);
+        double top = Math.floor(y);
+        double right = Math.ceil(x + bounds2D.getWidth());
+        double bottom = Math.ceil(y + bounds2D.getHeight());
+        bounds.setRectangle((int) left, (int) top, (int) (right - left), (int) (bottom - top));
     }
 
     @Override

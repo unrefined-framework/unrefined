@@ -1,6 +1,8 @@
 package unrefined.context;
 
+import unrefined.util.Half;
 import unrefined.util.ProducerThreadLocal;
+import unrefined.util.Rational;
 import unrefined.util.concurrent.Producer;
 import unrefined.util.function.Functor;
 
@@ -101,6 +103,14 @@ public class Environment implements Map<Object, Object> {
 
     public String putBigDecimalProperty(String key, BigDecimal value) {
         return putProperty(key, value.toEngineeringString());
+    }
+
+    public String putRational(String key, Rational value) {
+        return putProperty(key, value.toString());
+    }
+
+    public String putHalf(String key, short value) {
+        return putProperty(key, Half.toString(value));
     }
 
     public String removeProperty(String key) {
@@ -253,6 +263,34 @@ public class Environment implements Map<Object, Object> {
 
     public BigDecimal parseBigDecimalProperty(String key) {
         return new BigDecimal(getProperty(key));
+    }
+
+    public Rational parseRationalProperty(String key, Rational defaultValue) {
+        String value = getProperty(key);
+        try {
+            return value == null ? defaultValue : Rational.parseRational(value);
+        }
+        catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    public Rational parseRationalProperty(String key) {
+        return Rational.parseRational(getProperty(key));
+    }
+
+    public short parseHalfProperty(String key, short defaultValue) {
+        String value = getProperty(key);
+        try {
+            return value == null ? defaultValue : Half.parseHalf(value);
+        }
+        catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    public short parseHalfProperty(String key) {
+        return Half.parseHalf(getProperty(key));
     }
 
     public <T> T parseProperty(String key, T defaultValue, Functor<String, T> parseProc) {

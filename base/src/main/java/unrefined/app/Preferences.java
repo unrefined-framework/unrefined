@@ -1,5 +1,7 @@
 package unrefined.app;
 
+import unrefined.context.Container;
+import unrefined.util.Rational;
 import unrefined.util.event.Event;
 import unrefined.util.event.EventSlot;
 import unrefined.util.signal.Signal;
@@ -10,6 +12,24 @@ import java.math.BigInteger;
 import java.util.Objects;
 
 public abstract class Preferences {
+
+    public static Preferences of(String name) {
+        return Runtime.getInstance().getPreferences(name);
+    }
+
+    public static boolean delete(String name) {
+        return Runtime.getInstance().deletePreferences(name);
+    }
+
+    public static Preferences of(String name, Container container) {
+        if (container == null) return Runtime.getInstance().getPreferences(name);
+        else return container.getPreferences(name);
+    }
+
+    public static boolean delete(String name, Container container) {
+        if (container == null) return Runtime.getInstance().deletePreferences(name);
+        else return container.deletePreferences(name);
+    }
 
     private final Signal<EventSlot<ChangeEvent>> onChange = Signal.ofSlot();
     public Signal<EventSlot<ChangeEvent>> onChange() {
@@ -33,6 +53,8 @@ public abstract class Preferences {
         public abstract Editor putString(String key, String value);
         public abstract Editor putBigInteger(String key, BigInteger value);
         public abstract Editor putBigDecimal(String key, BigDecimal value);
+        public abstract Editor putRational(String key, Rational value);
+        public abstract Editor putHalf(String key, short value);
 
         public abstract Editor remove(String key);
         public abstract Editor clear();
@@ -55,6 +77,8 @@ public abstract class Preferences {
     public abstract String getString(String key, String defaultValue);
     public abstract BigInteger getBigInteger(String key, BigInteger defaultValue);
     public abstract BigDecimal getBigDecimal(String key, BigDecimal defaultValue);
+    public abstract Rational getRational(String key, Rational defaultValue);
+    public abstract short getHalf(String key, short defaultValue);
 
     public abstract int size();
     public abstract boolean contains(String key);

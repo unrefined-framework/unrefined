@@ -1,13 +1,13 @@
 package unrefined.util.function;
 
 @FunctionalInterface
-public interface BooleanFunctor<R> extends VarFunctor<R> {
+public interface BooleanFunctor<R> extends Functor<Boolean, R> {
 
     @Override
-    default R actuate(Object... args) {
-        return apply((boolean) args[0]);
+    default R apply(Boolean t) {
+        return applyOfBoolean(t);
     }
 
-    R apply(boolean a);
+    R applyOfBoolean(boolean t);
 
 }

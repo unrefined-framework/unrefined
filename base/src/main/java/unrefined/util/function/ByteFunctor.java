@@ -1,13 +1,13 @@
 package unrefined.util.function;
 
 @FunctionalInterface
-public interface ByteFunctor<R> extends VarFunctor<R> {
+public interface ByteFunctor<R> extends Functor<Byte, R> {
 
     @Override
-    default R actuate(Object... args) {
-        return apply((byte) args[0]);
+    default R apply(Byte t) {
+        return applyOfByte(t);
     }
 
-    R apply(byte a);
+    R applyOfByte(byte t);
 
 }

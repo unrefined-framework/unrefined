@@ -10,16 +10,17 @@ import com.kenai.jffi.Library;
 import com.kenai.jffi.MemoryIO;
 import com.kenai.jffi.Platform;
 import com.kenai.jffi.Type;
-import unrefined.internal.windows.WindowsLibrary;
+import unrefined.internal.windows.WindowsSupport;
 import unrefined.nio.Pointer;
 import unrefined.runtime.DesktopSymbol;
 import unrefined.util.EmptyArray;
+import unrefined.util.FastArray;
 import unrefined.util.NotInstantiableError;
+import unrefined.util.ProducerThreadLocal;
 import unrefined.util.concurrent.ConcurrentHashSet;
 import unrefined.util.foreign.Aggregate;
 import unrefined.util.foreign.Foreign;
 import unrefined.util.foreign.LastErrorException;
-import unrefined.util.foreign.Redirect;
 import unrefined.util.foreign.Symbol;
 
 import java.io.File;
@@ -28,7 +29,9 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Proxy;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -162,7 +165,7 @@ public final class ForeignSupport {
             if (method.getDeclaringClass() != Object.class) {
                 if (method.isDefault()) continue;
                 String name;
-                Redirect redirect = method.getAnnotation(Redirect.class);
+                unrefined.util.foreign.Library.Redirect redirect = method.getAnnotation(unrefined.util.foreign.Library.Redirect.class);
                 if (redirect == null) name = method.getName();
                 else name = redirect.value();
                 unrefined.util.foreign.Library.Options override =
@@ -620,7 +623,7 @@ public final class ForeignSupport {
         return invokeAddressFunction0(options, address, args);
     }
 
-    public static <T extends Aggregate> T invokeAggregateFunction0(int options, long address, Class<T> returnType, Object... args) {
+    private static <T extends Aggregate> T invokeAggregateFunction0(int options, long address, Class<T> returnType, Object... args) {
         CallContext context;
         HeapInvocationBuffer heapInvocationBuffer;
         if (args.length > 0 && args[args.length - 1].getClass().isArray()) {
@@ -777,26 +780,25 @@ public final class ForeignSupport {
     public static final IntFunction<String> ERROR_STRING_PRODUCER;
     static {
         if (OSInfo.IS_WINDOWS) {
-            Function FormatMessageW = new Function(WindowsLibrary.Kernel32.getSymbolAddress("FormatMessageW"),
+            Function FormatMessageW = new Function(WindowsSupport.Kernel32.getSymbolAddress("FormatMessageW"),
                     CallContext.getCallContext(Type.UINT32,
                             new Type[] {Type.UINT32, Type.POINTER, Type.UINT32, Type.UINT32, Type.POINTER, Type.UINT32, Type.POINTER},
                             CallingConvention.DEFAULT, false));
-            int size = 4096;
-            long lpBuffer = UNSAFE.allocateMemory((long) size * OSInfo.WIDE_CHAR_SIZE);
-            ERROR_STRING_PRODUCER = new IntFunction<String>() {
-                @Override
-                public synchronized String apply(int errno) {
-                    HeapInvocationBuffer heapInvocationBuffer = new HeapInvocationBuffer(FormatMessageW);
-                    heapInvocationBuffer.putInt(0x00001000); // FORMAT_MESSAGE_FROM_SYSTEM
-                    heapInvocationBuffer.putAddress(0);
-                    heapInvocationBuffer.putInt(errno);
-                    heapInvocationBuffer.putInt(0);
-                    heapInvocationBuffer.putAddress(lpBuffer);
-                    heapInvocationBuffer.putInt(size);
-                    heapInvocationBuffer.putAddress(0);
-                    if (INVOKER.invokeInt(FormatMessageW, heapInvocationBuffer) == 0) return null;
-                    else return new String(MEMORY_IO.getZeroTerminatedByteArray(lpBuffer), OSInfo.NATIVE_CHARSET);
-                }
+            final int size = 4096;
+            final ThreadLocal<ByteBuffer> lpBufferThreadLocal = new ProducerThreadLocal<>(() ->
+                    ByteBuffer.allocateDirect(size * OSInfo.WIDE_CHAR_SIZE));
+            ERROR_STRING_PRODUCER = errno -> {
+                long lpBuffer = MEMORY_IO.getDirectBufferAddress(lpBufferThreadLocal.get());
+                HeapInvocationBuffer heapInvocationBuffer = new HeapInvocationBuffer(FormatMessageW);
+                heapInvocationBuffer.putInt(0x00001000 /* FORMAT_MESSAGE_FROM_SYSTEM */);
+                heapInvocationBuffer.putAddress(0);
+                heapInvocationBuffer.putInt(errno);
+                heapInvocationBuffer.putInt(0);
+                heapInvocationBuffer.putAddress(lpBuffer);
+                heapInvocationBuffer.putInt(size);
+                heapInvocationBuffer.putAddress(0);
+                if (INVOKER.invokeInt(FormatMessageW, heapInvocationBuffer) == 0) return null;
+                else return getZeroTerminatedString(lpBuffer, FastArray.ARRAY_LENGTH_MAX, OSInfo.WIDE_CHARSET);
             };
         }
         else {
@@ -807,9 +809,30 @@ public final class ForeignSupport {
                 if (ABI.I == 8) heapInvocationBuffer.putLong(errno);
                 else heapInvocationBuffer.putInt(errno);
                 long string = INVOKER.invokeAddress(function, heapInvocationBuffer);
-                return string == 0 ? null : new String(MEMORY_IO.getZeroTerminatedByteArray(string), OSInfo.NATIVE_CHARSET);
+                return string == 0 ? null : getZeroTerminatedString(string, OSInfo.NATIVE_CHARSET);
             };
         }
+    }
+
+    public static String getZeroTerminatedString(long address, int maxLength, Charset charset) {
+        if (charset == null) charset = Charset.defaultCharset();
+        byte[] terminator = "\0".getBytes(charset);
+        int size = terminator.length;
+        if (size == 1 && terminator[0] == '\0') return new String(MEMORY_IO.getZeroTerminatedByteArray(address, maxLength), charset);
+        else {
+            StringBuilder builder = new StringBuilder();
+            byte[] buffer = new byte[size];
+            while (true) {
+                MEMORY_IO.getByteArray(address, buffer, 0, size);
+                if (Arrays.equals(terminator, buffer)) return builder.toString();
+                else builder.append(new String(buffer, charset));
+                address += size;
+            }
+        }
+    }
+
+    public static String getZeroTerminatedString(long address, Charset charset) {
+        return getZeroTerminatedString(address, FastArray.ARRAY_LENGTH_MAX, charset);
     }
 
 }

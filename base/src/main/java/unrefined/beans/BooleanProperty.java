@@ -36,7 +36,7 @@ public abstract class BooleanProperty {
         return new Instance(initialValue);
     }
 
-    public static BooleanProperty ofDefault() {
+    public static BooleanProperty of() {
         return new Instance();
     }
 
@@ -83,7 +83,7 @@ public abstract class BooleanProperty {
         }
         @Override
         public boolean get() {
-            return getter.get();
+            return getter.getAsBoolean();
         }
     }
 

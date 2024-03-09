@@ -1,13 +1,13 @@
 package unrefined.util.function;
 
 @FunctionalInterface
-public interface ByteSlot extends VarSlot {
+public interface ByteSlot extends Slot<Byte> {
 
     @Override
-    default void actuate(Object... args) {
-        accept((byte) args[0]);
+    default void accept(Byte t) {
+        acceptAsByte(t);
     }
 
-    void accept(byte value);
+    void acceptAsByte(byte t);
 
 }
