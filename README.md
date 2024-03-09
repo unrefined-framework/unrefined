@@ -40,6 +40,12 @@ Pull Requests & Issues welcome!
 [Apache-2.0](/LICENSE)
 
 ### Dependencies
-| Library                             | License    | Comptime | Runtime |
-|-------------------------------------|------------|----------|---------|
-| [JFFI](https://github.com/jnr/jffi) | Apache-2.0 | Yes      | Yes     |
+| Library                                                                      | License       | Comptime | Runtime |
+|------------------------------------------------------------------------------|---------------|----------|---------|
+| [JFFI](https://github.com/jnr/jffi)                                          | Apache-2.0    | Yes      | Yes     |
+| [JavaSound Resource Loader](https://github.com/Tianscar/javasound-resloader) | MIT           | Yes      | Yes     |
+| [JavaSound MP3](https://github.com/Tianscar/javasound-mp3)                   | LGPL-2.1      | Yes      | Yes     |
+| [JavaSound FLAC](https://github.com/Tianscar/javasound-flac)                 | LGPL-2.1      | Yes      | Yes     |
+| [JavaSound OGG Vorbis](https://github.com/Tianscar/javasound-vorbis)         | LGPL-2.0      | Yes      | Yes     |
+| [VorbisJava](https://github.com/Gagravarr/VorbisJava)                        | Apache-2.0    | Yes      | Yes     |
+| [JavaSound AAC](https://github.com/Tianscar/javasound-aac)                   | Public Domain | Yes      | Yes     |
