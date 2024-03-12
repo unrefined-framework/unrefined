@@ -26,6 +26,7 @@ public class Board extends ContextAdapter {
     private boolean inGame = true;
     private Sound gameOver;
     private Sound collision;
+    private Sound victory;
 
     @Override
     public void onCreate(Context context) {
@@ -34,6 +35,7 @@ public class Board extends ContextAdapter {
         try {
             collision = Sampled.getInstance().readSound(new Asset("brick.ogg"));
             gameOver = Sampled.getInstance().readSound(new Asset("game_over.ogg"));
+            victory = Sampled.getInstance().readSound(new Asset("victory.ogg"));
         } catch (IOException e) {
             throw new UnexpectedError(e);
         }
@@ -46,6 +48,7 @@ public class Board extends ContextAdapter {
 
         collision.dispose();
         gameOver.dispose();
+        victory.dispose();
     }
 
     void playCollisionSound() {
@@ -169,6 +172,7 @@ public class Board extends ContextAdapter {
 
             if (j == Constant.N_OF_BRICKS) {
                 message = "Victory";
+                victory.start();
                 stopGame();
             }
         }
