@@ -106,19 +106,22 @@ public abstract class Sound implements Resettable, Disposable {
     }
     public abstract int start(float leftVolume, float rightVolume, float speed, int loops);
     public int start(float leftVolume, float rightVolume) {
-        return start(leftVolume, rightVolume, 1.0f, 0);
+        return start(leftVolume, rightVolume, getSpeed(), getLooping());
     }
     public int start(float leftVolume, float rightVolume, float speed) {
-        return start(leftVolume, rightVolume, speed, 0);
+        return start(leftVolume, rightVolume, speed, getLooping());
     }
-    public int start(float volume, int loops, float speed) {
+    public int play(float volume, float speed, int loops) {
         return start(volume, volume, speed, loops);
     }
-    public int start(float volume, int loops) {
-        return start(volume, volume, 1.0f, loops);
+    public int play(float volume, float speed) {
+        return start(volume, volume, speed, 0);
     }
-    public int start(float volume) {
+    public int play(float volume) {
         return start(volume, volume, 1.0f, 0);
+    }
+    public int play() {
+        return start(1.0f, 1.0f, 1.0f, 0);
     }
     public abstract void pause(int id);
     public abstract void resume(int id);

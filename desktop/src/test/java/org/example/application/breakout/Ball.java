@@ -41,20 +41,20 @@ public class Ball extends Sprite {
         y += ydir;
 
         if (x == 0) {
-            board.collision();
+            board.playCollisionSound();
 
             setXDir(1);
         }
 
         if (x == Constant.WIDTH - width) {
-            board.collision();
+            board.playCollisionSound();
 
             //System.out.println(bitmapWidth);
             setXDir(-1);
         }
 
         if (y == 0) {
-            board.collision();
+            board.playCollisionSound();
 
             setYDir(1);
         }

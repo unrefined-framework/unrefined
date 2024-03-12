@@ -13,6 +13,8 @@ import unrefined.util.SharedTimer;
 import unrefined.util.UnexpectedError;
 
 import java.io.IOException;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Board extends ContextAdapter {
 
@@ -46,9 +48,12 @@ public class Board extends ContextAdapter {
         gameOver.dispose();
     }
 
-    void collision() {
+    void playCollisionSound() {
 
-        collision.start();
+        Random random = ThreadLocalRandom.current();
+        float volume = random.nextFloat(0.9f, 1.1f);
+        float speed = random.nextFloat(0.9f, 1.1f);
+        collision.start(volume, volume, speed);
     }
 
     private void gameInit(Context context) {
@@ -180,13 +185,15 @@ public class Board extends ContextAdapter {
 
             if (ballLPos < first) {
 
+                playCollisionSound();
+
                 ball.setXDir(-1);
                 ball.setYDir(-1);
             }
 
             if (ballLPos >= first && ballLPos < second) {
 
-                collision();
+                playCollisionSound();
 
                 ball.setXDir(-1);
                 ball.setYDir(-1 * ball.getYDir());
@@ -194,7 +201,7 @@ public class Board extends ContextAdapter {
 
             if (ballLPos >= second && ballLPos < third) {
 
-                collision();
+                playCollisionSound();
 
                 ball.setXDir(0);
                 ball.setYDir(-1);
@@ -202,7 +209,7 @@ public class Board extends ContextAdapter {
 
             if (ballLPos >= third && ballLPos < fourth) {
 
-                collision();
+                playCollisionSound();
 
                 ball.setXDir(1);
                 ball.setYDir(-1 * ball.getYDir());
@@ -210,7 +217,7 @@ public class Board extends ContextAdapter {
 
             if (ballLPos > fourth) {
 
-                collision();
+                playCollisionSound();
 
                 ball.setXDir(1);
                 ball.setYDir(-1);
@@ -235,24 +242,24 @@ public class Board extends ContextAdapter {
 
                     if (bricks[i].getRect().contains(pointRight.getX(), pointRight.getY())) {
 
-                        collision();
+                        playCollisionSound();
 
                         ball.setXDir(-1);
                     } else if (bricks[i].getRect().contains(pointLeft.getX(), pointLeft.getY())) {
 
-                        collision();
+                        playCollisionSound();
 
                         ball.setXDir(1);
                     }
 
                     if (bricks[i].getRect().contains(pointTop.getX(), pointTop.getY())) {
 
-                        collision();
+                        playCollisionSound();
 
                         ball.setYDir(1);
                     } else if (bricks[i].getRect().contains(pointBottom.getX(), pointBottom.getY())) {
 
-                        collision();
+                        playCollisionSound();
 
                         ball.setYDir(-1);
                     }
