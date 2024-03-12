@@ -2,11 +2,17 @@ package org.example.application.breakout;
 
 import unrefined.context.Context;
 import unrefined.context.ContextAdapter;
+import unrefined.io.asset.Asset;
 import unrefined.media.graphics.Brush;
 import unrefined.media.graphics.Color;
 import unrefined.media.graphics.Graphics;
 import unrefined.media.graphics.Point;
+import unrefined.media.sound.Sampled;
+import unrefined.media.sound.Sound;
 import unrefined.util.SharedTimer;
+import unrefined.util.UnexpectedError;
+
+import java.io.IOException;
 
 public class Board extends ContextAdapter {
 
@@ -16,12 +22,33 @@ public class Board extends ContextAdapter {
     private Paddle paddle;
     private Brick[] bricks;
     private boolean inGame = true;
+    private Sound gameOver;
+    private Sound collision;
 
     @Override
     public void onCreate(Context context) {
         context.setBackgroundColor(Color.WHITE);
 
+        try {
+            collision = Sampled.getInstance().readSound(new Asset("brick.ogg"));
+            gameOver = Sampled.getInstance().readSound(new Asset("game_over.ogg"));
+        } catch (IOException e) {
+            throw new UnexpectedError(e);
+        }
+
         gameInit(context);
+    }
+
+    @Override
+    public void onDispose(Context context) {
+
+        collision.dispose();
+        gameOver.dispose();
+    }
+
+    void collision() {
+
+        collision.start();
     }
 
     private void gameInit(Context context) {
@@ -109,7 +136,7 @@ public class Board extends ContextAdapter {
 
     private void doGameCycle(Context context) {
 
-        ball.move();
+        ball.move(this);
         paddle.move();
         checkCollision();
 
@@ -125,6 +152,7 @@ public class Board extends ContextAdapter {
     private void checkCollision() {
 
         if (ball.getRect().getBottom() > Constant.BOTTOM_EDGE) {
+            gameOver.start();
             stopGame();
         }
 
@@ -158,11 +186,15 @@ public class Board extends ContextAdapter {
 
             if (ballLPos >= first && ballLPos < second) {
 
+                collision();
+
                 ball.setXDir(-1);
                 ball.setYDir(-1 * ball.getYDir());
             }
 
             if (ballLPos >= second && ballLPos < third) {
+
+                collision();
 
                 ball.setXDir(0);
                 ball.setYDir(-1);
@@ -170,11 +202,15 @@ public class Board extends ContextAdapter {
 
             if (ballLPos >= third && ballLPos < fourth) {
 
+                collision();
+
                 ball.setXDir(1);
                 ball.setYDir(-1 * ball.getYDir());
             }
 
             if (ballLPos > fourth) {
+
+                collision();
 
                 ball.setXDir(1);
                 ball.setYDir(-1);
@@ -199,16 +235,24 @@ public class Board extends ContextAdapter {
 
                     if (bricks[i].getRect().contains(pointRight.getX(), pointRight.getY())) {
 
+                        collision();
+
                         ball.setXDir(-1);
                     } else if (bricks[i].getRect().contains(pointLeft.getX(), pointLeft.getY())) {
+
+                        collision();
 
                         ball.setXDir(1);
                     }
 
                     if (bricks[i].getRect().contains(pointTop.getX(), pointTop.getY())) {
 
+                        collision();
+
                         ball.setYDir(1);
                     } else if (bricks[i].getRect().contains(pointBottom.getX(), pointBottom.getY())) {
+
+                        collision();
 
                         ball.setYDir(-1);
                     }

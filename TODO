@@ -19,7 +19,6 @@ Message Box Dialog
 Question Box Dialog
 Input Box Dialog
 Password Box Dialog
-System Preferences [Windows Registry, macOS/iOS NSUserDefaults, UNIX INI configuration file]
 Joystick [Windows DirectInput/XInput, macOS/iOS Game Controller Framework, Linux/FreeBSD <linux/joystick.h>, UNIX SDL_Joystick]
 JavaScript Engine [macOS/iOS JavaScriptCore (JIT disabled), other QuickJS]
 --------------------------------

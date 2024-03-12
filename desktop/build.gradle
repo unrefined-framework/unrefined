@@ -11,8 +11,9 @@ dependencies {
 
     implementation 'com.tianscar.javasound:javasound-flac:1.4.1'
     implementation 'com.tianscar.javasound:javasound-mp3:1.9.8'
-    implementation 'com.tianscar.javasound:javasound-vorbis:2.0.0'
     implementation 'com.tianscar.javasound:javasound-aac:0.9.8'
+
+    implementation 'com.github.stephengold:j-ogg-vorbis:1.0.4'
 }
 
 jar {

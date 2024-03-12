@@ -31,7 +31,7 @@ public abstract class Runtime {
         public static final int MEDIA    = GRAPHICS | AUDIO;
         public static final int ALL      = removeUnusedBits(0xFFFFFFFF);
         public static int removeUnusedBits(int flags) {
-            return flags << 31 >>> 31;
+            return flags << 30 >>> 30;
         }
         public static String toString(int flags) {
             flags = removeUnusedBits(flags);

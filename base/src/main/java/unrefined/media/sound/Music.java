@@ -72,13 +72,13 @@ public abstract class Music implements Resettable, Disposable {
     }
 
     public static class StopEvent extends Event<Music> {
-        private final int looping;
-        public StopEvent(Music source, int looping) {
+        private final int loops;
+        public StopEvent(Music source, int loops) {
             super(source);
-            this.looping = looping;
+            this.loops = loops;
         }
         public int getLooping() {
-            return looping;
+            return loops;
         }
     }
 

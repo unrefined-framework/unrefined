@@ -13,6 +13,8 @@ import java.util.Set;
 
 public abstract class Sampled {
 
+    private static final int DEFAULT_POOL_SIZE = 20;
+
     private static volatile Sampled INSTANCE;
     private static final Object INSTANCE_LOCK = new Object();
     public static Sampled getInstance() {
@@ -23,8 +25,8 @@ public abstract class Sampled {
     }
 
     public static abstract class Handler {
-        public abstract Sound readSound(File input) throws IOException;
-        public abstract Sound readSound(Asset input) throws IOException;
+        public abstract Sound readSound(File input, int pool) throws IOException;
+        public abstract Sound readSound(Asset input, int pool) throws IOException;
         public abstract Music readMusic(File input) throws IOException;
         public abstract Music readMusic(Asset input) throws IOException;
         public abstract Set<String> readerFormats();
@@ -35,20 +37,28 @@ public abstract class Sampled {
         return audioHandlers;
     }
 
-    public Sound readSound(File input) throws IOException {
+    public Sound readSound(File input, int pool) throws IOException {
         for (Handler handler : audioHandlers()) {
-            Sound sound = handler.readSound(input);
+            Sound sound = handler.readSound(input, pool);
+            if (sound != null) return sound;
+        }
+        throw new UnsupportedFormatException();
+    }
+
+    public Sound readSound(File input) throws IOException {
+        return readSound(input, DEFAULT_POOL_SIZE);
+    }
+
+    public Sound readSound(Asset input, int pool) throws IOException {
+        for (Handler handler : audioHandlers()) {
+            Sound sound = handler.readSound(input, pool);
             if (sound != null) return sound;
         }
         throw new UnsupportedFormatException();
     }
 
     public Sound readSound(Asset input) throws IOException {
-        for (Handler handler : audioHandlers()) {
-            Sound sound = handler.readSound(input);
-            if (sound != null) return sound;
-        }
-        throw new UnsupportedFormatException();
+        return readSound(input, DEFAULT_POOL_SIZE);
     }
 
     public Music readMusic(File input) throws IOException {

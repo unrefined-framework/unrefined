@@ -35,21 +35,27 @@ public class Ball extends Sprite {
         graphics.drawEllipse(x, y, width, height);
     }
 
-    void move() {
+    void move( Board board ) {
 
         x += xdir;
         y += ydir;
 
         if (x == 0) {
+            board.collision();
+
             setXDir(1);
         }
 
         if (x == Constant.WIDTH - width) {
+            board.collision();
+
             //System.out.println(bitmapWidth);
             setXDir(-1);
         }
 
         if (y == 0) {
+            board.collision();
+
             setYDir(1);
         }
 

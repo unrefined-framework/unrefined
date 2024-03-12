@@ -26,11 +26,11 @@ public class JavaSoundAudioHandler extends Sampled.Handler {
     public static final JavaSoundAudioHandler INSTANCE = new JavaSoundAudioHandler();
 
     @Override
-    public Sound readSound(File input) throws IOException {
+    public Sound readSound(File input, int pool) throws IOException {
         Objects.requireNonNull(input);
         SoundClip soundClip;
         try {
-            soundClip = new SoundClip(AudioSystem.getAudioInputStream(input), 1);
+            soundClip = new SoundClip(AudioSystem.getAudioInputStream(input), pool);
         } catch (UnsupportedAudioFileException e) {
             return null;
         }
@@ -38,13 +38,13 @@ public class JavaSoundAudioHandler extends Sampled.Handler {
     }
 
     @Override
-    public Sound readSound(Asset input) throws IOException {
+    public Sound readSound(Asset input, int pool) throws IOException {
         Objects.requireNonNull(input);
         SoundClip soundClip;
         try {
             soundClip = new SoundClip(AudioResourceLoader
                     .getAudioInputStream(((DesktopAssetLoader) input.getAssetLoader()).getClassLoader(),
-                            input.getPathname()), 1);
+                            input.getPathname()), pool);
         } catch (UnsupportedAudioFileException e) {
             return null;
         }

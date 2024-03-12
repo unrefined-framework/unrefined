@@ -9,9 +9,14 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.Mixer;
 import javax.sound.sampled.SourceDataLine;
+import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -22,6 +27,11 @@ import static javax.sound.sampled.AudioSystem.NOT_SPECIFIED;
 public class SoundClip implements AutoCloseable {
 
 	private final LinkedBlockingDeque<SoundClipCursor> available;
+
+	public int instanceCount() {
+		return polyphony - available.size();
+	}
+
 	private final float[] pcm;
 
 	private final int frameLength;
@@ -78,11 +88,11 @@ public class SoundClip implements AutoCloseable {
 	}
 
 	private static float[] load(AudioInputStream stream) throws IOException {
-		byte[] buffer = IOStreams.readNBytes(stream, FastArray.ARRAY_LENGTH_MAX / 2);
+		byte[] buffer = IOStreams.readAllBytes(stream);
 		IOStreams.closeQuietly(stream);
 
 		// stereo output, so two entries per frame
-		float[] tmp = new float[buffer.length * 2];
+		float[] tmp = new float[buffer.length / 2];
 		int bufferIndex = 0;
 		for (int i = 0; i < tmp.length; i ++) {
 			tmp[i] = ((buffer[bufferIndex ++] & 0xFF) | (buffer[bufferIndex ++] << 8)) / 32767f;
@@ -137,6 +147,8 @@ public class SoundClip implements AutoCloseable {
 
 	public void close() {
 		if (!open) return;
+
+		playing = false;
 
 		if (soundMuxer != null) {
 			soundMuxer.removeClip(this);

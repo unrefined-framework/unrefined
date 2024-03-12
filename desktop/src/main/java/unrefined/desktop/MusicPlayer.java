@@ -226,6 +226,10 @@ public class MusicPlayer implements AutoCloseable {
 
     public void stop() {
         checkPrepared();
+        stop0();
+    }
+
+    private void stop0() {
         if (!isPrepared()) return;
         synchronized (lock) {
             if (!isPlaying()) return;
@@ -312,7 +316,7 @@ public class MusicPlayer implements AutoCloseable {
 
     @Override
     public void close() {
-        stop();
+        stop0();
     }
 
 }

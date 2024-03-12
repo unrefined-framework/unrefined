@@ -105,6 +105,7 @@ public class SoundMuxer implements AutoCloseable {
 		
 		SoundMuxerPlayer player = new SoundMuxerPlayer(mixer);
 		Thread t = new Thread(player, "SoundMuxerPlayback-" + serialNumber());
+		t.setDaemon(true);
 		t.setPriority(threadPriority);
 		t.start();
 	}

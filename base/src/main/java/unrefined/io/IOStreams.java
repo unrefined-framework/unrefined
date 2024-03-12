@@ -124,6 +124,10 @@ public final class IOStreams {
         }
     }
 
+    public static byte[] readAllBytes(InputStream in) throws IOException {
+        return readNBytes(in, FastArray.ARRAY_LENGTH_MAX);
+    }
+
     public static byte[] readNBytes(InputStream in, int n) throws IOException {
         if (n < 0) throw new IllegalArgumentException("n < 0");
         Objects.requireNonNull(in);

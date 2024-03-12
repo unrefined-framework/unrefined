@@ -40,6 +40,12 @@ Pull Requests & Issues welcome!
 [Apache-2.0](/LICENSE)
 
 ### Dependencies
-| Library                             | License    | Comptime | Runtime |
-|-------------------------------------|------------|----------|---------|
-| [JFFI](https://github.com/jnr/jffi) | Apache-2.0 | Yes      | Yes     |
+| Library                                                                                      | License                                                                             | Comptime | Runtime |
+|----------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|----------|---------|
+| [JFFI](https://github.com/jnr/jffi)                                                          | Apache-2.0                                                                          | Yes      | Yes     |
+| [JavaSound Resource Loader](https://github.com/Tianscar/javasound-resloader)                 | MIT                                                                                 | Yes      | Yes     |
+| [JavaSound MP3](https://github.com/Tianscar/javasound-mp3)                                   | LGPL-2.1                                                                            | Yes      | Yes     |
+| [Tritonus Share](https://mvnrepository.com/artifact/com.googlecode.soundlibs/tritonus-share) | LGPL-2.1                                                                            | Yes      | Yes     |
+| [JavaSound FLAC](https://github.com/Tianscar/javasound-flac)                                 | LGPL-2.1, Apache-2.0, Xiph.Org Variant of the BSD License                           | Yes      | Yes     |
+| [JavaSound AAC](https://github.com/Tianscar/javasound-aac)                                   | Public Domain                                                                       | Yes      | Yes     |
+| [J OGG Vorbis](https://github.com/stephengold/j-ogg-all)                                     | [An Informal License](https://github.com/stephengold/j-ogg-all/blob/master/LICENSE) | Yes      | Yes     |
