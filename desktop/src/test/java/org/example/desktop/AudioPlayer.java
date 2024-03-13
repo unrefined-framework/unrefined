@@ -7,7 +7,7 @@ import unrefined.runtime.DesktopRuntime;
 
 import java.io.IOException;
 
-public class MusicPlayer {
+public class AudioPlayer {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         DesktopRuntime.initialize(args);
