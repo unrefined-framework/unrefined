@@ -102,10 +102,10 @@ public class DesktopContext extends DesktopEmbeddedContext {
                 graphics.cleanup();
                 graphics = null;
             }
-            EventQueue.invokeLater(() -> {
+            //EventQueue.invokeLater(() -> {
                 ContextListener listener = getContextListener();
                 if (listener != null) listener.onDispose(DesktopContext.this);
-            });
+            //});
         };
         component.onPaint = graphics2D -> {
             if (graphics == null) return;
@@ -206,6 +206,7 @@ public class DesktopContext extends DesktopEmbeddedContext {
 
     private static final class GraphicsComponent extends Canvas {
 
+        private volatile boolean created = false;
         private volatile Runnable onCreate;
         private volatile Runnable onDispose;
         private volatile Slot<Graphics2D> onPaint;
@@ -220,16 +221,18 @@ public class DesktopContext extends DesktopEmbeddedContext {
         public void addNotify() {
             super.addNotify();
             onCreate.run();
+            EventQueue.invokeLater(() -> created = true);
         }
         @Override
         public void removeNotify() {
+            created = false;
             onDispose.run();
             super.removeNotify();
         }
 
         @Override
         public void paint(Graphics g) {
-            if (g == null) return;
+            if (g == null || !created) return;
             onPaint.accept((Graphics2D) g);
         }
 

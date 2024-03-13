@@ -2,10 +2,15 @@ package org.example.application.snake;
 
 import unrefined.context.Context;
 import unrefined.context.ContextAdapter;
+import unrefined.io.asset.Asset;
 import unrefined.media.graphics.Brush;
 import unrefined.media.graphics.Color;
 import unrefined.media.graphics.Graphics;
+import unrefined.media.sound.Sound;
 import unrefined.util.SharedTimer;
+import unrefined.util.UnexpectedError;
+
+import java.io.IOException;
 
 public class Board extends ContextAdapter {
 
@@ -24,9 +29,17 @@ public class Board extends ContextAdapter {
 
     private SharedTimer timer;
 
+    private Sound gameOver;
+
     @Override
     public void onCreate(Context context) {
         context.setBackgroundColor(Color.WHITE);
+
+        try {
+            gameOver = Sound.read(new Asset("game_over.ogg"));
+        } catch (IOException e) {
+            throw new UnexpectedError(e);
+        }
 
         gameInit(context);
     }
@@ -50,11 +63,17 @@ public class Board extends ContextAdapter {
     }
 
     @Override
+    public void onDispose(Context context) {
+
+        gameOver.dispose();
+    }
+
+    @Override
     public void onPaint(Context context, Graphics graphics, boolean snapshot) {
         doDrawing(graphics);
     }
 
-    private static final Brush FOOD_COLOR = Brush.ofColor(Color.BLUE);
+    private static final Brush FOOD_COLOR = Brush.ofColor(Color.RED);
     private static final Brush SNAKE_COLOR = Brush.ofColor(Color.BLACK);
 
     private void doDrawing(Graphics graphics) {
@@ -158,6 +177,7 @@ public class Board extends ContextAdapter {
         }
         
         if (!inGame) {
+            gameOver.start();
             timer.stop();
         }
 

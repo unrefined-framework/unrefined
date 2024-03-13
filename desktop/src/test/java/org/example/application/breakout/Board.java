@@ -33,9 +33,9 @@ public class Board extends ContextAdapter {
         context.setBackgroundColor(Color.WHITE);
 
         try {
-            collision = Sampled.getInstance().readSound(new Asset("brick.ogg"));
-            gameOver = Sampled.getInstance().readSound(new Asset("game_over.ogg"));
-            victory = Sampled.getInstance().readSound(new Asset("victory.ogg"));
+            collision = Sound.read(new Asset("brick.ogg"));
+            gameOver = Sound.read(new Asset("game_over.ogg"));
+            victory = Sound.read(new Asset("victory.ogg"));
         } catch (IOException e) {
             throw new UnexpectedError(e);
         }

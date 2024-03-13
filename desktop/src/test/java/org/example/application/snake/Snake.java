@@ -18,6 +18,7 @@ public class Snake extends ContainerAdapter {
         insets = new Insets();
 
         canvas = container.createContext(new Board());
+        canvas.setSize(Constant.WIDTH, Constant.HEIGHT);
 
         container.addContext(canvas);
     }
@@ -37,8 +38,6 @@ public class Snake extends ContainerAdapter {
 
     @Override
     public void onStart(Container container) {
-        container.setClientSize(Constant.WIDTH, Constant.HEIGHT);
-        resizeCanvas(container);
         canvas.requestFocus();
     }
 

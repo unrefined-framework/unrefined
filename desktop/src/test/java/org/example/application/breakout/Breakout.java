@@ -20,6 +20,7 @@ public class Breakout extends ContainerAdapter {
         canvas = container.createContext(new Board());
 
         container.addContext(canvas);
+        canvas.setSize(Constant.WIDTH, Constant.HEIGHT);
     }
 
     @Override
@@ -37,8 +38,6 @@ public class Breakout extends ContainerAdapter {
 
     @Override
     public void onStart(Container container) {
-        container.setClientSize(Constant.WIDTH, Constant.HEIGHT);
-        resizeCanvas(container);
         canvas.requestFocus();
     }
 

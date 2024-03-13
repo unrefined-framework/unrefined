@@ -22,7 +22,7 @@ public class SoundMuxer implements AutoCloseable {
 	}
 
 	public int getClipCacheCount() {
-		return clipCache.length;
+		return clipCache == null ? 0 : clipCache.length;
 	}
 
 	private final int bufferFrames;

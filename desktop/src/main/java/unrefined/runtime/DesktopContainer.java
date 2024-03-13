@@ -32,6 +32,7 @@ import unrefined.util.event.EventBus;
 import unrefined.util.function.Slot;
 import unrefined.util.signal.Dispatcher;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.DisplayMode;
@@ -128,7 +129,7 @@ public class DesktopContainer extends unrefined.context.Container implements
             };
             if (BUFFERED) updateBuffer(frame.getGraphicsConfiguration().getDevice().getDisplayMode());
             frame.setIconImage(DefaultIcon.ICON);
-            frame.setLocationByPlatform(true);
+            //frame.setLocationByPlatform(true);
             frame.addWindowListener(this);
             frame.addWindowFocusListener(this);
             inputMethod = new InputMethodIndicator();
@@ -143,11 +144,11 @@ public class DesktopContainer extends unrefined.context.Container implements
         this.inputMethod = inputMethod;
 
         this.container = frame == null ? container : frame;
-        this.container.setLayout(null);
+        //this.container.setLayout(null);
         this.container.setIgnoreRepaint(true);
         this.container.setBackground(Color.BLACK);
         this.container.enableInputMethods(false);
-        this.container.setMinimumSize(new java.awt.Dimension(320, 240));
+        this.container.setMinimumSize(null);
         this.container.setSize(640, 480);
 
         this.container.addComponentListener(this);
@@ -163,7 +164,29 @@ public class DesktopContainer extends unrefined.context.Container implements
 
     @Override
     public void run() {
-        container.setVisible(true);
+        run(null);
+    }
+
+    public void run(Runnable beforeVisible) {
+        if (container instanceof Frame) {
+            try {
+                ((Frame) container).pack();
+            }
+            finally {
+                container.setLayout(null);
+            }
+        }
+        try {
+            if (beforeVisible != null)
+                beforeVisible.run();
+        }
+        finally {
+            container.setVisible(true);
+        }
+    }
+
+    public void requestLaunch(Runnable beforeVisible) {
+        Dispatcher.defaultInstance().invokeLater(() -> DesktopContainer.this.run(beforeVisible));
     }
 
     private class InputMethodIndicator extends TextField implements InputMethodListener, FocusListener {
@@ -404,6 +427,7 @@ public class DesktopContainer extends unrefined.context.Container implements
     public void setBounds(int x, int y, int width, int height) {
         container.setLocation(x, y);
         container.setSize(width, height);
+        container.setPreferredSize(new java.awt.Dimension(width, height));
     }
 
     @Override
