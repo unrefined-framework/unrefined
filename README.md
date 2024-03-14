@@ -3,9 +3,9 @@ Version Name: 0.7.0
 Version Code: 71  
 Version Codename: Claw Hammer
 
-Cross-platform multimedia framework written in pure Java.
+Cross-platform multimedia application framework written in pure Java.
 
-This library is designed for multimedia, but not just a multimedia framework.  
+This library is designed for multimedia application, but it not just a multimedia application framework.  
 You can also use it as a game engine or a utility toolkit.
 
 It provides:  

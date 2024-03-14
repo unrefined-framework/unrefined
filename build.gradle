@@ -16,7 +16,7 @@ subprojects {
         libraryName = 'Unrefined'
         libraryGroupName = 'unrefined'
         libraryPublishGroupName = 'com.tianscar.unrefined'
-        libraryDescription = 'Cross-platform multimedia framework written in pure Java.'
+        libraryDescription = 'Cross-platform multimedia application framework written in pure Java.'
         libraryUrl = 'https://github.com/Tianscar/unrefined'
 
         libraryVersionCode = 70
