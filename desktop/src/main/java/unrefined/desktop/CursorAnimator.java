@@ -1,6 +1,6 @@
 package unrefined.desktop;
 
-import unrefined.base.AnimatedCursor;
+import unrefined.core.AnimatedCursor;
 import unrefined.runtime.DesktopCursor;
 import unrefined.util.NotInstantiableError;
 

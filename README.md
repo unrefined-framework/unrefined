@@ -9,20 +9,20 @@ This library is designed for multimedia application, but it not just a multimedi
 You can also use it as a game engine or a utility toolkit.
 
 It provides:  
-[Extended Console API](/base/src/main/java/unrefined/io/console)  
-[Window & Widget Management API](/base/src/main/java/unrefined/context)  
-[Feature-rich 2D Graphics API](/base/src/main/java/unrefined/media/graphics)  
-[Extended Memory Management API](/base/src/main/java/unrefined/nio)  
-[Qt-like Signal/Slot API](/base/src/main/java/unrefined/util/signal)  
-[Pub/sub Event Bus API](/base/src/main/java/unrefined/util/event)  
-[Functional Programming Helper API](/base/src/main/java/unrefined/util/function/Function.java)  
-[Extended Collections API](/base/src/main/java/unrefined/util/)  
-[Animation API](/base/src/main/java/unrefined/util/animation)  
-[Serialization/Deserialization API](/base/src/main/java/unrefined/io/Savable.java)  
-[Logger API](/base/src/main/java/unrefined/app/Logger.java)  
-[MVVM Data Binding API](/base/src/main/java/unrefined/beans)  
-[Foreign Function Interface API](/base/src/main/java/unrefined/util/foreign)  
-[Extended Runtime API](/base/src/main/java/unrefined/app/Runtime.java)  
+[Extended Console API](/core/src/main/java/unrefined/io/console)  
+[Window & Widget Management API](/core/src/main/java/unrefined/context)  
+[Feature-rich 2D Graphics API](/core/src/main/java/unrefined/media/graphics)  
+[Extended Memory Management API](/core/src/main/java/unrefined/nio)  
+[Qt-like Signal/Slot API](/core/src/main/java/unrefined/util/signal)  
+[Pub/sub Event Bus API](/core/src/main/java/unrefined/util/event)  
+[Functional Programming Helper API](/core/src/main/java/unrefined/util/function/Function.java)  
+[Extended Collections API](/core/src/main/java/unrefined/util/)  
+[Animation API](/core/src/main/java/unrefined/util/animation)  
+[Serialization/Deserialization API](/core/src/main/java/unrefined/io/Savable.java)  
+[Logger API](/core/src/main/java/unrefined/app/Logger.java)  
+[MVVM Data Binding API](/core/src/main/java/unrefined/beans)  
+[Foreign Function Interface API](/core/src/main/java/unrefined/util/foreign)  
+[Extended Runtime API](/core/src/main/java/unrefined/app/Runtime.java)  
 ...and more
 
 It is also designed to work properly in "headless mode".

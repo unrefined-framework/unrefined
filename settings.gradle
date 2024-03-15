@@ -15,8 +15,8 @@ dependencyResolutionManagement {
 
 rootProject.name = 'unrefined'
 
-// base
-include ':base'
+// core
+include ':core'
 
 // desktop
 include ':desktop'

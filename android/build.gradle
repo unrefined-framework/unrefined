@@ -1,4 +1,4 @@
 dependencies {
-    implementation project(':base')
-    api project(':base')
+    implementation project(':core')
+    api project(':core')
 }

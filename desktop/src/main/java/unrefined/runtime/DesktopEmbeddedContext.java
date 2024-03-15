@@ -1,6 +1,6 @@
 package unrefined.runtime;
 
-import unrefined.base.AnimatedCursor;
+import unrefined.core.AnimatedCursor;
 import unrefined.context.Container;
 import unrefined.context.Context;
 import unrefined.context.ContextListener;

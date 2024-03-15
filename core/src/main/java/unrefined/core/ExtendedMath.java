@@ -1,4 +1,4 @@
-package unrefined.base;
+package unrefined.core;
 
 import unrefined.math.FastMath;
 import unrefined.util.NotInstantiableError;

@@ -4,7 +4,7 @@ import unrefined.app.Platform;
 import unrefined.context.Environment;
 import unrefined.io.UnsupportedFormatException;
 import unrefined.io.asset.Asset;
-import unrefined.base.AnimatedCursor;
+import unrefined.core.AnimatedCursor;
 import unrefined.util.concurrent.ConcurrentHashSet;
 import unrefined.util.function.IntBiOperator;
 

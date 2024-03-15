@@ -1,6 +1,6 @@
 package unrefined.math;
 
-import unrefined.base.ExtendedMath;
+import unrefined.core.ExtendedMath;
 import unrefined.util.NotInstantiableError;
 
 import java.math.BigInteger;

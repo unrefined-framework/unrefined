@@ -2,7 +2,7 @@ package unrefined.runtime;
 
 import unrefined.app.Logger;
 import unrefined.app.Preferences;
-import unrefined.base.AnimatedCursor;
+import unrefined.core.AnimatedCursor;
 import unrefined.context.ContainerListener;
 import unrefined.context.Context;
 import unrefined.context.ContextListener;
@@ -32,7 +32,6 @@ import unrefined.util.event.EventBus;
 import unrefined.util.function.Slot;
 import unrefined.util.signal.Dispatcher;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.DisplayMode;

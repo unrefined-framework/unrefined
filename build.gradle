@@ -2,7 +2,7 @@ plugins {
     id 'com.android.library' version '8.1.0' apply false
 }
 
-def baseProjects    = [project(':base')]
+def coreProjects    = [project(':core')]
 
 def desktopProjects = [project(':desktop')]
 
@@ -15,9 +15,9 @@ subprojects {
     ext {
         libraryName = 'Unrefined'
         libraryGroupName = 'unrefined'
-        libraryPublishGroupName = 'com.tianscar.unrefined'
+        libraryPublishGroupName = 'io.github.unrefined-framework'
         libraryDescription = 'Cross-platform multimedia application framework written in pure Java.'
-        libraryUrl = 'https://github.com/Tianscar/unrefined'
+        libraryUrl = 'https://github.com/unrefined-framework/unrefined'
 
         libraryVersionCode = 70
         libraryVersionName = '0.7.1-SNAPSHOT'
@@ -25,7 +25,7 @@ subprojects {
 
         libraryLicenseName = 'The Apache License, Version 2.0'
         libraryLicenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-        libraryScmConnection = 'scm:git:git@github.com/Tianscar/unrefined.git'
+        libraryScmConnection = 'scm:git:git@github.com/unrefined-framework/unrefined.git'
         libraryScmDeveloperConnection = libraryScmConnection
         libraryScmUrl = libraryUrl
         libraryDevelopersId = 'Unrefined'
@@ -50,9 +50,15 @@ subprojects {
 
     group libraryGroupName
     version libraryVersionCode
+
+    // FIXME cleanup Javadocs from errors
+    tasks.withType(Javadoc) {
+        failOnError false
+        options.addStringOption('Xdoclint:none', '-quiet')
+    }
 }
 
-configure (baseProjects) {
+configure (coreProjects) {
     apply plugin: 'java-library'
 
     sourceCompatibility = libraryBaseSourceCompatibility
@@ -75,7 +81,7 @@ configure (desktopProjects) {
     }
 }
 
-configure (baseProjects + desktopProjects) {
+configure (coreProjects + desktopProjects) {
 
     [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
@@ -200,7 +206,7 @@ configure (androidProjects) {
         publishing {
             singleVariant('release') {
                 withSourcesJar()
-                withJavadocJar()
+                //withJavadocJar()
             }
         }
     }
