@@ -133,8 +133,7 @@ public final class DesktopRuntime extends Runtime {
 
     @Override
     public Container createContainer(ContainerListener containerListener) {
-        return null;
-        //return new DesktopContainer(containerListener);
+        return new DesktopContainer(containerListener);
     }
 
     private volatile String NORMALIZED_APP_NAME;

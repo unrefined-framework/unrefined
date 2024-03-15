@@ -33,6 +33,7 @@ import unrefined.util.function.Slot;
 import unrefined.util.signal.Dispatcher;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.DisplayMode;
 import java.awt.EventQueue;
@@ -132,6 +133,7 @@ public class DesktopContainer extends unrefined.context.Container implements
             frame.addWindowListener(this);
             frame.addWindowFocusListener(this);
             inputMethod = new InputMethodIndicator();
+            inputMethod.setVisible(false);
             inputMethod.addKeyListener(this);
             frame.add(inputMethod);
         }
@@ -699,9 +701,18 @@ public class DesktopContainer extends unrefined.context.Container implements
 
     @Override
     public void requestInputMethod() {
-        inputMethod.setCursor(container.findComponentAt(inputMethod.getLocation()).getCursor());
-        container.setComponentZOrder(inputMethod, container.getComponentCount() - 1);
-        inputMethod.requestFocus();
+        inputMethod.setVisible(true);
+        try {
+            Component component = container.findComponentAt(inputMethod.getLocation());
+            if (component != null) inputMethod.setCursor(component.getCursor());
+            synchronized (container.getTreeLock()) {
+                int count = container.getComponentCount();
+                if (count > 0) container.setComponentZOrder(inputMethod, count - 1);
+            }
+        }
+        finally {
+            inputMethod.requestFocus();
+        }
     }
 
     @Override

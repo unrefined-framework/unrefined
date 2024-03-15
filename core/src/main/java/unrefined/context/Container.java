@@ -156,7 +156,7 @@ public abstract class Container implements Runnable {
         return dp * getDensity();
     }
     public float dppt(float dp) {
-        return dp * getDensity() / 72f;
+        return dp * getDotsPerInch() / 72f;
     }
     public float spdp(float sp) {
         return sp / getFontScale();
@@ -165,7 +165,7 @@ public abstract class Container implements Runnable {
         return sp * getScaledDensity();
     }
     public float sppt(float sp) {
-        return sp * getScaledDensity() / 72f;
+        return sp * getDotsPerInch() * getFontScale() / 72f;
     }
     public float ptdp(float pt) {
         return pt / getDotsPerInch() * 72f;
