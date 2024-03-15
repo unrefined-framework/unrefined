@@ -149,40 +149,40 @@ public abstract class Container implements Runnable {
     public abstract float getFontScale();
     public abstract float getDensity();
     public abstract float getScaledDensity();
-    public float dpsp(float dp) {
+    public float DP_SP(float dp) {
         return dp * getFontScale();
     }
-    public float dppx(float dp) {
+    public float DP_PX(float dp) {
         return dp * getDensity();
     }
-    public float dppt(float dp) {
+    public float DP_PT(float dp) {
         return dp * getDotsPerInch() / 72f;
     }
-    public float spdp(float sp) {
+    public float SP_DP(float sp) {
         return sp / getFontScale();
     }
-    public float sppx(float sp) {
+    public float SP_PX(float sp) {
         return sp * getScaledDensity();
     }
-    public float sppt(float sp) {
+    public float SP_PT(float sp) {
         return sp * getDotsPerInch() * getFontScale() / 72f;
     }
-    public float ptdp(float pt) {
+    public float PT_DP(float pt) {
         return pt / getDotsPerInch() * 72f;
     }
-    public float ptsp(float pt) {
+    public float PT_SP(float pt) {
         return pt / getDotsPerInch() * getFontScale() * 72f;
     }
-    public float ptpx(float pt) {
+    public float PT_PX(float pt) {
         return pt * 72f;
     }
-    public float pxdp(float px) {
+    public float PX_DP(float px) {
         return px / getDensity();
     }
-    public float pxsp(float px) {
+    public float PX_SP(float px) {
         return px / getScaledDensity();
     }
-    public float pxpt(float px) {
+    public float PX_PT(float px) {
         return px / 72f;
     }
 

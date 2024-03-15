@@ -39,7 +39,7 @@ public class HelloWorldContext extends ContextAdapter {
         try {
             graphics.setStyle(Graphics.Style.FILL);
             graphics.setBrush(brush);
-            graphics.setTextSize(context.getContainer().sppt(12));
+            graphics.setTextSize(context.getContainer().SP_PT(12));
             graphics.measureText(TXT_HELLO_WORLD, metrics, bounds);
             graphics.drawText(TXT_HELLO_WORLD,
                     (graphics.getWidth() - bounds.getWidth()) / 2,
