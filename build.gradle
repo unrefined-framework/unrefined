@@ -19,7 +19,7 @@ subprojects {
         libraryDescription = 'Cross-platform multimedia application framework written in pure Java.'
         libraryUrl = 'https://github.com/unrefined-framework/unrefined'
 
-        libraryVersionCode = 72
+        libraryVersionCode = '72-SNAPSHOT'
         libraryVersionName = '0.7.2-SNAPSHOT'
         libraryVersionCodeName = 'Claw Hammer'
 
