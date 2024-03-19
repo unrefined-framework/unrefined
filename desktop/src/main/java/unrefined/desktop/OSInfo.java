@@ -39,6 +39,7 @@ public final class OSInfo {
 
     public static final boolean IS_WINDOWS = OS_NAME.startsWith("Windows");
     public static final boolean IS_WINDOWS_PE = IS_WINDOWS && "X:\\Windows\\System32".equalsIgnoreCase(System.getProperty("user.dir"));
+    public static final boolean IS_WINDOWS_CE = OS_NAME.startsWith("Windows CE");
     public static final boolean IS_MAC = OS_NAME.startsWith("Mac") || OS_NAME.startsWith("Darwin");
     public static final boolean IS_LINUX = OS_NAME.startsWith("Linux");
     public static final boolean IS_SOLARIS = OS_NAME.startsWith("Solaris") || OS_NAME.startsWith("SunOS");
@@ -81,6 +82,6 @@ public final class OSInfo {
         return ((long) major << 48) | ((long) minor << 32) | ((long) micro << 16) | patch;
     }
 
-    public static final File NULL_FILE = IS_WINDOWS ? new File("NUL") : new File("/dev/null");
+    public static final File NULL_FILE = IS_WINDOWS ? new File(File.listRoots()[0], "NUL") : new File("/dev/null");
 
 }

@@ -3,6 +3,7 @@ package unrefined.runtime;
 import unrefined.desktop.AWTSupport;
 import unrefined.desktop.AttributedCharSequence;
 import unrefined.desktop.CharArrayIterator;
+import unrefined.desktop.CleanerSupport;
 import unrefined.desktop.FontSupport;
 import unrefined.desktop.TextHints;
 import unrefined.desktop.TextPathLayout;
@@ -96,6 +97,7 @@ public class DesktopGraphics extends Graphics {
         this.height = height;
         info = new Info();
         reset();
+        CleanerSupport.register(this, this::dispose);
     }
 
     public DesktopGraphics(Graphics2D graphics2D) {

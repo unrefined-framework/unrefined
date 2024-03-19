@@ -1,6 +1,7 @@
 package unrefined.runtime;
 
 import unrefined.desktop.BitmapSupport;
+import unrefined.desktop.CleanerSupport;
 import unrefined.media.graphics.Bitmap;
 import unrefined.media.graphics.Graphics;
 import unrefined.util.AlreadyDisposedException;
@@ -17,12 +18,14 @@ public class DesktopBitmap extends Bitmap {
     public DesktopBitmap(BufferedImage bufferedImage) {
         this.bufferedImage = Objects.requireNonNull(bufferedImage);
         bitmapType = BitmapSupport.getBitmapType(bufferedImage);
+        CleanerSupport.register(this, this::dispose);
     }
 
     public DesktopBitmap(int width, int height, int type) {
         this.bufferedImage = BitmapSupport.createImage(width, height, type);
         attachment = null;
         bitmapType = BitmapSupport.getBitmapType(bufferedImage);
+        CleanerSupport.register(this, this::dispose);
     }
 
     private volatile DesktopBitmap attachment;

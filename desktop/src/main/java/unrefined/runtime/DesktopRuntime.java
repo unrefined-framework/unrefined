@@ -80,13 +80,13 @@ public final class DesktopRuntime extends Runtime {
                 Environment.properties.setProperty("unrefined.app.version.code",
                         mainPackage.getImplementationVersion() == null ? "1" : mainPackage.getImplementationVersion());
                 try {
-                    Attributes attributes = new Manifest(mainClazz.getClassLoader().getResourceAsStream("META-INF/MANIFEST.MF")).getMainAttributes();
-                    Environment.properties.setProperty("unrefined.backend.vendor", attributes.getValue("Unrefined-Specification-Vendor"));
-                    Environment.properties.setProperty("unrefined.backend.name", attributes.getValue("Unrefined-Specification-Title"));
-                    Environment.properties.setProperty("unrefined.backend.version.name", attributes.getValue("Unrefined-Specification-Version"));
-                    Environment.properties.setProperty("unrefined.backend.implementer", attributes.getValue("Unrefined-Implementation-Vendor"));
-                    Environment.properties.setProperty("unrefined.backend.package", attributes.getValue("Unrefined-Implementation-Title"));
-                    Environment.properties.setProperty("unrefined.backend.version.code", attributes.getValue("Unrefined-Implementation-Version"));
+                    Attributes attributes = new Manifest(mainClazz.getClassLoader().getResourceAsStream("META-INF/unrefined/MANIFEST.MF")).getMainAttributes();
+                    Environment.properties.setProperty("unrefined.backend.vendor", attributes.getValue("Specification-Vendor"));
+                    Environment.properties.setProperty("unrefined.backend.name", attributes.getValue("Specification-Title"));
+                    Environment.properties.setProperty("unrefined.backend.version.name", attributes.getValue("Specification-Version"));
+                    Environment.properties.setProperty("unrefined.backend.implementer", attributes.getValue("Implementation-Vendor"));
+                    Environment.properties.setProperty("unrefined.backend.package", attributes.getValue("Implementation-Title"));
+                    Environment.properties.setProperty("unrefined.backend.version.code", attributes.getValue("Implementation-Version"));
                 }
                 catch (IOException ignored) {
                 }

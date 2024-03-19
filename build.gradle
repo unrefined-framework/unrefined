@@ -19,8 +19,8 @@ subprojects {
         libraryDescription = 'Cross-platform multimedia application framework written in pure Java.'
         libraryUrl = 'https://github.com/unrefined-framework/unrefined'
 
-        libraryVersionCode = 70
-        libraryVersionName = '0.7.1-SNAPSHOT'
+        libraryVersionCode = 72
+        libraryVersionName = '0.7.2-SNAPSHOT'
         libraryVersionCodeName = 'Claw Hammer'
 
         libraryLicenseName = 'The Apache License, Version 2.0'
@@ -38,8 +38,8 @@ subprojects {
         libraryAndroidMinSdk = 19
         libraryAndroidTargetSdk = 33
 
-        libraryBaseSourceCompatibility = JavaVersion.VERSION_1_8
-        libraryBaseTargetCompatibility = JavaVersion.VERSION_1_8
+        libraryCoreSourceCompatibility = JavaVersion.VERSION_1_8
+        libraryCoreTargetCompatibility = JavaVersion.VERSION_1_8
 
         libraryAndroidSourceCompatibility = JavaVersion.VERSION_1_8
         libraryAndroidTargetCompatibility = JavaVersion.VERSION_1_8
@@ -61,12 +61,16 @@ subprojects {
 configure (coreProjects) {
     apply plugin: 'java-library'
 
-    sourceCompatibility = libraryBaseSourceCompatibility
-    targetCompatibility = libraryBaseTargetCompatibility
+    ext.unrefinedManifestDescription = 'Unrefined Core API'
+
+    sourceCompatibility = libraryCoreSourceCompatibility
+    targetCompatibility = libraryCoreTargetCompatibility
 }
 
 configure (desktopProjects) {
     apply plugin: 'java-library'
+
+    ext.unrefinedManifestDescription = 'Unrefined For Java Standard Edition'
 
     sourceCompatibility = libraryDesktopSourceCompatibility
     targetCompatibility = libraryDesktopTargetCompatibility
@@ -99,16 +103,39 @@ configure (coreProjects + desktopProjects) {
         withSourcesJar()
     }
 
-    jar {
-        manifest {
-            attributes 'Unrefined-Specification-Vendor': libraryDevelopersName
-            attributes 'Unrefined-Specification-Title': libraryName
-            attributes 'Unrefined-Specification-Version': libraryVersionCodeName
-            attributes 'Unrefined-Implementation-Vendor': libraryDevelopersId
-            attributes 'Unrefined-Implementation-Title': libraryGroupName
-            attributes 'Unrefined-Implementation-Version': libraryVersionName
+    ext.unrefinedResourcesDir = file("$buildDir/unrefined-resources/main")
+    ext.unrefinedManifest = file("$unrefinedResourcesDir/META-INF/unrefined/MANIFEST.MF")
+
+    tasks.register('generateUnrefinedManifest') {
+        outputs.file(unrefinedManifest)
+        doLast {
+            def tmp = libraryGroupName + '.' + project.name.replaceAll('-', '.')
+            unrefinedManifest.text =
+"""Manifest-Version: 1.0
+Specification-Vendor: $libraryDevelopersName
+Specification-Title: $unrefinedManifestDescription
+Specification-Version: $libraryVersionCodeName
+Implementation-Vendor: $libraryDevelopersId
+Implementation-Title: $tmp
+Implementation-Version: $libraryVersionName
+"""
         }
     }
+
+    sourceSets.main.output.dir unrefinedResourcesDir, builtBy: generateUnrefinedManifest
+
+    /*
+    jar {
+        manifest {
+            attributes 'Specification-Vendor': libraryDevelopersName
+            attributes 'Specification-Title': libraryName
+            attributes 'Specification-Version': libraryVersionCodeName
+            attributes 'Implementation-Vendor': libraryDevelopersId
+            attributes 'Implementation-Title': libraryGroupName + '.' + project.name.replaceAll('-', '.')
+            attributes 'Implementation-Version': libraryVersionName
+        }
+    }
+     */
 
     javadoc {
         if (JavaVersion.current().isJava9Compatible()) {
@@ -119,7 +146,7 @@ configure (coreProjects + desktopProjects) {
     publishing {
         publications {
             mavenJava(MavenPublication) {
-                groupId = libraryGroupName
+                groupId = libraryPublishGroupName
                 artifactId = "${rootProject.name}-${project.name}"
                 version = libraryVersionName
                 from components.java
@@ -206,7 +233,7 @@ configure (androidProjects) {
         publishing {
             singleVariant('release') {
                 withSourcesJar()
-                //withJavadocJar()
+                withJavadocJar()
             }
         }
     }
@@ -214,7 +241,7 @@ configure (androidProjects) {
 
         publications {
             release(MavenPublication) {
-                groupId = libraryGroupName
+                groupId = libraryPublishGroupName
                 artifactId = "${rootProject.name}-${project.name}"
                 version = libraryVersionName
                 afterEvaluate {

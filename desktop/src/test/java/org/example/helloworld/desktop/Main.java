@@ -1,6 +1,6 @@
 package org.example.helloworld.desktop;
 
-import org.example.helloworld.HelloWorldContainer;
+import org.example.helloworld.HelloWorldContainerAdapter;
 import unrefined.runtime.DesktopContainer;
 import unrefined.runtime.DesktopRuntime;
 
@@ -14,7 +14,7 @@ public class Main {
     public static void main(String[] args) {
         DesktopRuntime.initialize(args);
 
-        DesktopContainer container = new DesktopContainer(new HelloWorldContainer());
+        DesktopContainer container = new DesktopContainer(new HelloWorldContainerAdapter());
 
         Frame frame = container.getFrame();
         frame.setTitle("Unrefined Application");

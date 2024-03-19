@@ -11,7 +11,7 @@ import unrefined.media.graphics.Text;
 /**
  * This is the 'canvas', all drawing logic are here.
  */
-public class HelloWorldContext extends ContextAdapter {
+public class HelloWorldContextAdapter extends ContextAdapter {
 
     private static final String TXT_HELLO_WORLD = "Hello, World!";
 

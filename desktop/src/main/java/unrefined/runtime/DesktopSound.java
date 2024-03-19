@@ -1,5 +1,6 @@
 package unrefined.runtime;
 
+import unrefined.desktop.CleanerSupport;
 import unrefined.desktop.SoundClip;
 import unrefined.desktop.SoundEvent;
 import unrefined.desktop.SoundListener;
@@ -29,6 +30,7 @@ public class DesktopSound extends Sound implements SoundListener {
         this.soundClip = Objects.requireNonNull(soundClip);
         soundClip.addSoundListener(this);
         reset();
+        CleanerSupport.register(this, this::dispose);
     }
 
     @Override

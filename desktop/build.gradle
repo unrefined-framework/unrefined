@@ -15,17 +15,20 @@ dependencies {
     implementation 'com.github.stephengold:j-ogg-vorbis:1.0.4'
 }
 
+/*
 jar {
     manifest {
-        attributes 'Unrefined-Implementation-Title': libraryGroupName + '.' + project.name.replaceAll('-', '.')
-        attributes 'Unrefined-Specification-Title': 'Unrefined For Java Standard Edition'
+        from project(':core').jar.manifest
+
+        attributes 'Specification-Title': 'Unrefined For Java Standard Edition'
     }
 }
+ */
 
 task testJar(type: Jar) {
     dependsOn ':base:jar'
 
-    manifest { from jar.manifest }
+    //manifest { from jar.manifest }
 
     archiveClassifier = 'test'
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE

@@ -76,7 +76,6 @@ Data Serialization/Deserialization
 --------------------------------
 JSON [Desktop modified org.json, Android/RoboVM SDK JSON API, TeaVM HTML5 JSON API]
 XML DOM SAX XPath [Desktop javax.xml, Android/RoboVM SDK XML API, TeaVM HTML5 XML API]
-Preferences
 Binary [Bit-based I/O as enhancement required]
 SQLite
 --------------------------------

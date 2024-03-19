@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * This is the 'container' of canvases, on desktop is the application's root window.
  */
-public class HelloWorldContainer extends ContainerAdapter {
+public class HelloWorldContainerAdapter extends ContainerAdapter {
 
     private static final int MINIMUM_WIDTH = 64;
     private static final int MINIMUM_HEIGHT = 48;
@@ -28,7 +28,7 @@ public class HelloWorldContainer extends ContainerAdapter {
     public void onCreate(Container container) {
         insets = new Insets();
 
-        context = Context.of(container, new HelloWorldContext());
+        context = Context.of(container, new HelloWorldContextAdapter());
         context.setBackgroundColor(Color.WHITE);
         context.setSize(WIDTH, HEIGHT);
         container.addContext(context);

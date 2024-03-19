@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public class VorbisAudioFileReader extends AudioFileReader {
+
     public VorbisAudioFileReader() {
     }
 

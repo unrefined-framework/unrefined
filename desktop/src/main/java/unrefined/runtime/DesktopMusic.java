@@ -1,5 +1,6 @@
 package unrefined.runtime;
 
+import unrefined.desktop.CleanerSupport;
 import unrefined.desktop.MusicEvent;
 import unrefined.desktop.MusicListener;
 import unrefined.desktop.MusicPlayer;
@@ -35,6 +36,7 @@ public class DesktopMusic extends Music implements MusicListener {
         this.musicPlayer = Objects.requireNonNull(musicPlayer);
         reset();
         musicPlayer.addMusicListener(this);
+        CleanerSupport.register(this, this::dispose);
     }
 
     @Override

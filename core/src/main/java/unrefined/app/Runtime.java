@@ -242,9 +242,4 @@ public abstract class Runtime {
         return FENCE.get().get();
     }
 
-    public final Environment system = Environment.system;
-    public final Environment properties = Environment.properties;
-    public final Environment global = Environment.global;
-    public final Environment threadLocal = Environment.threadLocal;
-
 }
