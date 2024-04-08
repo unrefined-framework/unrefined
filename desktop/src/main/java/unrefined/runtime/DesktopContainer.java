@@ -172,6 +172,7 @@ public class DesktopContainer extends unrefined.context.Container implements
         if (container instanceof Frame) {
             try {
                 ((Frame) container).pack();
+                ((Frame) container).setLocationByPlatform(true);
             }
             finally {
                 container.setLayout(null);
@@ -356,7 +357,7 @@ public class DesktopContainer extends unrefined.context.Container implements
 
     @Override
     public File getCurrentDirectory() {
-        return new File("");
+        return new File(System.getProperty("user.dir"));
     }
 
     @Override

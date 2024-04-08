@@ -15,6 +15,8 @@ import unrefined.util.UnexpectedError;
 import unrefined.util.foreign.Aggregate;
 import unrefined.util.foreign.LastErrorException;
 import unrefined.util.foreign.Symbol;
+import unrefined.util.function.FunctionTargetException;
+import unrefined.util.function.VarFunctor;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -34,9 +36,9 @@ public class DesktopSymbol extends Symbol {
     private final Type[] nonVariadicFFITypes;
     private final Type returnFFIType;
 
-    private final Class<?> returnType;
-    private final Class<?>[] parameterTypes;
-    private final List<Class<?>> markerTypes;
+    private final Object returnType;
+    private final Object[] parameterTypes;
+    private final List<Object> markerTypes;
 
     private final long address;
 
@@ -44,11 +46,12 @@ public class DesktopSymbol extends Symbol {
     private final Closure.Handle closure;
     private final int options;
 
-    public DesktopSymbol(int options, long address, Class<?> returnType, Class<?>... parameterTypes) {
+    public DesktopSymbol(int options, long address, Object returnType, Object... parameterTypes) {
         if (address == 0) throw new NullPointerException("address == NULL");
         else this.address = address;
         this.options = Option.removeUnusedBits(options);
-        varargs = parameterTypes.length > 0 && parameterTypes[parameterTypes.length - 1].isArray();
+        varargs = parameterTypes.length > 0 && parameterTypes[parameterTypes.length - 1] instanceof Class &&
+                ((Class<?>) parameterTypes[parameterTypes.length - 1]).isArray();
         if (varargs) {
             function = null;
             returnFFIType = SymbolSupport.toFFIType(returnType);
@@ -67,23 +70,36 @@ public class DesktopSymbol extends Symbol {
     }
 
     @SuppressWarnings("unchecked")
-    public DesktopSymbol(int options, Object object, Method method, Class<?> returnType, Class<?>... parameterTypes) {
+    public DesktopSymbol(int options, Object object, Method method, Object returnType, Object... parameterTypes) {
         if (!Modifier.isStatic(method.getModifiers())) Objects.requireNonNull(object);
         this.options = Option.removeUnusedBits(options);
         Parameter[] parameters = method.getParameters();
         int parameterCount = parameters.length;
         if (parameterCount != parameterTypes.length) throw new IndexOutOfBoundsException("Array length mismatch");
         Class<?> methodReturnType = method.getReturnType();
-        if (methodReturnType != returnType) throw new IllegalArgumentException("Illegal method return type; expected " + returnType);
+        if (returnType instanceof Class) {
+            if (methodReturnType != returnType) throw new IllegalArgumentException("Illegal method return type; expected " + returnType);
+        }
+        else if (returnType instanceof Aggregate.Descriptor && methodReturnType != Aggregate.class)
+            throw new IllegalArgumentException("Illegal method return type; expected " + Aggregate.class);
+        else throw new IllegalArgumentException("Illegal return type: " + returnType);
         this.returnType = returnType;
         for (int i = 0; i < parameterCount; i ++) {
-            if (Aggregate.class.isAssignableFrom(parameterTypes[i])) {
-                if (parameters[i].getType() != parameterTypes[i]) throw new IllegalArgumentException("Illegal argument type; expected " + parameterTypes[i]);
+            if (parameterTypes[i] instanceof Class) {
+                if (Aggregate.class.isAssignableFrom((Class<?>) parameterTypes[i])) {
+                    if (parameters[i].getType() != parameterTypes[i]) throw new IllegalArgumentException("Illegal argument type; expected " + parameterTypes[i]);
+                }
+                else if (!SymbolSupport.matches((Class<?>) parameterTypes[i], parameters[i].getType()))
+                    throw new IllegalArgumentException("Illegal argument type; expected " + parameterTypes[i]);
             }
-            else if (!SymbolSupport.matches(parameterTypes[i], parameters[i].getType()))
-                throw new IllegalArgumentException("Illegal argument type; expected " + parameterTypes[i]);
+            else if (parameterTypes[i] instanceof Aggregate.Descriptor) {
+                if (Aggregate.class != parameters[i].getType())
+                    throw new IllegalArgumentException("Illegal argument type; expected " + Aggregate.class);
+            }
+            else throw new IllegalArgumentException("Illegal argument type: " + parameterTypes[i]);
         }
-        if (parameterCount > 0 && parameterTypes[parameterCount - 1].isArray())
+        if (parameterCount > 0 && parameterTypes[parameterCount - 1] instanceof Class &&
+                ((Class<?>) parameterTypes[parameterCount - 1]).isArray())
             throw new UnsupportedOperationException("Variadic arguments not supported");
         varargs = false;
         nonVariadicFFITypes = null;
@@ -97,33 +113,107 @@ public class DesktopSymbol extends Symbol {
             Object[] args = new Object[parameterCount];
             int index = 0;
             for (int i = 0; i < parameterCount; i ++) {
-                Class<?> parameterType = parameterTypes[i];
-                if (parameterType == boolean.class) args[i] = buffer.getByte(index) != 0;
-                else if (parameterType == byte.class) args[i] = buffer.getByte(index);
-                else if (parameterType == char.class) args[i] = (char) buffer.getShort(index);
-                else if (parameterType == short.class) args[i] = buffer.getShort(index);
-                else if (parameterType == int.class) args[i] = buffer.getInt(index);
-                else if (parameterType == long.class) {
-                    args[i] = buffer.getLong(index);
-                    if (ABI.P != 8) index ++;
+                Object parameterType = parameterTypes[i];
+                if (parameterType instanceof Class) {
+                    if (parameterType == boolean.class) args[i] = buffer.getByte(index) != 0;
+                    else if (parameterType == byte.class) args[i] = buffer.getByte(index);
+                    else if (parameterType == char.class) args[i] = (char) buffer.getShort(index);
+                    else if (parameterType == short.class) args[i] = buffer.getShort(index);
+                    else if (parameterType == int.class) args[i] = buffer.getInt(index);
+                    else if (parameterType == long.class) {
+                        args[i] = buffer.getLong(index);
+                        if (ABI.P != 8) index ++;
+                    }
+                    else if (parameterType == float.class) args[i] = buffer.getFloat(index);
+                    else if (parameterType == double.class) {
+                        args[i] = buffer.getDouble(index);
+                        if (ABI.P != 8) index ++;
+                    }
+                    else if (Aggregate.class.isAssignableFrom((Class<?>) parameterType)) {
+                        byte[] struct = new byte[(int) Aggregate.sizeOfType((Class<? extends Aggregate>) parameterType)];
+                        MEMORY_IO.getByteArray(buffer.getStruct(index), struct, 0, struct.length);
+                        args[i] = Aggregate.newInstance((Class<? extends Aggregate>) parameterType, Pointer.wrap(SymbolSupport.reverseIfNeeded(struct)));
+                    }
                 }
-                else if (parameterType == float.class) args[i] = buffer.getFloat(index);
-                else if (parameterType == double.class) {
-                    args[i] = buffer.getDouble(index);
-                    if (ABI.P != 8) index ++;
-                }
-                else if (Aggregate.class.isAssignableFrom(parameterType)) {
-                    byte[] struct = new byte[(int) Aggregate.sizeOfType((Class<? extends Aggregate>) parameterType)];
+                else if (parameterType instanceof Aggregate.Descriptor) {
+                    byte[] struct = new byte[(int) ((Aggregate.Descriptor) parameterType).size()];
                     MEMORY_IO.getByteArray(buffer.getStruct(index), struct, 0, struct.length);
-                    args[i] = Aggregate.newInstance((Class<? extends Aggregate>) parameterType, Pointer.wrap(SymbolSupport.reverseIfNeeded(struct)));
+                    args[i] = Aggregate.newProxyInstance((Aggregate.Descriptor) parameterType, Pointer.wrap(SymbolSupport.reverseIfNeeded(struct)));
                 }
                 index ++;
             }
             try {
-                SymbolSupport.push(buffer, ReflectionSupport.invokeMethod(object, method, args), returnType);
+                Object result = ReflectionSupport.invokeMethod(object, method, args);
+                if (returnType != void.class) Objects.requireNonNull(result);
+                SymbolSupport.push(buffer, result, returnType);
             } catch (InvocationTargetException e) {
-                throw new UnexpectedError(e);
+                throw new FunctionTargetException(e.getTargetException());
             }
+        }, context);
+        closure.setAutoRelease(true);
+        address = closure.getAddress();
+        function = new Function(address, context);
+    }
+
+    @SuppressWarnings("unchecked")
+    public DesktopSymbol(int options, VarFunctor<?> proc, Object returnType, Object... parameterTypes) {
+        Objects.requireNonNull(proc);
+        this.options = Option.removeUnusedBits(options);
+        int parameterCount = parameterTypes.length;
+        if (!(returnType instanceof Class) && !(returnType instanceof Aggregate.Descriptor))
+            throw new IllegalArgumentException("Illegal return type: " + returnType);
+        this.returnType = returnType;
+        for (Object type : parameterTypes) {
+            if (!(type instanceof Class) && !(type instanceof Aggregate.Descriptor))
+                throw new IllegalArgumentException("Illegal argument type: " + type);
+        }
+        if (parameterCount > 0 && parameterTypes[parameterCount - 1] instanceof Class &&
+                ((Class<?>) parameterTypes[parameterCount - 1]).isArray())
+            throw new UnsupportedOperationException("Variadic arguments not supported");
+        varargs = false;
+        nonVariadicFFITypes = null;
+        returnFFIType = null;
+        CallContext context = CallContext.getCallContext(
+                SymbolSupport.toFFIType(returnType), SymbolSupport.toFFITypes(parameterTypes),
+                CallingConvention.DEFAULT, false);
+        this.parameterTypes = parameterTypes.clone();
+        markerTypes = Arrays.asList(parameterTypes);
+        closure = ClosureManager.getInstance().newClosure(buffer -> {
+            Object[] args = new Object[parameterCount];
+            int index = 0;
+            for (int i = 0; i < parameterCount; i ++) {
+                Object parameterType = parameterTypes[i];
+                if (parameterType instanceof Class) {
+                    if (parameterType == boolean.class) args[i] = buffer.getByte(index) != 0;
+                    else if (parameterType == byte.class) args[i] = buffer.getByte(index);
+                    else if (parameterType == char.class) args[i] = (char) buffer.getShort(index);
+                    else if (parameterType == short.class) args[i] = buffer.getShort(index);
+                    else if (parameterType == int.class) args[i] = buffer.getInt(index);
+                    else if (parameterType == long.class) {
+                        args[i] = buffer.getLong(index);
+                        if (ABI.P != 8) index ++;
+                    }
+                    else if (parameterType == float.class) args[i] = buffer.getFloat(index);
+                    else if (parameterType == double.class) {
+                        args[i] = buffer.getDouble(index);
+                        if (ABI.P != 8) index ++;
+                    }
+                    else if (Aggregate.class.isAssignableFrom((Class<?>) parameterType)) {
+                        byte[] struct = new byte[(int) Aggregate.sizeOfType((Class<? extends Aggregate>) parameterType)];
+                        MEMORY_IO.getByteArray(buffer.getStruct(index), struct, 0, struct.length);
+                        args[i] = Aggregate.newInstance((Class<? extends Aggregate>) parameterType, Pointer.wrap(SymbolSupport.reverseIfNeeded(struct)));
+                    }
+                }
+                else if (parameterType instanceof Aggregate.Descriptor) {
+                    byte[] struct = new byte[(int) ((Aggregate.Descriptor) parameterType).size()];
+                    MEMORY_IO.getByteArray(buffer.getStruct(index), struct, 0, struct.length);
+                    args[i] = Aggregate.newProxyInstance((Aggregate.Descriptor) parameterType, Pointer.wrap(SymbolSupport.reverseIfNeeded(struct)));
+                }
+                index ++;
+            }
+            Object result = proc.actuate(args);
+            if (returnType != void.class) Objects.requireNonNull(result);
+            SymbolSupport.push(buffer, result, returnType);
         }, context);
         closure.setAutoRelease(true);
         address = closure.getAddress();
@@ -136,12 +226,12 @@ public class DesktopSymbol extends Symbol {
     }
 
     @Override
-    public List<Class<?>> getParameterTypes() {
+    public List<Object> getParameterTypes() {
         return markerTypes;
     }
 
     @Override
-    public Class<?> getReturnType() {
+    public Object getReturnType() {
         return returnType;
     }
 
@@ -477,7 +567,8 @@ public class DesktopSymbol extends Symbol {
 
     @Override
     public Aggregate invokeAggregate(Object... args) {
-        if (!Aggregate.class.isAssignableFrom(returnType)) throw new IllegalArgumentException("Illegal return type; expected aggregate");
+        if (!(returnType instanceof Class) || !Aggregate.class.isAssignableFrom((Class<?>) returnType))
+            throw new IllegalArgumentException("Illegal return type; expected " + returnType);
         if ((options & Option.THROW_ERRNO) != 0) {
             int prev = LAST_ERROR.get();
             LAST_ERROR.set(0);
@@ -490,22 +581,54 @@ public class DesktopSymbol extends Symbol {
         else return invokeAggregate0(options, args);
     }
 
+    private Aggregate invokeDescriptor0(int options, Object... args) {
+        if (varargs) {
+            CallContext context = CallContext.getCallContext(returnFFIType, nonVariadicFFITypes.length,
+                    SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args[args.length - 1]),
+                    (options & Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
+                    (options & Option.SAVE_ERRNO) != 0);
+            return Aggregate.newProxyInstance((Aggregate.Descriptor) returnType, Pointer.wrap(SymbolSupport.reverseIfNeeded(
+                    INVOKER.invokeStruct(context, address, SymbolSupport.toHeapInvocationBufferVariadic(context, parameterTypes, args)))));
+        }
+        else return Aggregate.newProxyInstance((Aggregate.Descriptor) returnType, Pointer.wrap(SymbolSupport.reverseIfNeeded(
+                INVOKER.invokeStruct(function, SymbolSupport.toHeapInvocationBuffer(function.getCallContext(), parameterTypes, args)))));
+    }
+
+    @Override
+    public Aggregate invokeDescriptor(Object... args) {
+        if (!(returnType instanceof Aggregate.Descriptor))
+            throw new IllegalArgumentException("Illegal return type; expected " + Aggregate.Descriptor.class);
+        if ((options & Option.THROW_ERRNO) != 0) {
+            int prev = LAST_ERROR.get();
+            LAST_ERROR.set(0);
+            Aggregate result = invokeDescriptor0(options | Option.SAVE_ERRNO, args);
+            int errno = LAST_ERROR.get();
+            LAST_ERROR.set(prev);
+            if (errno == 0) return result;
+            else throw new LastErrorException(errno);
+        }
+        else return invokeDescriptor0(options, args);
+    }
+
     @Override
     public Object invoke(Object... args) {
-        if (returnType == void.class) {
-            invokeVoid(args);
-            return null;
+        if (returnType instanceof Class) {
+            if (returnType == void.class) {
+                invokeVoid(args);
+                return null;
+            }
+            else if (returnType == boolean.class) return invokeBoolean(args);
+            else if (returnType == byte.class) return invokeByte(args);
+            else if (returnType == char.class) return invokeChar(args);
+            else if (returnType == short.class) return invokeShort(args);
+            else if (returnType == int.class) return invokeInt(args);
+            else if (returnType == long.class) return invokeLong(args);
+            else if (returnType == float.class) return invokeFloat(args);
+            else if (returnType == double.class) return invokeDouble(args);
+            else if (Aggregate.class.isAssignableFrom((Class<?>) returnType)) return invokeAggregate(args);
         }
-        else if (returnType == boolean.class) return invokeBoolean(args);
-        else if (returnType == byte.class) return invokeByte(args);
-        else if (returnType == char.class) return invokeChar(args);
-        else if (returnType == short.class) return invokeShort(args);
-        else if (returnType == int.class) return invokeInt(args);
-        else if (returnType == long.class) return invokeLong(args);
-        else if (returnType == float.class) return invokeFloat(args);
-        else if (returnType == double.class) return invokeDouble(args);
-        else if (Aggregate.class.isAssignableFrom(returnType)) return invokeAggregate(args);
-        else throw new UnexpectedError();
+        else if (returnType instanceof Aggregate.Descriptor) return invokeDescriptor(args);
+        throw new UnexpectedError();
     }
 
     @Override

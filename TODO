@@ -30,10 +30,9 @@ Single Instance Checker
 Stream API
 Process API
 String Template API
-File Monitor
 Collection/Map Utilities
 String/CharSequence Utilities
-InputStream/OutputStream Utilities
+Time/Date Utilities
 --------------------------------
 
 --------------------------------
@@ -74,9 +73,8 @@ Curses
 --------------------------------
 Data Serialization/Deserialization
 --------------------------------
-JSON [Desktop modified org.json, Android/RoboVM SDK JSON API, TeaVM HTML5 JSON API]
+JSON [Desktop org.json, Android/RoboVM SDK JSON API, TeaVM HTML5 JSON API]
 XML DOM SAX XPath [Desktop javax.xml, Android/RoboVM SDK XML API, TeaVM HTML5 XML API]
-Binary [Bit-based I/O as enhancement required]
 SQLite
 --------------------------------
 

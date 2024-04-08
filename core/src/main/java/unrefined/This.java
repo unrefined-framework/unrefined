@@ -5,6 +5,8 @@ import unrefined.app.Platform;
 import unrefined.app.Runtime;
 import unrefined.io.asset.AssetLoader;
 import unrefined.io.console.Console;
+import unrefined.io.file.FileSystem;
+import unrefined.io.file.FileWatcher;
 import unrefined.math.Arithmetic;
 import unrefined.media.graphics.Drawing;
 import unrefined.media.sound.Sampled;
@@ -34,6 +36,10 @@ public class This {
         }
         public static class console {
             public static final Console console = Console.getInstance();
+        }
+        public static class file {
+            public static final FileSystem fileSystem = FileSystem.getInstance();
+            public static final FileWatcher fileWatcher = FileWatcher.getInstance();
         }
     }
 

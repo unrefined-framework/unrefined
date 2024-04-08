@@ -1,6 +1,7 @@
-package unrefined.io;
+package unrefined.io.file;
 
-import unrefined.util.NotInstantiableError;
+import unrefined.io.RandomAccessDataInput;
+import unrefined.io.RandomAccessDataOutput;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -9,63 +10,31 @@ import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.util.Objects;
 
-import static unrefined.io.ChannelFile.Mode.*;
+import static unrefined.io.file.FileSystem.OpenOption.*;
 
 public class ChannelFile implements RandomAccessDataInput, RandomAccessDataOutput {
 
-    public static final class Mode {
-        private Mode() {
-            throw new NotInstantiableError(Mode.class);
-        }
-        public static final int READ              = 0;
-        public static final int WRITE             = 1;
-        public static final int APPEND            = 1 << 1;
-        public static final int TRUNCATE_EXISTING = 1 << 2;
-        public static final int CREATE            = 1 << 3;
-        public static final int CREATE_NEW        = 1 << 4;
-        public static final int DELETE_ON_CLOSE   = 1 << 5;
-        public static final int SYNC              = 1 << 6;
-        public static final int DSYNC             = 1 << 7;
-        public static int removeUnusedBits(int mode) {
-            return mode << 24 >>> 24;
-        }
-        public static String toString(int mode) {
-            mode = removeUnusedBits(mode);
-            if (mode == READ) return "[READ]";
-            else {
-                StringBuilder builder = new StringBuilder("[READ, WRITE");
-                if ((mode & TRUNCATE_EXISTING) != 0) builder.append(", TRUNCATE_EXISTING");
-                else if ((mode & APPEND) != 0) builder.append(", APPEND");
-                if ((mode & CREATE_NEW) != 0) builder.append(", CREATE_NEW");
-                else builder.append(", CREATE");
-                if ((mode & DELETE_ON_CLOSE) != 0) builder.append(", DELETE_ON_CLOSE");
-                if ((mode & SYNC) != 0) builder.append(", SYNC");
-                else if ((mode & DSYNC) != 0) builder.append(", DSYNC");
-                builder.append("]");
-                return builder.toString();
-            }
-        }
-    }
-
     private final RandomAccessFile randomAccessFile;
     private final File file;
-    private final int mode;
-    private final boolean alreadyExists;
+    private final int options;
     private final boolean deleteOnClose;
-    public ChannelFile(File file, int mode) throws IOException {
+    public ChannelFile(File file, int options) throws IOException {
         Objects.requireNonNull(file);
-        this.mode = mode = Mode.removeUnusedBits(mode);
-        randomAccessFile = new RandomAccessFile(file, toRandomAccessFileMode(mode));
+        this.options = options = FileSystem.OpenOption.removeUnusedBits(options);
+        randomAccessFile = new RandomAccessFile(file, toRandomAccessFileMode(options));
         this.file = file;
-        if ((mode & TRUNCATE_EXISTING) != 0 && file.exists()) randomAccessFile.setLength(0);
-        if ((mode & APPEND) != 0) randomAccessFile.seek(randomAccessFile.length());
-        deleteOnClose = (mode & DELETE_ON_CLOSE) != 0;
+        if ((options & TRUNCATE_EXISTING) != 0 && file.exists()) randomAccessFile.setLength(0);
+        if ((options & APPEND) != 0) randomAccessFile.seek(randomAccessFile.length());
+        deleteOnClose = (options & DELETE_ON_CLOSE) != 0;
         if (deleteOnClose) file.deleteOnExit();
-        alreadyExists = (mode & CREATE_NEW) != 0 && file.exists();
+        if ((options & CREATE_NEW) != 0 && file.exists()) throw new IOException("file already exists");
+    }
+    public ChannelFile(String pathname, int options) throws IOException {
+        this(new File(pathname), options);
     }
 
-    public int getMode() {
-        return mode;
+    public int getOpenOptions() {
+        return options;
     }
 
     public File asFile() {
@@ -108,85 +77,71 @@ public class ChannelFile implements RandomAccessDataInput, RandomAccessDataOutpu
 
     @Override
     public void write(int b) throws IOException {
-        if (alreadyExists) throw new IOException("file already exists");
         randomAccessFile.write(b);
     }
 
     @Override
     public void write(byte[] b) throws IOException {
-        if (alreadyExists) throw new IOException("file already exists");
         randomAccessFile.write(b);
     }
 
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
-        if (alreadyExists) throw new IOException("file already exists");
         randomAccessFile.write(b, off, len);
     }
 
     @Override
     public void writeBoolean(boolean v) throws IOException {
-        if (alreadyExists) throw new IOException("file already exists");
         randomAccessFile.writeBoolean(v);
     }
 
     @Override
     public void writeByte(int v) throws IOException {
-        if (alreadyExists) throw new IOException("file already exists");
         randomAccessFile.writeByte(v);
     }
 
     @Override
     public void writeShort(int v) throws IOException {
-        if (alreadyExists) throw new IOException("file already exists");
         randomAccessFile.writeShort(v);
     }
 
     @Override
     public void writeChar(int v) throws IOException {
-        if (alreadyExists) throw new IOException("file already exists");
         randomAccessFile.writeChar(v);
     }
 
     @Override
     public void writeInt(int v) throws IOException {
-        if (alreadyExists) throw new IOException("file already exists");
         randomAccessFile.writeInt(v);
     }
 
     @Override
     public void writeLong(long v) throws IOException {
-        if (alreadyExists) throw new IOException("file already exists");
         randomAccessFile.writeLong(v);
     }
 
     @Override
     public void writeFloat(float v) throws IOException {
-        if (alreadyExists) throw new IOException("file already exists");
         randomAccessFile.writeFloat(v);
     }
 
     @Override
     public void writeDouble(double v) throws IOException {
-        if (alreadyExists) throw new IOException("file already exists");
         randomAccessFile.writeDouble(v);
     }
 
     @Override
     public void writeBytes(String s) throws IOException {
-        if (alreadyExists) throw new IOException("file already exists");
         randomAccessFile.writeBytes(s);
     }
 
     @Override
     public void writeChars(String s) throws IOException {
-        if (alreadyExists) throw new IOException("file already exists");
         randomAccessFile.writeChars(s);
     }
 
     @Override
     public void writeUTF(String s) throws IOException {
-        if (alreadyExists) throw new IOException("file already exists");
         randomAccessFile.writeUTF(s);
     }
 
@@ -207,7 +162,6 @@ public class ChannelFile implements RandomAccessDataInput, RandomAccessDataOutpu
 
     @Override
     public void setLength(long newLength) throws IOException {
-        if (alreadyExists) throw new IOException("file already exists");
         randomAccessFile.setLength(newLength);
     }
 
@@ -225,7 +179,6 @@ public class ChannelFile implements RandomAccessDataInput, RandomAccessDataOutpu
 
     @Override
     public void flush() throws IOException {
-        if (alreadyExists) throw new IOException("file already exists");
         randomAccessFile.getFD().sync();
     }
 
@@ -317,8 +270,7 @@ public class ChannelFile implements RandomAccessDataInput, RandomAccessDataOutpu
 
         ChannelFile that = (ChannelFile) o;
 
-        if (mode != that.mode) return false;
-        if (alreadyExists != that.alreadyExists) return false;
+        if (options != that.options) return false;
         if (deleteOnClose != that.deleteOnClose) return false;
         if (!randomAccessFile.equals(that.randomAccessFile)) return false;
         return file.equals(that.file);
@@ -328,8 +280,7 @@ public class ChannelFile implements RandomAccessDataInput, RandomAccessDataOutpu
     public int hashCode() {
         int result = randomAccessFile.hashCode();
         result = 31 * result + file.hashCode();
-        result = 31 * result + mode;
-        result = 31 * result + (alreadyExists ? 1 : 0);
+        result = 31 * result + options;
         result = 31 * result + (deleteOnClose ? 1 : 0);
         return result;
     }
@@ -339,7 +290,7 @@ public class ChannelFile implements RandomAccessDataInput, RandomAccessDataOutpu
         return getClass().getName()
                 + '{' +
                 "path=" + file.getAbsolutePath() +
-                ", mode=" + Mode.toString(getMode()) +
+                ", mode=" + FileSystem.OpenOption.toString(getOpenOptions()) +
                 '}';
     }
 

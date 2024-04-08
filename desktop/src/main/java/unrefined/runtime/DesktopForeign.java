@@ -6,6 +6,7 @@ import unrefined.util.foreign.Aggregate;
 import unrefined.util.foreign.Foreign;
 import unrefined.util.foreign.Library;
 import unrefined.util.foreign.Symbol;
+import unrefined.util.function.VarFunctor;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,13 +21,18 @@ public class DesktopForeign extends Foreign {
     }
 
     @Override
-    public Symbol downcallHandle(int options, long function, Class<?> returnType, Class<?>... parameterTypes) {
+    public Symbol downcallHandle(int options, long function, Object returnType, Object... parameterTypes) {
         return ForeignSupport.downcallHandle(options, function, returnType, parameterTypes);
     }
 
     @Override
-    public Symbol upcallStub(int options, Object object, Method method, Class<?> returnType, Class<?>... parameterTypes) {
+    public Symbol upcallStub(int options, Object object, Method method, Object returnType, Object... parameterTypes) {
         return ForeignSupport.upcallStub(options, object, method, returnType, parameterTypes);
+    }
+
+    @Override
+    public Symbol upcallStub(int options, VarFunctor<?> closure, Object returnType, Object... parameterTypes) {
+        return ForeignSupport.upcallStub(options, closure, returnType, parameterTypes);
     }
 
     @Override
@@ -95,7 +101,12 @@ public class DesktopForeign extends Foreign {
     }
 
     @Override
-    public <T> T invokeFunction(int options, long address, Class<T> returnType, Object... args) {
+    public Aggregate invokeDescriptorFunction(int options, long address, Aggregate.Descriptor returnType, Object... args) {
+        return ForeignSupport.invokeDescriptorFunction(options, address, returnType, args);
+    }
+
+    @Override
+    public Object invokeFunction(int options, long address, Object returnType, Object... args) {
         return ForeignSupport.invokeFunction(options, address, returnType, args);
     }
 

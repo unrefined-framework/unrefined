@@ -8,7 +8,7 @@
  */
 package unrefined.io.console;
 
-import unrefined.io.IOStreams;
+import unrefined.io.ReadWriteIO;
 
 import java.io.FilterOutputStream;
 import java.io.IOException;
@@ -70,7 +70,7 @@ public class AnsiOutputStream extends FilterOutputStream {
     public AnsiOutputStream(OutputStream os, int mode, int type, int colors, Charset charset) {
         super(os);
         Ansi.Type.checkValid(type);
-        if (!IOStreams.isStandardOutputStream(os)) {
+        if (!ReadWriteIO.isStandardOutputStream(os)) {
             if (mode == Ansi.Mode.AUTO) mode = Ansi.Mode.STRIP;
             type = Ansi.Type.REDIRECTED;
         }

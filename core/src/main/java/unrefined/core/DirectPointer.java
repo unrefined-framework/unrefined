@@ -1,6 +1,9 @@
-package unrefined.nio;
+package unrefined.core;
 
 import unrefined.math.FastMath;
+import unrefined.nio.Allocator;
+import unrefined.nio.Pointer;
+import unrefined.nio.UnboundedPointerException;
 
 import java.io.IOException;
 import java.math.BigInteger;

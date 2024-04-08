@@ -1,0 +1,7 @@
+dependencies {
+    implementation project(':core')
+    api project(':core')
+
+    implementation 'org.mozilla:rhino-runtime:1.7.14'
+    api 'org.mozilla:rhino-runtime:1.7.14'
+}

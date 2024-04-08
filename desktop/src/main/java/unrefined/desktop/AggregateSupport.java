@@ -15,7 +15,7 @@ public final class AggregateSupport {
         throw new NotInstantiableError(AggregateSupport.class);
     }
 
-    private static final Map<Class<? extends Aggregate>, Type> TYPE_CACHE = new HashMap<>();
+    private static final Map<Aggregate.Descriptor, Type> TYPE_CACHE = new HashMap<>();
 
     private static int checkSizeValid(long size) {
         if (size < 0) throw new UnsupportedOperationException("Aggregate size too large: " + FastMath.unsign(size));
@@ -23,16 +23,21 @@ public final class AggregateSupport {
         else return (int) size;
     }
 
-    public static Type typeOf(Class<? extends Aggregate> clazz) {
-        register(clazz);
-        return TYPE_CACHE.get(clazz);
+    public static Type typeOf(Aggregate.Descriptor descriptor) {
+        register(descriptor);
+        return TYPE_CACHE.get(descriptor);
     }
 
-    private static void register(Class<? extends Aggregate> clazz) {
-        if (!TYPE_CACHE.containsKey(clazz)) {
+    public static Type typeOf(Class<? extends Aggregate> clazz) {
+        return typeOf(Aggregate.descriptorOf(clazz));
+    }
+
+    private static void register(Aggregate.Descriptor descriptor) {
+        if (!TYPE_CACHE.containsKey(descriptor)) {
             synchronized (TYPE_CACHE) {
-                if (!TYPE_CACHE.containsKey(clazz)) TYPE_CACHE.put(clazz, com.kenai.jffi.Array.newArray(Type.UINT8,
-                        checkSizeValid(Aggregate.descriptorOf(clazz).getSize())));
+                if (!TYPE_CACHE.containsKey(descriptor)) TYPE_CACHE.put(
+                        descriptor, com.kenai.jffi.Array.newArray(Type.UINT8,
+                        checkSizeValid(descriptor.size())));
             }
         }
     }

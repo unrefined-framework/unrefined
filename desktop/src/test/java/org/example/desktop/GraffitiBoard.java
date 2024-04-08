@@ -18,6 +18,8 @@ import unrefined.runtime.DesktopRuntime;
 import unrefined.util.UnexpectedError;
 import unrefined.util.signal.Dispatcher;
 
+import java.awt.Dimension;
+
 /**
  * This class creates a simple graffiti board, with a white background and a "plain black" brush.
  */
@@ -105,6 +107,7 @@ public class GraffitiBoard {
                         return true;
                     }
                 });
+                canvas.setSize(640, 480);
 
                 container.addContext(canvas);
             }

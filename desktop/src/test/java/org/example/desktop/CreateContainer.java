@@ -11,6 +11,8 @@ import unrefined.runtime.DesktopRuntime;
 import unrefined.util.UnexpectedError;
 import unrefined.util.signal.Dispatcher;
 
+import java.awt.Dimension;
+
 /**
  * One of the main features of Unrefined is creating "canvas" and draw on it. Before doing any drawing, you need to create a container to show the "canvas".
  * Let's create and change its cursor to the system "wait" cursor.
@@ -53,6 +55,8 @@ public class CreateContainer {
             }
 
         });
+
+        container.getFrame().setMinimumSize(new Dimension(640, 480));
 
         Dispatcher.defaultInstance().invokeLater(container); // Launch the container
     }

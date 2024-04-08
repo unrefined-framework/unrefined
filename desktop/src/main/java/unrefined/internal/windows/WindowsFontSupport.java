@@ -7,7 +7,7 @@ import com.kenai.jffi.HeapInvocationBuffer;
 import com.kenai.jffi.Type;
 import unrefined.desktop.ForeignSupport;
 import unrefined.desktop.OSInfo;
-import unrefined.desktop.ShutdownGuard;
+import unrefined.desktop.ShutdownHook;
 import unrefined.util.NotInstantiableError;
 import unrefined.util.concurrent.FloatProducer;
 
@@ -107,7 +107,7 @@ public final class WindowsFontSupport {
                         }
                     };
                     //Runtime.getRuntime().addShutdownHook(new Thread(shutdown, "Unrefined Registry Daemon Cleanup"));
-                    ShutdownGuard.register(shutdown);
+                    ShutdownHook.register(shutdown);
                 }
             }
             finally {

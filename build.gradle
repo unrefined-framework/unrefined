@@ -2,7 +2,7 @@ plugins {
     id 'com.android.library' version '8.1.0' apply false
 }
 
-def coreProjects    = [project(':core')]
+def coreProjects    = [project(':core'), project(':clayer'), project(':rhino')]
 
 def desktopProjects = [project(':desktop')]
 
@@ -19,8 +19,8 @@ subprojects {
         libraryDescription = 'Cross-platform multimedia application framework written in pure Java.'
         libraryUrl = 'https://github.com/unrefined-framework/unrefined'
 
-        libraryVersionCode = '72-SNAPSHOT'
-        libraryVersionName = '0.7.2-SNAPSHOT'
+        libraryVersionCode = '80-SNAPSHOT'
+        libraryVersionName = '0.8.0-SNAPSHOT'
         libraryVersionCodeName = 'Claw Hammer'
 
         libraryLicenseName = 'The Apache License, Version 2.0'

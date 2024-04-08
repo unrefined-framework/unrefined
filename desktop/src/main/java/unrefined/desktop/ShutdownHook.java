@@ -5,10 +5,10 @@ import unrefined.util.concurrent.ConcurrentHashSet;
 
 import java.util.Set;
 
-public final class ShutdownGuard {
+public final class ShutdownHook {
 
-    private ShutdownGuard() {
-        throw new NotInstantiableError(ShutdownGuard.class);
+    private ShutdownHook() {
+        throw new NotInstantiableError(ShutdownHook.class);
     }
 
     public static void register(Runnable runnable) {

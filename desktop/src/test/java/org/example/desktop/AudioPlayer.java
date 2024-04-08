@@ -15,11 +15,12 @@ public class AudioPlayer {
         Music music = Music.read(new Asset("game_over.ogg"));
         Sound sound = Sound.read(new Asset("game_over.ogg"));
         music.prepare();
+        long wait = music.getMillisecondLength() + 100;
         music.start();
         music.onStop().connect(stopEvent -> music.dispose());
-        Thread.sleep(music.getMillisecondLength() + 100);
+        Thread.sleep(wait);
         sound.start();
-        Thread.sleep(1000);
+        Thread.sleep(wait);
     }
 
 }

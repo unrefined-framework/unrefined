@@ -5,7 +5,7 @@ import unrefined.app.Preferences;
 import unrefined.desktop.ForeignSupport;
 import unrefined.desktop.OSInfo;
 import unrefined.desktop.PreferencesSupport;
-import unrefined.desktop.ShutdownGuard;
+import unrefined.desktop.ShutdownHook;
 import unrefined.util.Half;
 import unrefined.util.Pair;
 import unrefined.util.Rational;
@@ -58,7 +58,7 @@ public class WindowsPreferences extends Preferences {
     }
 
     static {
-        ShutdownGuard.register(() -> {
+        ShutdownHook.register(() -> {
             synchronized (preferencesMap) {
                 for (WindowsPreferences preferences : preferencesMap.values()) {
                     RegCloseKey(preferences.hKey);

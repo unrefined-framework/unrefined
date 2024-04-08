@@ -13,6 +13,8 @@ import unrefined.runtime.DesktopContainer;
 import unrefined.runtime.DesktopRuntime;
 import unrefined.util.signal.Dispatcher;
 
+import java.awt.Dimension;
+
 /**
  * After create and add, then you can draw content to the canvas, and it will show to user.
  * Let's fill the canvas with "plain black".
@@ -47,6 +49,7 @@ public class DrawOnCanvas {
                         graphics.drawColor();             // Draw the full canvas area
                     }
                 });
+                canvas.setSize(640, 480);
 
                 container.setBackgroundColor(Color.BLUE); // Set the background color
                 container.addContext(canvas);

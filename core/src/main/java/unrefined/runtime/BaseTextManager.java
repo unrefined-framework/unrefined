@@ -1,8 +1,9 @@
 package unrefined.runtime;
 
-import unrefined.io.ChannelFile;
+import unrefined.io.file.ChannelFile;
 import unrefined.io.RandomAccessDataInputStream;
 import unrefined.io.asset.Asset;
+import unrefined.io.file.FileSystem;
 import unrefined.nio.charset.Charsets;
 import unrefined.util.TextManager;
 import unrefined.util.concurrent.ConcurrentHashSet;
@@ -50,7 +51,7 @@ public class BaseTextManager extends TextManager {
 
     @Override
     public void load(Locale locale, File input, Charset charset) throws IOException {
-        load0(locale, new RandomAccessDataInputStream(new ChannelFile(input, ChannelFile.Mode.READ)), charset);
+        load0(locale, new RandomAccessDataInputStream(new ChannelFile(input, FileSystem.OpenOption.READ)), charset);
     }
 
     @Override

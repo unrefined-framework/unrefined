@@ -28,3 +28,7 @@ include ':android'
 
 // html5
 //include ':teavm'  //TODO
+
+// extensions
+include ':clayer'
+include ':rhino'

@@ -1,6 +1,6 @@
 package unrefined.desktop;
 
-import unrefined.io.IOStreams;
+import unrefined.io.ReadWriteIO;
 import unrefined.math.FastMath;
 import unrefined.util.FastArray;
 
@@ -83,8 +83,8 @@ public class SoundClip implements AutoCloseable {
 	}
 
 	private static float[] load(AudioInputStream stream) throws IOException {
-		byte[] buffer = IOStreams.readAllBytes(stream);
-		IOStreams.closeQuietly(stream);
+		byte[] buffer = ReadWriteIO.readAllBytes(stream);
+		ReadWriteIO.closeQuietly(stream);
 
 		// stereo output, so two entries per frame
 		float[] tmp = new float[buffer.length / 2];

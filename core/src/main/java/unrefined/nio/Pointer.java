@@ -130,18 +130,6 @@ public abstract class Pointer implements Comparable<Pointer>, Closeable, Duplica
      * <p>Memory objects can be either direct (representing native memory), or
      * non-direct (representing java heap memory).
      *
-     * <p>Non-direct memory objects can still be passed to native functions as pointer
-     * (void *, char *, etc) parameters, but the java memory will first be copied
-     * to a temporary native memory area.  The temporary memory area will then be
-     * used as the parameter value for the call.  If needed, the java memory
-     * will be automatically reloaded from the temporary native memory after the
-     * native function returns.
-     * <p><b>Note:</b> the transient nature of the temporary memory allocated for
-     * non-direct memory means native functions which store the address value
-     * passed to them will fail in unpredictable ways when using non-direct memory.
-     * You will need to explicitly allocate direct memory to use those types of
-     * functions.
-     *
      * @return true if, and only if, this memory object represents a native address.
      */
     public abstract boolean isDirect();

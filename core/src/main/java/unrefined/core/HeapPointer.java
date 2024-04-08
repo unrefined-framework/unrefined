@@ -1,6 +1,7 @@
-package unrefined.nio;
+package unrefined.core;
 
 import unrefined.math.FastMath;
+import unrefined.nio.Pointer;
 import unrefined.util.FastArray;
 import unrefined.util.foreign.Foreign;
 
@@ -44,7 +45,9 @@ public class HeapPointer extends Pointer {
     private final NativeTypeAdapter NATIVE_LONG_ADAPTER = Foreign.getInstance().nativeLongSize() == 8 ? NATIVE_TYPE_ADAPTER_64 : NATIVE_TYPE_ADAPTER_32;
     private final NativeTypeAdapter ADDRESS_ADAPTER = Foreign.getInstance().addressSize() == 8 ? NATIVE_TYPE_ADAPTER_64 : NATIVE_TYPE_ADAPTER_32;
 
-    private final byte[][] arrays;
+    private final int arraysHash;
+    private final String arraysString;
+    private volatile byte[][] arrays;
     private final long size;
     private final long arraysOffset;
     private final long arraysLength;
@@ -65,6 +68,8 @@ public class HeapPointer extends Pointer {
             }
             arrays[0] = new byte[reminder];
         }
+        arraysHash = arrays.hashCode();
+        arraysString = arrays.toString();
         this.attachment = null;
         this.size = size;
         this.arraysOffset = 0;
@@ -75,6 +80,8 @@ public class HeapPointer extends Pointer {
     public HeapPointer(byte[] array, int offset, int length) {
         this.attachment = null;
         this.arrays = new byte[][] { array };
+        arraysHash = arrays.hashCode();
+        arraysString = arrays.toString();
         this.arraysOffset = offset;
         this.arraysLength = array.length;
         this.size = length;
@@ -84,6 +91,8 @@ public class HeapPointer extends Pointer {
     protected HeapPointer(HeapPointer attachment, long arraysLength, byte[][] arrays, long arraysOffset, long size) {
         this.attachment = attachment;
         this.arrays = arrays;
+        arraysHash = arrays.hashCode();
+        arraysString = arrays.toString();
         this.size = size;
         this.arraysOffset = arraysOffset;
         this.arraysLength = arraysLength;
@@ -1051,7 +1060,7 @@ public class HeapPointer extends Pointer {
 
     @Override
     public int hashCode() {
-        int result = arrays.hashCode();
+        int result = arraysHash;
         result = 31 * result + (int) (size ^ (size >>> 32));
         result = 31 * result + (int) (arraysOffset ^ (arraysOffset >>> 32));
         return result;
@@ -1062,12 +1071,13 @@ public class HeapPointer extends Pointer {
         return getClass().getName() + '@' + Integer.toHexString(hashCode())
                 + '{' +
                 "hasMemory=" + hasMemory +
-                ", arrays=" + arrays +
+                ", arrays=" + arraysString +
                 '}';
     }
 
     @Override
     public void close() throws IOException {
+        arrays = null;
     }
 
 }

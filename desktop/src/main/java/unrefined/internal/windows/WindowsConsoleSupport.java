@@ -5,7 +5,7 @@ import com.kenai.jffi.CallingConvention;
 import com.kenai.jffi.Function;
 import com.kenai.jffi.HeapInvocationBuffer;
 import com.kenai.jffi.Type;
-import unrefined.desktop.ShutdownGuard;
+import unrefined.desktop.ShutdownHook;
 import unrefined.util.NotInstantiableError;
 
 import static unrefined.desktop.ForeignSupport.INVOKER;
@@ -91,7 +91,7 @@ public final class WindowsConsoleSupport {
                     }, "Unrefined Windows Virtual Terminal Cleanup"));
 
                      */
-                    ShutdownGuard.register(new Runnable() {
+                    ShutdownHook.register(new Runnable() {
                         @Override
                         public void run() {
                             SetConsoleMode(OUTPUT, mode);

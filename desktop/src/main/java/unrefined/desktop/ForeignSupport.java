@@ -22,6 +22,7 @@ import unrefined.util.foreign.Aggregate;
 import unrefined.util.foreign.Foreign;
 import unrefined.util.foreign.LastErrorException;
 import unrefined.util.foreign.Symbol;
+import unrefined.util.function.VarFunctor;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -171,7 +172,7 @@ public final class ForeignSupport {
                 unrefined.util.foreign.Library.Options override =
                         method.getAnnotation(unrefined.util.foreign.Library.Options.class);
                 if (override != null) options = override.value();
-                Class<?> returnType = method.getReturnType();
+                Object returnType = method.getReturnType();
                 if (returnType == long.class) {
                     unrefined.util.foreign.Library.Marshal marshal = method.getAnnotation(unrefined.util.foreign.Library.Marshal.class);
                     if (marshal != null) {
@@ -183,7 +184,7 @@ public final class ForeignSupport {
                     }
                 }
                 Parameter[] parameters = method.getParameters();
-                Class<?>[] parameterTypes = new Class[parameters.length];
+                Object[] parameterTypes = new Class[parameters.length];
                 for (int i = 0; i < parameterTypes.length; i ++) {
                     Class<?> parameterType = parameters[i].getType();
                     if (parameterType == long.class) {
@@ -220,19 +221,23 @@ public final class ForeignSupport {
         return downcallProxy(options, clazz, ReflectionSupport.getCallerClass().getClassLoader());
     }
 
-    public static Symbol downcallHandle(int options, long function, Class<?> returnType, Class<?>... parameterTypes) {
+    public static Symbol downcallHandle(int options, long function, Object returnType, Object... parameterTypes) {
         return new DesktopSymbol(options, function, returnType, parameterTypes);
     }
 
-    public static Symbol upcallStub(int options, Object object, Method method, Class<?> returnType, Class<?>... parameterTypes) {
+    public static Symbol upcallStub(int options, Object object, Method method, Object returnType, Object... parameterTypes) {
         return new DesktopSymbol(options, object, method, returnType, parameterTypes);
+    }
+
+    public static Symbol upcallStub(int options, VarFunctor<?> closure, Object returnType, Object... parameterTypes) {
+        return new DesktopSymbol(options, closure, returnType, parameterTypes);
     }
 
     private static void invokeVoidFunction0(int options, long address, Object... args) {
         CallContext context;
         HeapInvocationBuffer heapInvocationBuffer;
         if (args.length > 0 && args[args.length - 1].getClass().isArray()) {
-            Type[] nonVariadicFFITypes = SymbolSupport.toFFITypes(args, args.length - 1);
+            Type[] nonVariadicFFITypes = SymbolSupport.getFFITypesFromObjects(args, args.length - 1);
             context = CallContext.getCallContext(Type.VOID, nonVariadicFFITypes.length,
                     SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
@@ -240,7 +245,7 @@ public final class ForeignSupport {
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBufferVariadic(context, args);
         }
         else {
-            context = CallContext.getCallContext(Type.VOID, SymbolSupport.toFFITypes(args),
+            context = CallContext.getCallContext(Type.VOID, SymbolSupport.getFFITypesFromObjects(args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
                     (options & Symbol.Option.SAVE_ERRNO) != 0);
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBuffer(context, args);
@@ -264,7 +269,7 @@ public final class ForeignSupport {
         CallContext context;
         HeapInvocationBuffer heapInvocationBuffer;
         if (args.length > 0 && args[args.length - 1].getClass().isArray()) {
-            Type[] nonVariadicFFITypes = SymbolSupport.toFFITypes(args, args.length - 1);
+            Type[] nonVariadicFFITypes = SymbolSupport.getFFITypesFromObjects(args, args.length - 1);
             context = CallContext.getCallContext(Type.UINT8, nonVariadicFFITypes.length,
                     SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
@@ -272,7 +277,7 @@ public final class ForeignSupport {
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBufferVariadic(context, args);
         }
         else {
-            context = CallContext.getCallContext(Type.UINT8, SymbolSupport.toFFITypes(args),
+            context = CallContext.getCallContext(Type.UINT8, SymbolSupport.getFFITypesFromObjects(args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
                     (options & Symbol.Option.SAVE_ERRNO) != 0);
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBuffer(context, args);
@@ -297,7 +302,7 @@ public final class ForeignSupport {
         CallContext context;
         HeapInvocationBuffer heapInvocationBuffer;
         if (args.length > 0 && args[args.length - 1].getClass().isArray()) {
-            Type[] nonVariadicFFITypes = SymbolSupport.toFFITypes(args, args.length - 1);
+            Type[] nonVariadicFFITypes = SymbolSupport.getFFITypesFromObjects(args, args.length - 1);
             context = CallContext.getCallContext(Type.SINT8, nonVariadicFFITypes.length,
                     SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
@@ -305,7 +310,7 @@ public final class ForeignSupport {
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBufferVariadic(context, args);
         }
         else {
-            context = CallContext.getCallContext(Type.SINT8, SymbolSupport.toFFITypes(args),
+            context = CallContext.getCallContext(Type.SINT8, SymbolSupport.getFFITypesFromObjects(args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
                     (options & Symbol.Option.SAVE_ERRNO) != 0);
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBuffer(context, args);
@@ -330,7 +335,7 @@ public final class ForeignSupport {
         CallContext context;
         HeapInvocationBuffer heapInvocationBuffer;
         if (args.length > 0 && args[args.length - 1].getClass().isArray()) {
-            Type[] nonVariadicFFITypes = SymbolSupport.toFFITypes(args, args.length - 1);
+            Type[] nonVariadicFFITypes = SymbolSupport.getFFITypesFromObjects(args, args.length - 1);
             context = CallContext.getCallContext(Type.UINT16, nonVariadicFFITypes.length,
                     SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
@@ -338,7 +343,7 @@ public final class ForeignSupport {
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBufferVariadic(context, args);
         }
         else {
-            context = CallContext.getCallContext(Type.UINT16, SymbolSupport.toFFITypes(args),
+            context = CallContext.getCallContext(Type.UINT16, SymbolSupport.getFFITypesFromObjects(args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
                     (options & Symbol.Option.SAVE_ERRNO) != 0);
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBuffer(context, args);
@@ -363,7 +368,7 @@ public final class ForeignSupport {
         CallContext context;
         HeapInvocationBuffer heapInvocationBuffer;
         if (args.length > 0 && args[args.length - 1].getClass().isArray()) {
-            Type[] nonVariadicFFITypes = SymbolSupport.toFFITypes(args, args.length - 1);
+            Type[] nonVariadicFFITypes = SymbolSupport.getFFITypesFromObjects(args, args.length - 1);
             context = CallContext.getCallContext(Type.SINT16, nonVariadicFFITypes.length,
                     SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
@@ -371,7 +376,7 @@ public final class ForeignSupport {
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBufferVariadic(context, args);
         }
         else {
-            context = CallContext.getCallContext(Type.SINT16, SymbolSupport.toFFITypes(args),
+            context = CallContext.getCallContext(Type.SINT16, SymbolSupport.getFFITypesFromObjects(args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
                     (options & Symbol.Option.SAVE_ERRNO) != 0);
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBuffer(context, args);
@@ -396,7 +401,7 @@ public final class ForeignSupport {
         CallContext context;
         HeapInvocationBuffer heapInvocationBuffer;
         if (args.length > 0 && args[args.length - 1].getClass().isArray()) {
-            Type[] nonVariadicFFITypes = SymbolSupport.toFFITypes(args, args.length - 1);
+            Type[] nonVariadicFFITypes = SymbolSupport.getFFITypesFromObjects(args, args.length - 1);
             context = CallContext.getCallContext(Type.SINT32, nonVariadicFFITypes.length,
                     SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
@@ -404,7 +409,7 @@ public final class ForeignSupport {
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBufferVariadic(context, args);
         }
         else {
-            context = CallContext.getCallContext(Type.SINT32, SymbolSupport.toFFITypes(args),
+            context = CallContext.getCallContext(Type.SINT32, SymbolSupport.getFFITypesFromObjects(args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
                     (options & Symbol.Option.SAVE_ERRNO) != 0);
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBuffer(context, args);
@@ -429,7 +434,7 @@ public final class ForeignSupport {
         CallContext context;
         HeapInvocationBuffer heapInvocationBuffer;
         if (args.length > 0 && args[args.length - 1].getClass().isArray()) {
-            Type[] nonVariadicFFITypes = SymbolSupport.toFFITypes(args, args.length - 1);
+            Type[] nonVariadicFFITypes = SymbolSupport.getFFITypesFromObjects(args, args.length - 1);
             context = CallContext.getCallContext(Type.SINT, nonVariadicFFITypes.length,
                     SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
@@ -437,7 +442,7 @@ public final class ForeignSupport {
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBufferVariadic(context, args);
         }
         else {
-            context = CallContext.getCallContext(Type.SINT, SymbolSupport.toFFITypes(args),
+            context = CallContext.getCallContext(Type.SINT, SymbolSupport.getFFITypesFromObjects(args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
                     (options & Symbol.Option.SAVE_ERRNO) != 0);
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBuffer(context, args);
@@ -462,7 +467,7 @@ public final class ForeignSupport {
         CallContext context;
         HeapInvocationBuffer heapInvocationBuffer;
         if (args.length > 0 && args[args.length - 1].getClass().isArray()) {
-            Type[] nonVariadicFFITypes = SymbolSupport.toFFITypes(args, args.length - 1);
+            Type[] nonVariadicFFITypes = SymbolSupport.getFFITypesFromObjects(args, args.length - 1);
             context = CallContext.getCallContext(Type.SINT64, nonVariadicFFITypes.length,
                     SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
@@ -470,7 +475,7 @@ public final class ForeignSupport {
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBufferVariadic(context, args);
         }
         else {
-            context = CallContext.getCallContext(Type.SINT64, SymbolSupport.toFFITypes(args),
+            context = CallContext.getCallContext(Type.SINT64, SymbolSupport.getFFITypesFromObjects(args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
                     (options & Symbol.Option.SAVE_ERRNO) != 0);
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBuffer(context, args);
@@ -495,7 +500,7 @@ public final class ForeignSupport {
         CallContext context;
         HeapInvocationBuffer heapInvocationBuffer;
         if (args.length > 0 && args[args.length - 1].getClass().isArray()) {
-            Type[] nonVariadicFFITypes = SymbolSupport.toFFITypes(args, args.length - 1);
+            Type[] nonVariadicFFITypes = SymbolSupport.getFFITypesFromObjects(args, args.length - 1);
             context = CallContext.getCallContext(Type.SLONG, nonVariadicFFITypes.length,
                     SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
@@ -503,7 +508,7 @@ public final class ForeignSupport {
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBufferVariadic(context, args);
         }
         else {
-            context = CallContext.getCallContext(Type.SLONG, SymbolSupport.toFFITypes(args),
+            context = CallContext.getCallContext(Type.SLONG, SymbolSupport.getFFITypesFromObjects(args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
                     (options & Symbol.Option.SAVE_ERRNO) != 0);
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBuffer(context, args);
@@ -528,7 +533,7 @@ public final class ForeignSupport {
         CallContext context;
         HeapInvocationBuffer heapInvocationBuffer;
         if (args.length > 0 && args[args.length - 1].getClass().isArray()) {
-            Type[] nonVariadicFFITypes = SymbolSupport.toFFITypes(args, args.length - 1);
+            Type[] nonVariadicFFITypes = SymbolSupport.getFFITypesFromObjects(args, args.length - 1);
             context = CallContext.getCallContext(Type.FLOAT, nonVariadicFFITypes.length,
                     SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
@@ -536,7 +541,7 @@ public final class ForeignSupport {
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBufferVariadic(context, args);
         }
         else {
-            context = CallContext.getCallContext(Type.FLOAT, SymbolSupport.toFFITypes(args),
+            context = CallContext.getCallContext(Type.FLOAT, SymbolSupport.getFFITypesFromObjects(args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
                     (options & Symbol.Option.SAVE_ERRNO) != 0);
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBuffer(context, args);
@@ -561,7 +566,7 @@ public final class ForeignSupport {
         CallContext context;
         HeapInvocationBuffer heapInvocationBuffer;
         if (args.length > 0 && args[args.length - 1].getClass().isArray()) {
-            Type[] nonVariadicFFITypes = SymbolSupport.toFFITypes(args, args.length - 1);
+            Type[] nonVariadicFFITypes = SymbolSupport.getFFITypesFromObjects(args, args.length - 1);
             context = CallContext.getCallContext(Type.DOUBLE, nonVariadicFFITypes.length,
                     SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
@@ -569,7 +574,7 @@ public final class ForeignSupport {
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBufferVariadic(context, args);
         }
         else {
-            context = CallContext.getCallContext(Type.DOUBLE, SymbolSupport.toFFITypes(args),
+            context = CallContext.getCallContext(Type.DOUBLE, SymbolSupport.getFFITypesFromObjects(args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
                     (options & Symbol.Option.SAVE_ERRNO) != 0);
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBuffer(context, args);
@@ -594,7 +599,7 @@ public final class ForeignSupport {
         CallContext context;
         HeapInvocationBuffer heapInvocationBuffer;
         if (args.length > 0 && args[args.length - 1].getClass().isArray()) {
-            Type[] nonVariadicFFITypes = SymbolSupport.toFFITypes(args, args.length - 1);
+            Type[] nonVariadicFFITypes = SymbolSupport.getFFITypesFromObjects(args, args.length - 1);
             context = CallContext.getCallContext(Type.POINTER, nonVariadicFFITypes.length,
                     SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
@@ -602,7 +607,7 @@ public final class ForeignSupport {
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBufferVariadic(context, args);
         }
         else {
-            context = CallContext.getCallContext(Type.POINTER, SymbolSupport.toFFITypes(args),
+            context = CallContext.getCallContext(Type.POINTER, SymbolSupport.getFFITypesFromObjects(args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
                     (options & Symbol.Option.SAVE_ERRNO) != 0);
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBuffer(context, args);
@@ -627,7 +632,7 @@ public final class ForeignSupport {
         CallContext context;
         HeapInvocationBuffer heapInvocationBuffer;
         if (args.length > 0 && args[args.length - 1].getClass().isArray()) {
-            Type[] nonVariadicFFITypes = SymbolSupport.toFFITypes(args, args.length - 1);
+            Type[] nonVariadicFFITypes = SymbolSupport.getFFITypesFromObjects(args, args.length - 1);
             context = CallContext.getCallContext(SymbolSupport.toFFIType(returnType), nonVariadicFFITypes.length,
                     SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
@@ -635,7 +640,7 @@ public final class ForeignSupport {
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBufferVariadic(context, args);
         }
         else {
-            context = CallContext.getCallContext(SymbolSupport.toFFIType(returnType), SymbolSupport.toFFITypes(args),
+            context = CallContext.getCallContext(SymbolSupport.toFFIType(returnType), SymbolSupport.getFFITypesFromObjects(args),
                     (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
                     (options & Symbol.Option.SAVE_ERRNO) != 0);
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBuffer(context, args);
@@ -658,24 +663,63 @@ public final class ForeignSupport {
         return invokeAggregateFunction0(options, address, returnType, args);
     }
 
-    @SuppressWarnings("unchecked")
-    public static <T> T invokeFunction(int options, long address, Class<T> returnType, Object... args) {
-        if (returnType == void.class) {
-            invokeVoidFunction(options, address, args);
-            return null;
+    private static Aggregate invokeDescriptorFunction0(int options, long address, Aggregate.Descriptor returnType, Object... args) {
+        CallContext context;
+        HeapInvocationBuffer heapInvocationBuffer;
+        if (args.length > 0 && args[args.length - 1].getClass().isArray()) {
+            Type[] nonVariadicFFITypes = SymbolSupport.getFFITypesFromObjects(args, args.length - 1);
+            context = CallContext.getCallContext(SymbolSupport.toFFIType(returnType), nonVariadicFFITypes.length,
+                    SymbolSupport.expandVariadicFFITypes(nonVariadicFFITypes, args),
+                    (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
+                    (options & Symbol.Option.SAVE_ERRNO) != 0);
+            heapInvocationBuffer = SymbolSupport.toHeapInvocationBufferVariadic(context, args);
         }
-        else if (returnType == boolean.class) return (T) Boolean.valueOf(invokeBooleanFunction(options, address, args));
-        else if (returnType == byte.class) return (T) Byte.valueOf(invokeByteFunction(options, address, args));
-        else if (returnType == char.class) return (T) Character.valueOf(invokeCharFunction(options, address, args));
-        else if (returnType == short.class) return (T) Short.valueOf(invokeShortFunction(options, address, args));
-        else if (returnType == int.class) return (T) Integer.valueOf(invokeIntFunction(options, address, args));
-        else if (returnType == long.class) return (T) Long.valueOf(invokeLongFunction(options, address, args));
-        else if (returnType == float.class) return (T) Float.valueOf(invokeFloatFunction(options, address, args));
-        else if (returnType == double.class) return (T) Double.valueOf(invokeDoubleFunction(options, address, args));
         else {
-            Objects.requireNonNull(returnType);
-            throw new IllegalArgumentException("Illegal return type: " + returnType);
+            context = CallContext.getCallContext(SymbolSupport.toFFIType(returnType), SymbolSupport.getFFITypesFromObjects(args),
+                    (options & Symbol.Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
+                    (options & Symbol.Option.SAVE_ERRNO) != 0);
+            heapInvocationBuffer = SymbolSupport.toHeapInvocationBuffer(context, args);
         }
+        byte[] struct = INVOKER.invokeStruct(context, address, heapInvocationBuffer);
+        SymbolSupport.reverseIfNeeded(struct);
+        return Aggregate.newProxyInstance(returnType, Pointer.wrap(struct));
+    }
+
+    public static Aggregate invokeDescriptorFunction(int options, long address, Aggregate.Descriptor returnType, Object... args) {
+        if ((options & Symbol.Option.THROW_ERRNO) != 0) {
+            int prev = LAST_ERROR.get();
+            LAST_ERROR.set(0);
+            Aggregate result = invokeDescriptorFunction0(options | Symbol.Option.SAVE_ERRNO, address, returnType, args);
+            int errno = LAST_ERROR.get();
+            LAST_ERROR.set(prev);
+            if (errno == 0) return result;
+            else throw new LastErrorException(errno);
+        }
+        return invokeDescriptorFunction0(options, address, returnType, args);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static Object invokeFunction(int options, long address, Object returnType, Object... args) {
+        if (returnType instanceof Class) {
+            if (returnType == void.class) {
+                invokeVoidFunction(options, address, args);
+                return null;
+            }
+            else if (returnType == boolean.class) return invokeBooleanFunction(options, address, args);
+            else if (returnType == byte.class) return invokeByteFunction(options, address, args);
+            else if (returnType == char.class) return invokeCharFunction(options, address, args);
+            else if (returnType == short.class) return invokeShortFunction(options, address, args);
+            else if (returnType == int.class) return invokeIntFunction(options, address, args);
+            else if (returnType == long.class) return invokeLongFunction(options, address, args);
+            else if (returnType == float.class) return invokeFloatFunction(options, address, args);
+            else if (returnType == double.class) return invokeDoubleFunction(options, address, args);
+            else if (Aggregate.class.isAssignableFrom((Class<?>) returnType))
+                return invokeAggregateFunction(options, address, (Class<? extends Aggregate>) returnType, args);
+        }
+        else if (returnType instanceof Aggregate.Descriptor)
+            return invokeDescriptorFunction(options, address, (Aggregate.Descriptor) returnType, args);
+        Objects.requireNonNull(returnType);
+        throw new IllegalArgumentException("Illegal return type: " + returnType);
     }
 
     public static void loadLibrary(String name, int loader) throws IOException {
@@ -784,21 +828,26 @@ public final class ForeignSupport {
                     CallContext.getCallContext(Type.UINT32,
                             new Type[] {Type.UINT32, Type.POINTER, Type.UINT32, Type.UINT32, Type.POINTER, Type.UINT32, Type.POINTER},
                             CallingConvention.DEFAULT, false));
-            final int size = 4096;
-            final ThreadLocal<ByteBuffer> lpBufferThreadLocal = new ProducerThreadLocal<>(() ->
-                    ByteBuffer.allocateDirect(size * OSInfo.WIDE_CHAR_SIZE));
+            final ThreadLocal<ByteBuffer> lpBufferThreadLocal = new ProducerThreadLocal<>(() -> ByteBuffer.allocateDirect(Type.POINTER.size()));
             ERROR_STRING_PRODUCER = errno -> {
                 long lpBuffer = MEMORY_IO.getDirectBufferAddress(lpBufferThreadLocal.get());
+                UNSAFE.putAddress(lpBuffer, 0);
                 HeapInvocationBuffer heapInvocationBuffer = new HeapInvocationBuffer(FormatMessageW);
-                heapInvocationBuffer.putInt(0x00001000 /* FORMAT_MESSAGE_FROM_SYSTEM */);
+                heapInvocationBuffer.putInt(0x00001000 /* FORMAT_MESSAGE_FROM_SYSTEM */ | 0x00000100 /* FORMAT_MESSAGE_ALLOCATE_BUFFER */);
                 heapInvocationBuffer.putAddress(0);
                 heapInvocationBuffer.putInt(errno);
                 heapInvocationBuffer.putInt(0);
                 heapInvocationBuffer.putAddress(lpBuffer);
-                heapInvocationBuffer.putInt(size);
+                heapInvocationBuffer.putInt(0);
                 heapInvocationBuffer.putAddress(0);
-                if (INVOKER.invokeInt(FormatMessageW, heapInvocationBuffer) == 0) return null;
-                else return getZeroTerminatedString(lpBuffer, FastArray.ARRAY_LENGTH_MAX, OSInfo.WIDE_CHARSET);
+                try {
+                    if (INVOKER.invokeInt(FormatMessageW, heapInvocationBuffer) == 0) return null;
+                    else return getZeroTerminatedString(UNSAFE.getAddress(lpBuffer), FastArray.ARRAY_LENGTH_MAX, OSInfo.WIDE_CHARSET);
+                }
+                finally {
+                    long buffer = UNSAFE.getAddress(lpBuffer);
+                    if (buffer != 0) WindowsSupport.LocalFree(buffer);
+                }
             };
         }
         else {

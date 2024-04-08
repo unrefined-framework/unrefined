@@ -81,7 +81,7 @@ public final class WindowsAWTSupport {
                     MonitorFromWindow = new Function(address,
                             CallContext.getCallContext(Type.POINTER, new Type[] {Type.POINTER, Type.UINT32},
                                     CallingConvention.DEFAULT, false));
-                    Shcore = Library.getCachedInstance(System.mapLibraryName("Shcore"), Library.GLOBAL | Library.LAZY);
+                    Shcore = Library.getCachedInstance(System.mapLibraryName(OSInfo.IS_WINDOWS_CE ? "CoreDLL" : "Shcore"), Library.GLOBAL | Library.LAZY);
                     address = Shcore.getSymbolAddress("GetDpiForMonitor");
                     if (address == 0) {
                         GetDpiForMonitor = null;

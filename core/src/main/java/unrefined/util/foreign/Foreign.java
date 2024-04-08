@@ -2,12 +2,11 @@ package unrefined.util.foreign;
 
 import unrefined.context.Environment;
 import unrefined.nio.Pointer;
-import unrefined.util.UnexpectedError;
+import unrefined.util.function.VarFunctor;
 import unrefined.util.reflect.Reflection;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
@@ -23,12 +22,89 @@ public abstract class Foreign {
         return INSTANCE;
     }
 
-    public <T extends Aggregate> T newAggregateInstance(Class<T> clazz, Pointer memory) {
-        try {
-            return Reflection.getInstance().newInstance(clazz.getDeclaredConstructor(Pointer.class), memory);
-        } catch (InstantiationException | InvocationTargetException | NoSuchMethodException e) {
-            throw new UnexpectedError(e);
-        }
+    public Aggregate.Descriptor getEmptyDescriptor() {
+        return Aggregate.declareEmpty();
+    }
+
+    public Aggregate.Descriptor createDescriptor(Object[] memberTypes, long[] memberOffsets, long[] memberRepetitions, long padding) {
+        return Aggregate.declare(memberTypes, memberOffsets, memberRepetitions, padding);
+    }
+
+    public Aggregate.Descriptor createDescriptor(Object[] memberTypes, long[] memberOffsets, long padding) {
+        return Aggregate.declare(memberTypes, memberOffsets, padding);
+    }
+
+    public Aggregate.Descriptor createDescriptor(Object[] memberTypes, int memberTypesOffset,
+                                               long[] memberOffsets, int memberOffsetsOffset,
+                                               long[] memberRepetitions, int memberRepetitionsOffset,
+                                               int length, long padding) {
+        return Aggregate.declare(memberTypes, memberTypesOffset, memberOffsets, memberOffsetsOffset, memberRepetitions, memberRepetitionsOffset, length, padding);
+    }
+
+    public Aggregate.Descriptor createDescriptor(Object[] memberTypes, int memberTypesOffset,
+                                               long[] memberOffsets, int memberOffsetsOffset,
+                                               int length, long padding) {
+        return Aggregate.declare(memberTypes, memberTypesOffset, memberOffsets, memberOffsetsOffset, length, padding);
+    }
+
+    public Aggregate.Descriptor createStructDescriptor(Object[] memberTypes, int memberTypesOffset,
+                                                     long[] memberRepetitions, int memberRepetitionsOffset,
+                                                     int length) {
+        return Aggregate.declareStruct(memberTypes, memberTypesOffset, memberRepetitions, memberRepetitionsOffset, length);
+    }
+
+    public Aggregate.Descriptor createStructDescriptor(Object[] memberTypes, int memberTypesOffset, int length) {
+        return Aggregate.declareStruct(memberTypes, memberTypesOffset, length);
+    }
+
+    public Aggregate.Descriptor createStructDescriptor(Object[] memberTypes, long[] memberRepetitions) {
+        return Aggregate.declareStruct(memberTypes, memberRepetitions);
+    }
+
+    public Aggregate.Descriptor createStructDescriptor(Object... memberTypes) {
+        return Aggregate.declareStruct(memberTypes);
+    }
+
+    public Aggregate.Descriptor createUnionDescriptor(Object[] memberTypes, int memberTypesOffset,
+                                                    long[] memberRepetitions, int memberRepetitionsOffset,
+                                                    int length) {
+        return Aggregate.declareUnion(memberTypes, memberTypesOffset, memberRepetitions, memberRepetitionsOffset, length);
+    }
+
+    public Aggregate.Descriptor createUnionDescriptor(Object[] memberTypes, int memberTypesOffset, int length) {
+        return Aggregate.declareUnion(memberTypes, memberTypesOffset, length);
+    }
+
+    public Aggregate.Descriptor createUnionDescriptor(Object[] memberTypes, long[] memberRepetitions) {
+        return Aggregate.declareUnion(memberTypes, memberRepetitions);
+    }
+
+    public Aggregate.Descriptor createUnionDescriptor(Object... memberTypes) {
+        return Aggregate.declareUnion(memberTypes);
+    }
+
+    public Aggregate createProxyAggregateInstance(Aggregate.Descriptor descriptor, Pointer memory) {
+        return Aggregate.newProxyInstance(descriptor, memory);
+    }
+
+    public <T extends Aggregate> T createAggregateInstance(Class<T> clazz, Pointer memory) {
+        return Aggregate.newInstance(clazz, memory);
+    }
+
+    public boolean isIncompleteAggregateClass(Class<? extends Aggregate> clazz) {
+        return Aggregate.isIncompleteClass(clazz);
+    }
+
+    public boolean isProxyAggregateObject(Aggregate object) {
+        return Aggregate.isProxyObject(object);
+    }
+
+    public boolean isProxyAggregateClass(Class<? extends Aggregate> clazz) {
+        return Aggregate.isProxyClass(clazz);
+    }
+
+    public boolean isIncompleteAggregateObject(Aggregate object) {
+        return Aggregate.isIncompleteObject(object);
     }
 
     public Aggregate.Descriptor descriptorOf(Class<? extends Aggregate> clazz) {
@@ -52,21 +128,25 @@ public abstract class Foreign {
         return downcallProxy(Symbol.Option.DEFAULT, clazz);
     }
 
-    public abstract Symbol downcallHandle(int options, long function, Class<?> returnType, Class<?>... parameterTypes);
-    public Symbol downcallHandle(long function, Class<?> returnType, Class<?>... parameterTypes) {
+    public abstract Symbol downcallHandle(int options, long function, Object returnType, Object... parameterTypes);
+    public Symbol downcallHandle(long function, Object returnType, Object... parameterTypes) {
         return downcallHandle(Symbol.Option.DEFAULT, function, returnType, parameterTypes);
     }
 
-    public abstract Symbol upcallStub(int options, Object object, Method method, Class<?> returnType, Class<?>... parameterTypes);
-    public Symbol upcallStub(Object object, Method method, Class<?> returnType, Class<?>... parameterTypes) {
+    public abstract Symbol upcallStub(int options, Object object, Method method, Object returnType, Object... parameterTypes);
+    public Symbol upcallStub(Object object, Method method, Object returnType, Object... parameterTypes) {
         return upcallStub(Symbol.Option.DEFAULT, object, method, returnType, parameterTypes);
     }
-    public Symbol upcallStub(int options, Method method, Class<?> returnType, Class<?>... parameterTypes) {
+    public Symbol upcallStub(int options, Method method, Object returnType, Object... parameterTypes) {
         if (!Modifier.isStatic(method.getModifiers())) throw new IllegalArgumentException("Illegal method modifier; expected static");
         return upcallStub(options, null, method, returnType, parameterTypes);
     }
-    public Symbol upcallStub(Method method, Class<?> returnType, Class<?>... parameterTypes) {
+    public Symbol upcallStub(Method method, Object returnType, Object... parameterTypes) {
         return upcallStub(Symbol.Option.DEFAULT, method, returnType, parameterTypes);
+    }
+    public abstract Symbol upcallStub(int options, VarFunctor<?> closure, Object returnType, Object... parameterTypes);
+    public Symbol upcallStub(VarFunctor<?> closure, Object returnType, Object... parameterTypes) {
+        return upcallStub(Symbol.Option.DEFAULT, closure, returnType, parameterTypes);
     }
 
     public abstract void invokeVoidFunction(int options, long address, Object... args);
@@ -121,8 +201,12 @@ public abstract class Foreign {
     public <T extends Aggregate> T invokeAggregateFunction(long address, Class<T> returnType, Object... args) {
         return invokeAggregateFunction(Symbol.Option.DEFAULT, address, returnType, args);
     }
-    public abstract <T> T invokeFunction(int options, long address, Class<T> returnType, Object... args);
-    public <T> T invokeFunction(long address, Class<T> returnType, Object... args) {
+    public abstract Aggregate invokeDescriptorFunction(int options, long address, Aggregate.Descriptor returnType, Object... args);
+    public Aggregate invokeDescriptorFunction(long address, Aggregate.Descriptor returnType, Object... args) {
+        return invokeDescriptorFunction(Symbol.Option.DEFAULT, address, returnType, args);
+    }
+    public abstract Object invokeFunction(int options, long address, Object returnType, Object... args);
+    public Object invokeFunction(long address, Object returnType, Object... args) {
         return invokeFunction(Symbol.Option.DEFAULT, address, returnType, args);
     }
 

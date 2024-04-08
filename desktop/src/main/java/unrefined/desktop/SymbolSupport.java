@@ -6,7 +6,6 @@ import com.kenai.jffi.HeapInvocationBuffer;
 import com.kenai.jffi.Library;
 import com.kenai.jffi.Type;
 import unrefined.nio.Pointer;
-import unrefined.util.FastArray;
 import unrefined.util.NotInstantiableError;
 import unrefined.util.Strings;
 import unrefined.util.UnexpectedError;
@@ -56,77 +55,62 @@ public class SymbolSupport {
     }
 
     @SuppressWarnings("unchecked")
-    public static Type toFFIType(Class<?> clazz) {
-        if (clazz == void.class) return Type.VOID;
-        else if (clazz == boolean.class) return Type.UINT8;
-        else if (clazz == byte.class) return Type.SINT8;
-        else if (clazz == char.class) return Type.UINT16;
-        else if (clazz == short.class) return Type.SINT16;
-        else if (clazz == int.class) return Type.SINT32;
-        else if (clazz == long.class) return Type.SINT64;
-        else if (clazz == float.class) return Type.FLOAT;
-        else if (clazz == double.class) return Type.DOUBLE;
-        else if (Aggregate.class.isAssignableFrom(clazz)) return AggregateSupport.typeOf((Class<? extends Aggregate>) clazz);
-        else {
-            Objects.requireNonNull(clazz);
-            throw new IllegalArgumentException("Illegal type class: " + clazz);
+    public static Type toFFIType(Object type) {
+        if (type instanceof Class) {
+            if (type == void.class) return Type.VOID;
+            else if (type == boolean.class) return Type.UINT8;
+            else if (type == byte.class) return Type.SINT8;
+            else if (type == char.class) return Type.UINT16;
+            else if (type == short.class) return Type.SINT16;
+            else if (type == int.class) return Type.SINT32;
+            else if (type == long.class) return Type.SINT64;
+            else if (type == float.class) return Type.FLOAT;
+            else if (type == double.class) return Type.DOUBLE;
+            else if (Aggregate.class.isAssignableFrom((Class<?>) type))
+                return AggregateSupport.typeOf((Class<? extends Aggregate>) type);
         }
+        else if (type instanceof Aggregate.Descriptor) return AggregateSupport.typeOf((Aggregate.Descriptor) type);
+        Objects.requireNonNull(type);
+        throw new IllegalArgumentException("Illegal type: " + type);
     }
 
     @SuppressWarnings("unchecked")
-    public static Type toFFITypeBoxed(Class<?> clazz) {
-        if (clazz == Boolean.class) return Type.UINT8;
-        else if (clazz == Byte.class) return Type.SINT8;
-        else if (clazz == Character.class) return Type.UINT16;
-        else if (clazz == Short.class) return Type.SINT16;
-        else if (clazz == Integer.class) return Type.SINT32;
-        else if (clazz == Long.class) return Type.SINT64;
-        else if (clazz == Float.class) return Type.FLOAT;
-        else if (clazz == Double.class) return Type.DOUBLE;
-        else if (Aggregate.class.isAssignableFrom(clazz)) return AggregateSupport.typeOf((Class<? extends Aggregate>) clazz);
-        else {
-            Objects.requireNonNull(clazz);
-            throw new IllegalArgumentException("Illegal type class: " + clazz);
+    public static Type toFFITypeBoxed(Object type) {
+        if (type instanceof Class) {
+            if (type == Boolean.class) return Type.UINT8;
+            else if (type == Byte.class) return Type.SINT8;
+            else if (type == Character.class) return Type.UINT16;
+            else if (type == Short.class) return Type.SINT16;
+            else if (type == Integer.class) return Type.SINT32;
+            else if (type == Long.class) return Type.SINT64;
+            else if (type == Float.class) return Type.FLOAT;
+            else if (type == Double.class) return Type.DOUBLE;
+            else if (Aggregate.class.isAssignableFrom((Class<?>) type))
+                return AggregateSupport.typeOf((Class<? extends Aggregate>) type);
         }
+        else if (type instanceof Aggregate.Descriptor) return AggregateSupport.typeOf((Aggregate.Descriptor) type);
+        Objects.requireNonNull(type);
+        throw new IllegalArgumentException("Illegal type: " + type);
     }
 
-    public static Type[] toFFITypes(Class<?>... classes) {
-        Type[] types = new Type[classes.length];
-        for (int i = 0; i < classes.length; i ++) {
-            types[i] = toFFIType(classes[i]);
+    public static Type[] toFFITypes(Object... types) {
+        Type[] result = new Type[types.length];
+        for (int i = 0; i < types.length; i ++) {
+            result[i] = toFFIType(types[i]);
         }
-        return types;
+        return result;
     }
 
-    public static Type[] toFFITypes(Class<?>[] classes, int offset, int length) {
-        Type[] types = new Type[length];
+    public static Type[] toFFITypes(Object[] types, int offset, int length) {
+        Type[] result = new Type[length];
         for (int i = 0; i < length; i ++) {
-            types[i] = toFFIType(classes[offset + i]);
+            result[i] = toFFIType(types[offset + i]);
         }
-        return types;
+        return result;
     }
 
-    public static Type[] toFFITypes(Object... args) {
-        Type[] types = new Type[args.length];
-        for (int i = 0; i < args.length; i ++) {
-            types[i] = toFFITypeBoxed(args[i].getClass());
-        }
-        return types;
-    }
-
-    public static Type[] toFFITypes(Object[] args, int offset, int length) {
-        Type[] types = new Type[length];
-        for (int i = 0; i < args.length; i ++) {
-            types[i] = toFFITypeBoxed(args[offset + i].getClass());
-        }
-        return types;
-    }
-
-    public static Type[] getVariadicFFITypes(Object... args) {
-        return expandVariadicFFITypes(toFFITypes(args, 0, args.length - 1), args[args.length - 1]);
-    }
-
-    public static Type[] getFFITypes(Object array) {
+    @SuppressWarnings("unchecked")
+    public static Type[] getFFITypesFromArray(Object array) {
         Class<?> clazz = array.getClass();
         if (clazz.isArray()) {
             Type[] types = new Type[Array.getLength(array)];
@@ -165,29 +149,45 @@ public class SymbolSupport {
             }
             else if (clazz == Object.class) {
                 for (int i = 0; i < types.length; i ++) {
-                    types[i] = toFFITypeBoxed(Array.get(array, i).getClass());
+                    Object obj = Array.get(array, i);
+                    Class<?> cl = obj.getClass();
+                    types[i] = toFFITypeBoxed(
+                            (Aggregate.class.isAssignableFrom(cl) &&
+                                    Aggregate.isProxyClass((Class<? extends Aggregate>) cl)) ?
+                                    ((Aggregate) obj).getDescriptor() : cl);
                 }
                 return types;
             }
         }
-        throw new IllegalArgumentException("Illegal type class: " + clazz);
+        throw new IllegalArgumentException("Illegal type: " + clazz);
     }
 
     @SuppressWarnings("unchecked")
-    public static void pushArgument(HeapInvocationBuffer heapInvocationBuffer, Class<?> marker, Object arg) {
-        if (marker == boolean.class) heapInvocationBuffer.putByte((Boolean) arg ? 1 : 0);
-        else if (marker == byte.class) heapInvocationBuffer.putByte(((Number) arg).byteValue());
-        else if (marker == char.class) heapInvocationBuffer.putShort((Character) arg);
-        else if (marker == short.class) heapInvocationBuffer.putShort(((Number) arg).shortValue());
-        else if (marker == int.class) heapInvocationBuffer.putInt(((Number) arg).intValue());
-        else if (marker == long.class) heapInvocationBuffer.putLong(((Number) arg).longValue());
-        else if (marker == float.class) heapInvocationBuffer.putFloat(((Number) arg).floatValue());
-        else if (marker == double.class) heapInvocationBuffer.putDouble(((Number) arg).doubleValue());
-        else if (Aggregate.class.isAssignableFrom(marker)) {
+    public static void pushArgument(HeapInvocationBuffer heapInvocationBuffer, Object marker, Object arg) {
+        if (marker instanceof Class) {
+            if (marker == boolean.class) heapInvocationBuffer.putByte((Boolean) arg ? 1 : 0);
+            else if (marker == byte.class) heapInvocationBuffer.putByte(((Number) arg).byteValue());
+            else if (marker == char.class) heapInvocationBuffer.putShort((Character) arg);
+            else if (marker == short.class) heapInvocationBuffer.putShort(((Number) arg).shortValue());
+            else if (marker == int.class) heapInvocationBuffer.putInt(((Number) arg).intValue());
+            else if (marker == long.class) heapInvocationBuffer.putLong(((Number) arg).longValue());
+            else if (marker == float.class) heapInvocationBuffer.putFloat(((Number) arg).floatValue());
+            else if (marker == double.class) heapInvocationBuffer.putDouble(((Number) arg).doubleValue());
+            else if (Aggregate.class.isAssignableFrom((Class<?>) marker)) {
+                Pointer memory = ((Aggregate) arg).memory();
+                if (memory.isDirect()) heapInvocationBuffer.putStruct(memory.address());
+                else {
+                    byte[] struct = new byte[(int) Aggregate.sizeOfType((Class<? extends Aggregate>) marker)];
+                    memory.getByteArray(0, struct);
+                    heapInvocationBuffer.putStruct(reverseIfNeeded(struct), 0);
+                }
+            }
+        }
+        else if (marker instanceof Aggregate.Descriptor) {
             Pointer memory = ((Aggregate) arg).memory();
             if (memory.isDirect()) heapInvocationBuffer.putStruct(memory.address());
             else {
-                byte[] struct = new byte[(int) Aggregate.sizeOfType((Class<? extends Aggregate>) marker)];
+                byte[] struct = new byte[(int) ((Aggregate.Descriptor) marker).size()];
                 memory.getByteArray(0, struct);
                 heapInvocationBuffer.putStruct(reverseIfNeeded(struct), 0);
             }
@@ -200,29 +200,11 @@ public class SymbolSupport {
     private static void pushArgument(HeapInvocationBuffer heapInvocationBuffer, Aggregate arg) {
         Pointer pointer = arg.memory();
         if (pointer.isDirect()) heapInvocationBuffer.putStruct(pointer.address());
-        else if (pointer.hasArrays()) {
-            if (!LITTLE_ENDIAN) {
-                if (pointer.size() == arg.getDescriptor().getSize()) {
-                    if (pointer.arraysOffset() % FastArray.ARRAY_LENGTH_MAX + pointer.size() <= FastArray.ARRAY_LENGTH_MAX) {
-                        heapInvocationBuffer.putStruct(
-                                pointer.arrays()[(int) (pointer.arraysOffset() / FastArray.ARRAY_LENGTH_MAX)],
-                                (int) (pointer.arraysOffset() % FastArray.ARRAY_LENGTH_MAX));
-                    }
-                    else {
-                        byte[] array = new byte[(int) arg.getDescriptor().getSize()];
-                        pointer.getByteArray(0, array);
-                        heapInvocationBuffer.putStruct(array, 0);
-                    }
-                }
-            }
-            else {
-                byte[] array = new byte[(int) arg.getDescriptor().getSize()];
-                pointer.getByteArray(0, array);
-                reverse0(array);
-                heapInvocationBuffer.putStruct(array, 0);
-            }
+        else {
+            byte[] struct = new byte[(int) arg.getDescriptor().size()];
+            pointer.getByteArray(0, struct);
+            heapInvocationBuffer.putStruct(reverseIfNeeded(struct), 0);
         }
-        else throw new IllegalArgumentException("Illegal pointer; neither direct nor arrays-backed");
     }
 
     public static byte[] reverseIfNeeded(byte[] array) {
@@ -316,7 +298,7 @@ public class SymbolSupport {
     }
 
     public static Type[] expandVariadicFFITypes(Type[] nonVariadicTypes, Object varargs) {
-        Type[] variadicTypes = getFFITypes(varargs);
+        Type[] variadicTypes = getFFITypesFromArray(varargs);
         Type[] types = Arrays.copyOf(nonVariadicTypes, nonVariadicTypes.length + variadicTypes.length);
         System.arraycopy(variadicTypes, 0, types, nonVariadicTypes.length, variadicTypes.length);
         return types;
@@ -370,50 +352,93 @@ public class SymbolSupport {
         return heapInvocationBuffer;
     }
 
-    public static HeapInvocationBuffer toHeapInvocationBuffer(CallContext context, Class<?>[] parameterTypes, Object... args) {
+    public static HeapInvocationBuffer toHeapInvocationBuffer(CallContext context, Object[] parameterTypes, Object... args) {
         HeapInvocationBuffer heapInvocationBuffer = new HeapInvocationBuffer(context);
         if (args.length > 0) {
             for (int i = 0; i < parameterTypes.length; i ++) {
-                Class<?> marker = parameterTypes[i];
-                Class<?> boxed = args[i].getClass();
-                if (!matchesBoxed(marker, boxed)) throw new IllegalArgumentException("Illegal argument type; expected " + marker);
+                Object marker = parameterTypes[i];
+                if (marker instanceof Class) {
+                    Class<?> boxed = args[i].getClass();
+                    if (!matchesBoxed((Class<?>) marker, boxed)) throw new IllegalArgumentException("Illegal argument type; expected " + marker);
+                }
+                else if (marker instanceof Aggregate.Descriptor) {
+                    if (!(args[i] instanceof Aggregate)) throw new IllegalArgumentException("Illegal argument type; expected " + Aggregate.class);
+                    else if (!((Aggregate) args[i]).getDescriptor().equals(marker))
+                        throw new IllegalArgumentException("Aggregate descriptor type mismatch");
+                }
+                else throw new UnexpectedError();
                 pushArgument(heapInvocationBuffer, marker, args[i]);
             }
         }
         return heapInvocationBuffer;
     }
 
-    public static HeapInvocationBuffer toHeapInvocationBufferVariadic(CallContext context, Class<?>[] parameterTypes, Object... args) {
+    public static HeapInvocationBuffer toHeapInvocationBufferVariadic(CallContext context, Object[] parameterTypes, Object... args) {
         HeapInvocationBuffer heapInvocationBuffer = new HeapInvocationBuffer(context);
         if (args.length > 0) {
             int variadic = parameterTypes.length - 1;
             for (int i = 0; i < variadic; i ++) {
-                Class<?> marker = parameterTypes[i];
-                Class<?> boxed = args[i].getClass();
-                if (!matchesBoxed(marker, boxed)) throw new IllegalArgumentException("Illegal argument type; expected " + marker);
+                Object marker = parameterTypes[i];
+                if (marker instanceof Class) {
+                    Class<?> boxed = args[i].getClass();
+                    if (!matchesBoxed((Class<?>) marker, boxed)) throw new IllegalArgumentException("Illegal argument type; expected " + marker);
+                }
+                else if (marker instanceof Aggregate.Descriptor) {
+                    if (!(args[i] instanceof Aggregate)) throw new IllegalArgumentException("Illegal argument type; expected " + Aggregate.class);
+                    else if (!((Aggregate) args[i]).getDescriptor().equals(marker))
+                        throw new IllegalArgumentException("Aggregate descriptor type mismatch");
+                }
+                else throw new UnexpectedError();
                 pushArgument(heapInvocationBuffer, marker, args[i]);
             }
-            pushVariadicArguments(heapInvocationBuffer, parameterTypes[variadic], args[variadic]);
+            pushVariadicArguments(heapInvocationBuffer, (Class<?>) parameterTypes[variadic], args[variadic]);
         }
         return heapInvocationBuffer;
     }
 
     private static byte[] toByteArray(Aggregate aggregate) {
-        byte[] array = new byte[(int) aggregate.getDescriptor().getSize()];
+        byte[] array = new byte[(int) aggregate.getDescriptor().size()];
         aggregate.memory().getByteArray(0, array);
         return reverseIfNeeded(array);
     }
 
-    public static void push(Closure.Buffer buffer, Object result, Class<?> returnType) {
+    public static void push(Closure.Buffer buffer, Object result, Object returnType) {
         if (result == null) return;
-        if (returnType == boolean.class) buffer.setByteReturn((byte) (((Boolean) result) ? 1 : 0));
-        else if (returnType == byte.class) buffer.setByteReturn(((Number) result).byteValue());
-        else if (returnType == char.class) buffer.setShortReturn((short) ((Character) result).charValue());
-        else if (returnType == short.class) buffer.setShortReturn(((Number) result).shortValue());
-        else if (returnType == int.class) buffer.setIntReturn(((Number) result).intValue());
-        else if (returnType == long.class) buffer.setLongReturn(((Number) result).longValue());
-        else if (returnType == float.class) buffer.setFloatReturn(((Number) result).floatValue());
-        else if (returnType == double.class) buffer.setDoubleReturn(((Number) result).doubleValue());
-        else if (Aggregate.class.isAssignableFrom(returnType)) buffer.setStructReturn(toByteArray((Aggregate) result), 0);
+        if (returnType instanceof Class) {
+            if (returnType == boolean.class) buffer.setByteReturn((byte) (((Boolean) result) ? 1 : 0));
+            else if (returnType == byte.class) buffer.setByteReturn(((Number) result).byteValue());
+            else if (returnType == char.class) buffer.setShortReturn((short) ((Character) result).charValue());
+            else if (returnType == short.class) buffer.setShortReturn(((Number) result).shortValue());
+            else if (returnType == int.class) buffer.setIntReturn(((Number) result).intValue());
+            else if (returnType == long.class) buffer.setLongReturn(((Number) result).longValue());
+            else if (returnType == float.class) buffer.setFloatReturn(((Number) result).floatValue());
+            else if (returnType == double.class) buffer.setDoubleReturn(((Number) result).doubleValue());
+            else if (Aggregate.class.isAssignableFrom((Class<?>) returnType)) buffer.setStructReturn(toByteArray((Aggregate) result), 0);
+        }
+        else if (returnType instanceof Aggregate.Descriptor) buffer.setStructReturn(toByteArray((Aggregate) result), 0);
     }
+
+    public static Type getFFITypeFromObject(Object object) {
+        if (object instanceof Aggregate && Aggregate.isProxyObject((Aggregate) object)) {
+            return AggregateSupport.typeOf(((Aggregate) object).getDescriptor());
+        }
+        else return toFFITypeBoxed(object.getClass());
+    }
+
+    public static Type[] getFFITypesFromObjects(Object... objects) {
+        Type[] result = new Type[objects.length];
+        for (int i = 0; i < objects.length; i ++) {
+            result[i] = getFFITypeFromObject(objects[i]);
+        }
+        return result;
+    }
+
+    public static Type[] getFFITypesFromObjects(Object[] objects, int offset, int length) {
+        Type[] result = new Type[length];
+        for (int i = 0; i < length; i ++) {
+            result[i] = getFFITypeFromObject(objects[offset + i]);
+        }
+        return result;
+    }
+
 }

@@ -36,8 +36,8 @@ public abstract class Symbol {
 
     public abstract long address();
 
-    public abstract List<Class<?>> getParameterTypes();
-    public abstract Class<?> getReturnType();
+    public abstract List<Object> getParameterTypes();
+    public abstract Object getReturnType();
     public abstract boolean isVarargs();
 
     public abstract void invokeVoid(Object... args);
@@ -53,6 +53,7 @@ public abstract class Symbol {
     public abstract double invokeDouble(Object... args);
     public abstract long invokeAddress(Object... args);
     public abstract Aggregate invokeAggregate(Object... args);
+    public abstract Aggregate invokeDescriptor(Object... args);
     public abstract Object invoke(Object... args);
 
 }

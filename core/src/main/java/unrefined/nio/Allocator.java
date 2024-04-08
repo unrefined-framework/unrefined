@@ -1,6 +1,8 @@
 package unrefined.nio;
 
 import unrefined.context.Environment;
+import unrefined.core.DirectPointer;
+import unrefined.core.HeapPointer;
 import unrefined.math.FastMath;
 import unrefined.util.FastArray;
 import unrefined.util.foreign.Foreign;

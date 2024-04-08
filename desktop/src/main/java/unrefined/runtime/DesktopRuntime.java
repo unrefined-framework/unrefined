@@ -8,7 +8,7 @@ import unrefined.context.Environment;
 import unrefined.desktop.AWTSupport;
 import unrefined.desktop.OSInfo;
 import unrefined.desktop.RuntimeSupport;
-import unrefined.desktop.ShutdownGuard;
+import unrefined.desktop.ShutdownHook;
 import unrefined.desktop.SizeOfSupport;
 import unrefined.desktop.StandardDirectories;
 import unrefined.desktop.VMInfo;
@@ -32,7 +32,7 @@ import static unrefined.desktop.UnsafeSupport.UNSAFE;
 public final class DesktopRuntime extends Runtime {
 
     {
-        ShutdownGuard.register(() -> DesktopRuntime.this.onShutdown().emit());
+        ShutdownHook.register(() -> DesktopRuntime.this.onShutdown().emit());
     }
 
     private static final AtomicBoolean initialized = new AtomicBoolean(false);
@@ -122,6 +122,8 @@ public final class DesktopRuntime extends Runtime {
             Environment.global.put("unrefined.runtime.console", new DesktopConsole());
             Environment.global.put("unrefined.runtime.foreign", new DesktopForeign());
             Environment.global.put("unrefined.runtime.allocator", new DesktopAllocator());
+            Environment.global.put("unrefined.runtime.fileSystem", new DesktopFileSystem());
+            Environment.global.put("unrefined.runtime.fileWatcher", new DesktopFileWatcher());
 
             Environment.global.put("unrefined.runtime.textManager", new BaseTextManager());
             Environment.global.put("unrefined.runtime.eventBus", new BaseEventBus());
@@ -218,12 +220,12 @@ public final class DesktopRuntime extends Runtime {
 
     @Override
     public File getCurrentDirectory() {
-        return new File("");
+        return new File(System.getProperty("user.dir"));
     }
 
     @Override
     public boolean isShutdownThread(Thread thread) {
-        return ShutdownGuard.isShutdownThread(thread);
+        return ShutdownHook.isShutdownThread(thread);
     }
 
     @Override
@@ -246,7 +248,7 @@ public final class DesktopRuntime extends Runtime {
     public void collectOnExit() {
         if (gc.compareAndSet(false, true)) {
             //java.lang.Runtime.getRuntime().addShutdownHook(new Thread(this::garbageCollection, "Unrefined GC Performer"));
-            ShutdownGuard.register(this::collect);
+            ShutdownHook.register(this::collect);
         }
     }
 

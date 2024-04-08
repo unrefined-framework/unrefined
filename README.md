@@ -1,6 +1,6 @@
 # Unrefined
-Version Name: 0.7.0  
-Version Code: 71  
+Version Name: 0.8.0  
+Version Code: 80  
 Version Codename: Claw Hammer
 
 Cross-platform multimedia application framework written in pure Java.
@@ -19,6 +19,7 @@ It provides:
 [Extended Collections API](/core/src/main/java/unrefined/util/)  
 [Animation API](/core/src/main/java/unrefined/util/animation)  
 [Serialization/Deserialization API](/core/src/main/java/unrefined/io/Savable.java)  
+[Extended File API](/core/src/main/java/unrefined/io/file)  
 [Logger API](/core/src/main/java/unrefined/app/Logger.java)  
 [MVVM Data Binding API](/core/src/main/java/unrefined/beans)  
 [Foreign Function Interface API](/core/src/main/java/unrefined/util/foreign)  

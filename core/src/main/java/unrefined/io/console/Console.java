@@ -14,6 +14,10 @@ import java.util.Objects;
 
 public abstract class Console {
 
+    public static final String SIGINT = "SIGINT";
+    public static final String SIGTERM = "SIGTERM";
+    public static final String SIGABRT = "SIGABRT";
+
     private static volatile Console INSTANCE;
     private static final Object INSTANCE_LOCK = new Object();
     public static Console getInstance() {

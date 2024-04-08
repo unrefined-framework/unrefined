@@ -26,10 +26,10 @@ public class StructAndUnion {
             return new Union64(Pointer.allocateDirect(sizeOfType(Union64.class)));
         }
         public long longValue() {
-            return memory().getLong(getDescriptor().getMembers().get(0).getOffset());
+            return memory().getLong(getDescriptor().members().get(0).getOffset());
         }
         public double doubleValue() {
-            return memory().getDouble(getDescriptor().getMembers().get(1).getOffset());
+            return memory().getDouble(getDescriptor().members().get(1).getOffset());
         }
     }
 
@@ -48,22 +48,22 @@ public class StructAndUnion {
             return new Int128(Pointer.allocateDirect(sizeOfType(Int128.class)));
         }
         public void low(long value) {
-            memory().putLong(getDescriptor().getMembers().get(0).getOffset(), value);
+            memory().putLong(getDescriptor().members().get(0).getOffset(), value);
         }
         public long low() {
-            return memory().getLong(getDescriptor().getMembers().get(0).getOffset());
+            return memory().getLong(getDescriptor().members().get(0).getOffset());
         }
         public void high(long value) {
-            memory().putLong(getDescriptor().getMembers().get(1).getOffset(), value);
+            memory().putLong(getDescriptor().members().get(1).getOffset(), value);
         }
         public long high() {
-            return memory().getLong(getDescriptor().getMembers().get(1).getOffset());
+            return memory().getLong(getDescriptor().members().get(1).getOffset());
         }
         public Union64 lowAsUnion64() {
-            return new Union64(memory().slice(getDescriptor().getMembers().get(0).getOffset(), descriptorOf(Union64.class).getSize()));
+            return new Union64(memory().slice(getDescriptor().members().get(0).getOffset(), descriptorOf(Union64.class).size()));
         }
         public Union64 highAsUnion64() {
-            return new Union64(memory().slice(getDescriptor().getMembers().get(1).getOffset(), descriptorOf(Union64.class).getSize()));
+            return new Union64(memory().slice(getDescriptor().members().get(1).getOffset(), descriptorOf(Union64.class).size()));
         }
     }
 
