@@ -43,10 +43,11 @@ public abstract class FileSystem {
         public static final int CREATE            = 1 << 3;
         public static final int CREATE_NEW        = 1 << 4;
         public static final int DELETE_ON_CLOSE   = 1 << 5;
-        public static final int SYNC              = 1 << 6;
-        public static final int DSYNC             = 1 << 7;
+        public static final int SPARSE            = 1 << 6;
+        public static final int SYNC              = 1 << 7;
+        public static final int DSYNC             = 1 << 8;
         public static int removeUnusedBits(int options) {
-            return options << 24 >>> 24;
+            return options << 23 >>> 23;
         }
         public static String toString(int options) {
             options = removeUnusedBits(options);
@@ -58,6 +59,7 @@ public abstract class FileSystem {
                 if ((options & CREATE_NEW) != 0) builder.append(", CREATE_NEW");
                 else builder.append(", CREATE");
                 if ((options & DELETE_ON_CLOSE) != 0) builder.append(", DELETE_ON_CLOSE");
+                if ((options & SPARSE) != 0) builder.append(", SPARSE");
                 if ((options & SYNC) != 0) builder.append(", SYNC");
                 else if ((options & DSYNC) != 0) builder.append(", DSYNC");
                 builder.append("]");
@@ -287,7 +289,7 @@ public abstract class FileSystem {
 
     public abstract long length(File file) throws IOException;
 
-    public abstract void move(File source, File target, int options) throws IOException;
+    public abstract void move(File source, File target, int copyOptions) throws IOException;
 
     public abstract Set<File> listRootDirectories();
     public abstract Iterable<File> lazyListRootDirectories();
@@ -350,13 +352,31 @@ public abstract class FileSystem {
     public abstract long getCreationTime(File file) throws IOException;
     public abstract void setCreationTime(File file, long timestamp) throws IOException;
 
-    public ChannelFile openChannelFile(File file, int options) throws IOException {
-        return new ChannelFile(file, options);
+    public ChannelFile openChannelFile(File file, int openOptions) throws IOException {
+        return new ChannelFile(file, openOptions);
     }
-    public abstract FileChannel openFileChannel(File file, int options) throws IOException;
-    public abstract AsynchronousFileChannel openAsynchronousFileChannel(File file, int options, ExecutorService executor) throws IOException;
-    public AsynchronousFileChannel openAsynchronousFileChannel(File file, int options) throws IOException {
-        return openAsynchronousFileChannel(file, options, null);
+    public ChannelFile openChannelFile(File file) throws IOException {
+        return new ChannelFile(file);
+    }
+    public abstract FileChannel openFileChannel(File file, int openOptions) throws IOException;
+    public abstract FileChannel openFileChannel(File file) throws IOException;
+    public abstract AsynchronousFileChannel openAsynchronousFileChannel(File file, ExecutorService executor, int openOptions) throws IOException;
+    public AsynchronousFileChannel openAsynchronousFileChannel(File file, int openOptions) throws IOException {
+        return openAsynchronousFileChannel(file, null, openOptions);
+    }
+    public abstract AsynchronousFileChannel openAsynchronousFileChannel(File file, ExecutorService executor) throws IOException;
+    public AsynchronousFileChannel openAsynchronousFileChannel(File file) throws IOException {
+        return openAsynchronousFileChannel(file, null);
+    }
+    public FileInputStream openFileInputStream(File file, int openOptions) throws IOException {
+        FileChannel channel = openFileChannel(file, openOptions);
+        return new FileInputStream(getFD(channel)) {
+            @Override
+            public void close() throws IOException {
+                super.close();
+                channel.close();
+            }
+        };
     }
     public FileInputStream openFileInputStream(File file) throws IOException {
         return new FileInputStream(file);
@@ -367,6 +387,16 @@ public abstract class FileSystem {
     public FileOutputStream openFileOutputStream(File file) throws IOException {
         return new FileOutputStream(file);
     }
+    public FileOutputStream openFileOutputStream(File file, int openOptions) throws IOException {
+        FileChannel channel = openFileChannel(file, openOptions);
+        return new FileOutputStream(getFD(channel)) {
+            @Override
+            public void close() throws IOException {
+                super.close();
+                channel.close();
+            }
+        };
+    }
     public FileOutputStream wrapFileOutputStream(FileDescriptor fileDescriptor) {
         return new FileOutputStream(fileDescriptor);
     }
@@ -375,6 +405,26 @@ public abstract class FileSystem {
     }
     public FileReader openFileReader(File file) throws IOException {
         return openFileReader(file, null);
+    }
+    public FileReader openFileReader(File file, Charset charset, int openOptions) throws IOException {
+        FileChannel channel = openFileChannel(file, openOptions);
+        return new FileReader(getFD(channel), charset) {
+            @Override
+            public void close() throws IOException {
+                super.close();
+                channel.close();
+            }
+        };
+    }
+    public FileReader openFileReader(File file, int openOptions) throws IOException {
+        FileChannel channel = openFileChannel(file, openOptions);
+        return new FileReader(getFD(channel)) {
+            @Override
+            public void close() throws IOException {
+                super.close();
+                channel.close();
+            }
+        };
     }
     public FileReader wrapFileReader(FileDescriptor fileDescriptor, Charset charset) {
         return new FileReader(fileDescriptor, charset);
@@ -387,6 +437,26 @@ public abstract class FileSystem {
     }
     public FileWriter openFileWriter(File file) throws IOException {
         return openFileWriter(file, null);
+    }
+    public FileWriter openFileWriter(File file, Charset charset, int openOptions) throws IOException {
+        FileChannel channel = openFileChannel(file, openOptions);
+        return new FileWriter(getFD(channel), charset) {
+            @Override
+            public void close() throws IOException {
+                super.close();
+                channel.close();
+            }
+        };
+    }
+    public FileWriter openFileWriter(File file, int openOptions) throws IOException {
+        FileChannel channel = openFileChannel(file, openOptions);
+        return new FileWriter(getFD(channel)) {
+            @Override
+            public void close() throws IOException {
+                super.close();
+                channel.close();
+            }
+        };
     }
     public FileWriter wrapFileWriter(FileDescriptor fileDescriptor, Charset charset) {
         return new FileWriter(fileDescriptor, charset);
@@ -434,8 +504,8 @@ public abstract class FileSystem {
         return a.compareTo(b);
     }
 
-    public abstract int toFileno(FileDescriptor descriptor);
-    public abstract long toHandle(FileDescriptor descriptor);
+    public abstract int getFileno(FileDescriptor descriptor);
+    public abstract long getHandle(FileDescriptor descriptor);
     public abstract long transfer(FileDescriptor in, FileDescriptor out) throws IOException;
 
     public abstract Set<FileStore> listFileStores();
@@ -445,5 +515,8 @@ public abstract class FileSystem {
 
     public abstract FileFilter createFileFilter(String glob);
     public abstract FilenameFilter createFilenameFilter(String glob);
+
+    public abstract FileDescriptor getFD(FileChannel channel);
+    public abstract FileDescriptor getFD(AsynchronousFileChannel channel);
 
 }

@@ -27,6 +27,7 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
@@ -258,8 +259,8 @@ public class DesktopFileSystem extends FileSystem {
     }
 
     @Override
-    public void move(File source, File target, int options) throws IOException {
-        Files.move(source.toPath(), target.toPath(), toCopyOptions(options));
+    public void move(File source, File target, int copyOptions) throws IOException {
+        Files.move(source.toPath(), target.toPath(), toCopyOptions(copyOptions));
     }
 
     private static <T> Set<T> toSet(Iterable<T> iterable) {
@@ -321,13 +322,23 @@ public class DesktopFileSystem extends FileSystem {
     }
 
     @Override
-    public FileChannel openFileChannel(File file, int options) throws IOException {
-        return FileChannel.open(file.toPath(), FileSystemSupport.toStandardOpenOptions(options));
+    public FileChannel openFileChannel(File file, int openOptions) throws IOException {
+        return FileChannel.open(file.toPath(), FileSystemSupport.toStandardOpenOptions(openOptions));
     }
 
     @Override
-    public AsynchronousFileChannel openAsynchronousFileChannel(File file, int options, ExecutorService executor) throws IOException {
-        return AsynchronousFileChannel.open(file.toPath(), FileSystemSupport.toStandardOpenOptions(options), executor, NO_ATTRIBUTES);
+    public FileChannel openFileChannel(File file) throws IOException {
+        return FileChannel.open(file.toPath());
+    }
+
+    @Override
+    public AsynchronousFileChannel openAsynchronousFileChannel(File file, ExecutorService executor, int openOptions) throws IOException {
+        return AsynchronousFileChannel.open(file.toPath(), FileSystemSupport.toStandardOpenOptions(openOptions), executor, NO_ATTRIBUTES);
+    }
+
+    @Override
+    public AsynchronousFileChannel openAsynchronousFileChannel(File file, ExecutorService executor) throws IOException {
+        return AsynchronousFileChannel.open(file.toPath(), EnumSet.noneOf(StandardOpenOption.class), executor);
     }
 
     @Override
@@ -547,12 +558,12 @@ public class DesktopFileSystem extends FileSystem {
     }
 
     @Override
-    public int toFileno(FileDescriptor descriptor) {
+    public int getFileno(FileDescriptor descriptor) {
         return FileSystemSupport.FD_PROCESS.toFD(descriptor);
     }
 
     @Override
-    public long toHandle(FileDescriptor descriptor) {
+    public long getHandle(FileDescriptor descriptor) {
         return FileSystemSupport.FD_PROCESS.toHANDLE(descriptor);
     }
 
@@ -600,4 +611,13 @@ public class DesktopFileSystem extends FileSystem {
         return (dir, name) -> pathMatcher.matches(Paths.get(dir.getAbsolutePath(), name));
     }
 
+    @Override
+    public FileDescriptor getFD(FileChannel channel) {
+        return FileSystemSupport.getFD(channel);
+    }
+
+    @Override
+    public FileDescriptor getFD(AsynchronousFileChannel channel) {
+        return FileSystemSupport.getFD(channel);
+    }
 }

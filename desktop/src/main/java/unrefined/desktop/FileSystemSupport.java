@@ -12,6 +12,7 @@ import java.io.UncheckedIOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.channels.AsynchronousFileChannel;
 import java.nio.channels.FileChannel;
 import java.nio.file.DirectoryIteratorException;
 import java.nio.file.DirectoryStream;
@@ -416,12 +417,13 @@ public final class FileSystemSupport {
 
     public static Set<StandardOpenOption> toStandardOpenOptions(int options) {
         options = FileSystem.OpenOption.removeUnusedBits(options);
-        List<StandardOpenOption> openOptions = new ArrayList<>(9);
+        List<StandardOpenOption> openOptions = new ArrayList<>(10);
         openOptions.add(StandardOpenOption.READ);
         if ((options & FileSystem.OpenOption.WRITE) != 0) openOptions.add(StandardOpenOption.WRITE);
         if ((options & FileSystem.OpenOption.APPEND) != 0) openOptions.add(StandardOpenOption.APPEND);
         if ((options & FileSystem.OpenOption.TRUNCATE_EXISTING) != 0) openOptions.add(StandardOpenOption.TRUNCATE_EXISTING);
         if ((options & FileSystem.OpenOption.CREATE) != 0) openOptions.add(StandardOpenOption.CREATE);
+        if ((options & FileSystem.OpenOption.SPARSE) != 0) openOptions.add(StandardOpenOption.SPARSE);
         if ((options & FileSystem.OpenOption.CREATE_NEW) != 0) openOptions.add(StandardOpenOption.CREATE_NEW);
         if ((options & FileSystem.OpenOption.DELETE_ON_CLOSE) != 0) openOptions.add(StandardOpenOption.DELETE_ON_CLOSE);
         if ((options & FileSystem.OpenOption.SYNC) != 0) openOptions.add(StandardOpenOption.SYNC);
@@ -449,7 +451,7 @@ public final class FileSystemSupport {
         return path;
     }
 
-    public static FileDescriptor getFileDescriptor(FileChannel fileChannel) {
+    public static FileDescriptor getFD(FileChannel fileChannel) {
         try {
             return (FileDescriptor) ReflectionSupport.getObjectField(fileChannel, fileChannel.getClass().getDeclaredField("fd"));
         } catch (NoSuchFieldException e) {
@@ -530,6 +532,14 @@ public final class FileSystemSupport {
                 else if (target instanceof Error) throw (Error) target;
                 else throw new UnexpectedError(target);
             }
+        }
+    }
+
+    public static FileDescriptor getFD(AsynchronousFileChannel fileChannel) {
+        try {
+            return (FileDescriptor) ReflectionSupport.getObjectField(fileChannel, fileChannel.getClass().getDeclaredField("fdObj"));
+        } catch (NoSuchFieldException e) {
+            throw new UnexpectedError(e);
         }
     }
 

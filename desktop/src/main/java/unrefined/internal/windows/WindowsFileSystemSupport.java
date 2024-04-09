@@ -62,7 +62,7 @@ public final class WindowsFileSystemSupport {
 
     public static synchronized int getNumberOfLinks(Path path) throws IOException {
         try (FileChannel channel = (FileChannel) Files.newByteChannel(path, StandardOpenOption.READ)) {
-            long hFile = FileSystemSupport.FD_PROCESS.toHANDLE(FileSystemSupport.getFileDescriptor(channel));
+            long hFile = FileSystemSupport.FD_PROCESS.toHANDLE(FileSystemSupport.getFD(channel));
             if (GetFileInformationByHandle(hFile, lpFileInformation)) return UNSAFE.getInt(lpFileInformation + 40);
             else throw new IOException(ForeignSupport.ERROR_STRING_PRODUCER.apply(LAST_ERROR.get()));
         }
