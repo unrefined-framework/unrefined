@@ -335,7 +335,7 @@ public final class Timeline extends Animation {
 	 */
 	public void pushPause(float time) {
 		if (built) throw new IllegalStateException("You can't push anything to a timeline once it is started");
-		current.children.add(Tween.build().mark().delay(time).unstarted());
+		current.children.add(Tween.newBuilder().mark().delay(time).unstarted());
 	}
 
 	/**

@@ -1,15 +1,14 @@
 package unrefined.util.concurrent;
 
-import java.util.concurrent.Callable;
-
 @FunctionalInterface
-public interface ShortProducer extends Callable<Short> {
+public interface ShortProducer extends Producer<Short> {
 
     @Override
     default Short call() throws Exception {
         return getAsShort();
     }
 
+    @Override
     default Short get() {
         return getAsShort();
     }

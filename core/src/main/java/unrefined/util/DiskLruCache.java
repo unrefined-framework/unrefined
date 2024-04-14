@@ -27,6 +27,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilterOutputStream;
+import java.io.Flushable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -92,7 +93,7 @@ import java.util.regex.Pattern;
  * Callers should handle other problems by catching {@code IOException} and
  * responding appropriately.
  */
-public class DiskLruCache implements Closeable {
+public class DiskLruCache implements Closeable, Flushable {
 
     private static final String JOURNAL_FILE = "journal";
     private static final String JOURNAL_FILE_TEMP = "journal.tmp";

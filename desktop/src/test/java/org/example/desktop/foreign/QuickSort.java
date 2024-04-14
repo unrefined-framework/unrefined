@@ -1,17 +1,18 @@
 package org.example.desktop.foreign;
 
-import unrefined.app.Logger;
+import unrefined.Lifecycle;
+import unrefined.app.Log;
 import unrefined.nio.Allocator;
 import unrefined.nio.Pointer;
-import unrefined.runtime.DesktopRuntime;
 import unrefined.util.UnexpectedError;
 import unrefined.util.foreign.Foreign;
 import unrefined.util.foreign.Library;
 import unrefined.util.foreign.Symbol;
+import unrefined.util.function.BiFunctor;
 
 import java.io.IOException;
 
-import static unrefined.util.foreign.Symbol.Option.*;
+import static unrefined.util.foreign.Symbol.Option.THROW_ERRNO;
 
 public class QuickSort {
 
@@ -31,30 +32,24 @@ public class QuickSort {
 
     public static void main(String[] args) {
 
-        DesktopRuntime.initialize(args);
+        Lifecycle.onMain(args);
 
-        Logger logger = Logger.defaultInstance();
+        Log log = Log.defaultInstance();
 
         Foreign foreign = Foreign.getInstance();
 
         LibC c = foreign.downcallProxy(LibC.class);
 
-        Symbol compare;
-        try {
-            compare = foreign.upcallStub(
-                    QuickSort.class.getDeclaredMethod("compareInt", long.class, long.class),
-                    int.class, foreign.addressClass(), foreign.addressClass());
-        } catch (NoSuchMethodException e) {
-            throw new UnexpectedError(e);
-        }
+        BiFunctor<Long, Long, Integer> compareInt = QuickSort::compareInt;
+        Symbol compare = foreign.upcallStub(compareInt, int.class, foreign.addressClass(), foreign.addressClass());
 
         try (Pointer memory = Pointer.allocateDirect(8)) {
             memory.putInt(0, 10);
             memory.putInt(4, -1); // offset is in bytes
-            logger.info("Unrefined FFI", "memory[0] = " + memory.getInt(0) + ", memory[1] = " + memory.getInt(4));
-            logger.info("Unrefined FFI", "qsort(memory, 2, sizeof(int32_t), Integer::compare)");
+            log.info("Unrefined FFI", "memory[0] = " + memory.getInt(0) + ", memory[1] = " + memory.getInt(4));
+            log.info("Unrefined FFI", "qsort(memory, 2, sizeof(int32_t), Integer::compare)");
             c.qsort(memory.address(), 2, 4, compare.address());
-            logger.info("Unrefined FFI", "memory[0] = " + memory.getInt(0) + ", memory[1] = " + memory.getInt(4));
+            log.info("Unrefined FFI", "memory[0] = " + memory.getInt(0) + ", memory[1] = " + memory.getInt(4));
         }
         catch (IOException e) {
             throw new UnexpectedError(e);

@@ -3,6 +3,7 @@ package unrefined.util.foreign;
 import unrefined.context.Environment;
 import unrefined.nio.Pointer;
 import unrefined.util.function.VarFunctor;
+import unrefined.util.function.VarSlot;
 import unrefined.util.reflect.Reflection;
 
 import java.io.File;
@@ -10,6 +11,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
+import java.util.concurrent.Callable;
 
 public abstract class Foreign {
 
@@ -146,6 +148,24 @@ public abstract class Foreign {
     }
     public abstract Symbol upcallStub(int options, VarFunctor<?> closure, Object returnType, Object... parameterTypes);
     public Symbol upcallStub(VarFunctor<?> closure, Object returnType, Object... parameterTypes) {
+        return upcallStub(Symbol.Option.DEFAULT, closure, returnType, parameterTypes);
+    }
+    public Symbol upcallStub(int options, VarSlot closure, Object returnType, Object... parameterTypes) {
+        return upcallStub(options, VarFunctor.cast(closure), returnType, parameterTypes);
+    }
+    public Symbol upcallStub(VarSlot closure, Object returnType, Object... parameterTypes) {
+        return upcallStub(Symbol.Option.DEFAULT, closure, returnType, parameterTypes);
+    }
+    public Symbol upcallStub(int options, Callable<?> closure, Object returnType, Object... parameterTypes) {
+        return upcallStub(options, VarFunctor.cast(closure), returnType, parameterTypes);
+    }
+    public Symbol upcallStub(Callable<?> closure, Object returnType, Object... parameterTypes) {
+        return upcallStub(Symbol.Option.DEFAULT, closure, returnType, parameterTypes);
+    }
+    public Symbol upcallStub(int options, Runnable closure, Object returnType, Object... parameterTypes) {
+        return upcallStub(options, VarFunctor.cast(closure), returnType, parameterTypes);
+    }
+    public Symbol upcallStub(Runnable closure, Object returnType, Object... parameterTypes) {
         return upcallStub(Symbol.Option.DEFAULT, closure, returnType, parameterTypes);
     }
 

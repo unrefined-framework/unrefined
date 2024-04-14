@@ -7,7 +7,6 @@ import unrefined.media.graphics.Brush;
 import unrefined.media.graphics.Color;
 import unrefined.media.graphics.Graphics;
 import unrefined.media.graphics.Point;
-import unrefined.media.sound.Sampled;
 import unrefined.media.sound.Sound;
 import unrefined.util.SharedTimer;
 import unrefined.util.UnexpectedError;
@@ -77,7 +76,7 @@ public class Board extends ContextAdapter {
             }
         }
 
-        timer = SharedTimer.build()
+        timer = SharedTimer.newBuilder()
                 .period(Constant.PERIOD)
                 .repeat(true)
                 .onPerform(signal -> signal.connect(performEvent -> doGameCycle(context)))

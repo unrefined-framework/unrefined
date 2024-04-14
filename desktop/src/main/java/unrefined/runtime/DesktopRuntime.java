@@ -4,8 +4,6 @@ import unrefined.app.Preferences;
 import unrefined.app.Runtime;
 import unrefined.context.Container;
 import unrefined.context.ContainerListener;
-import unrefined.context.Environment;
-import unrefined.desktop.AWTSupport;
 import unrefined.desktop.OSInfo;
 import unrefined.desktop.RuntimeSupport;
 import unrefined.desktop.ShutdownHook;
@@ -15,122 +13,18 @@ import unrefined.desktop.VMInfo;
 import unrefined.internal.macos.MacPreferences;
 import unrefined.internal.posix.PosixPreferences;
 import unrefined.internal.windows.WindowsPreferences;
-import unrefined.util.FastArray;
-import unrefined.util.UnexpectedError;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.jar.Attributes;
-import java.util.jar.Manifest;
 
-import static unrefined.app.Runtime.Flag.*;
 import static unrefined.desktop.UnsafeSupport.UNSAFE;
 
 public final class DesktopRuntime extends Runtime {
 
     {
         ShutdownHook.register(() -> DesktopRuntime.this.onShutdown().emit());
-    }
-
-    private static final AtomicBoolean initialized = new AtomicBoolean(false);
-
-    private static volatile int flags;
-
-    public static int getFlags() {
-        return flags;
-    }
-
-    public static void initialize(int flags, String... args) {
-        Environment.properties.putIntProperty("unrefined.runtime.flags", Flag.removeUnusedBits(flags));
-        initialize(args);
-    }
-
-    private static String getDomain(Package p) {
-        String text = p.getName();
-        String[] split = text.split("\\.");
-        FastArray.reverse(split);
-        StringBuilder builder = new StringBuilder();
-        int last = split.length - 1;
-        for (int i = 0; i < last; i ++) {
-            builder.append(split[i]).append(".");
-        }
-        if (last >= 0) builder.append(split[last]);
-        return builder.toString();
-    }
-
-    public static void initialize(String... args) {
-        if (initialized.compareAndSet(false, true)) {
-            try {
-                StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
-                Class<?> mainClazz = Class.forName(stackTraceElements[stackTraceElements.length - 1].getClassName());
-                Package mainPackage = mainClazz.getPackage();
-                Environment.properties.setProperty("unrefined.app.vendor",
-                        mainPackage.getSpecificationVendor() == null ? getDomain(mainPackage) : mainPackage.getSpecificationVendor());
-                Environment.properties.setProperty("unrefined.app.name",
-                        mainPackage.getSpecificationTitle() == null ? mainClazz.getSimpleName() : mainPackage.getSpecificationTitle());
-                Environment.properties.setProperty("unrefined.app.version.name",
-                        mainPackage.getSpecificationVersion() == null ? "1.0-SNAPSHOT" : mainPackage.getSpecificationVersion());
-                Environment.properties.setProperty("unrefined.app.implementer",
-                        mainPackage.getImplementationVendor() == null ? getDomain(mainPackage) : mainPackage.getImplementationVendor());
-                Environment.properties.setProperty("unrefined.app.package",
-                        mainPackage.getImplementationTitle() == null ? mainPackage.getName() : mainPackage.getImplementationTitle());
-                Environment.properties.setProperty("unrefined.app.version.code",
-                        mainPackage.getImplementationVersion() == null ? "1" : mainPackage.getImplementationVersion());
-                try {
-                    Attributes attributes = new Manifest(mainClazz.getClassLoader().getResourceAsStream("META-INF/unrefined/MANIFEST.MF")).getMainAttributes();
-                    Environment.properties.setProperty("unrefined.backend.vendor", attributes.getValue("Specification-Vendor"));
-                    Environment.properties.setProperty("unrefined.backend.name", attributes.getValue("Specification-Title"));
-                    Environment.properties.setProperty("unrefined.backend.version.name", attributes.getValue("Specification-Version"));
-                    Environment.properties.setProperty("unrefined.backend.implementer", attributes.getValue("Implementation-Vendor"));
-                    Environment.properties.setProperty("unrefined.backend.package", attributes.getValue("Implementation-Title"));
-                    Environment.properties.setProperty("unrefined.backend.version.code", attributes.getValue("Implementation-Version"));
-                }
-                catch (IOException ignored) {
-                }
-            } catch (ClassNotFoundException e) {
-                throw new UnexpectedError(e);
-            }
-
-            flags = Integer.parseInt(System.getProperty("unrefined.runtime.flags", Integer.toString(ALL)));
-
-            if ((flags & GRAPHICS) != 0) {
-                Environment.properties.put("unrefined.desktop.graphics.buffered", "true");
-                AWTSupport.patch();
-
-                Environment.global.put("unrefined.runtime.drawing", new DesktopDrawing());
-
-                Environment.global.put("unrefined.runtime.dispatcher", new DesktopDispatcher());
-            }
-            else {
-                Environment.global.put("unrefined.runtime.dispatcher", new BaseDispatcher("Unrefined Default Dispatcher"));
-            }
-            if ((flags & AUDIO) != 0) {
-                Environment.global.put("unrefined.runtime.sampled", new DesktopSampled());
-            }
-
-            Environment.global.put("unrefined.runtime.reflection", new DesktopReflection());
-            Environment.global.put("unrefined.runtime.arithmetic", new DesktopArithmetic());
-            Environment.global.put("unrefined.runtime.runtime", new DesktopRuntime());
-            Environment.global.put("unrefined.runtime.platform", new DesktopPlatform());
-            Environment.global.put("unrefined.runtime.threading", new DesktopThreading());
-            Environment.global.put("unrefined.runtime.base64", new DesktopBase64());
-            Environment.global.put("unrefined.runtime.atomic", new DesktopAtomic());
-            Environment.global.put("unrefined.runtime.cleaner", new DesktopCleaner());
-            Environment.global.put("unrefined.runtime.console", new DesktopConsole());
-            Environment.global.put("unrefined.runtime.foreign", new DesktopForeign());
-            Environment.global.put("unrefined.runtime.allocator", new DesktopAllocator());
-            Environment.global.put("unrefined.runtime.fileSystem", new DesktopFileSystem());
-            Environment.global.put("unrefined.runtime.fileWatcher", new DesktopFileWatcher());
-
-            Environment.global.put("unrefined.runtime.textManager", new BaseTextManager());
-            Environment.global.put("unrefined.runtime.eventBus", new BaseEventBus());
-
-            Environment.global.put("unrefined.runtime.logger", new DesktopLogger());
-            Environment.global.put("unrefined.runtime.assetLoader", new DesktopAssetLoader());
-        }
     }
 
     @Override

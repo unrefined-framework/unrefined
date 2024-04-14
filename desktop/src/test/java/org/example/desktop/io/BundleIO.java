@@ -1,12 +1,12 @@
 package org.example.desktop.io;
 
-import unrefined.app.Logger;
+import unrefined.Lifecycle;
+import unrefined.app.Log;
 import unrefined.io.BundleInput;
 import unrefined.io.BundleInputStream;
 import unrefined.io.BundleOutput;
 import unrefined.io.BundleOutputStream;
 import unrefined.io.Bundleable;
-import unrefined.runtime.DesktopRuntime;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -47,13 +47,13 @@ public class BundleIO {
     }
 
     public static void main(String[] args) {
-        DesktopRuntime.initialize(args);
+        Lifecycle.onMain(args);
 
-        Logger logger = Logger.defaultInstance();
+        Log log = Log.defaultInstance();
 
         Fruit write = new Fruit("Apple");
 
-        logger.info("Fruit", write.getName());
+        log.info("Fruit", write.getName());
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -63,13 +63,13 @@ public class BundleIO {
         }
 
         Fruit read = new Fruit();
-        logger.info("Fruit", read.getName());
+        log.info("Fruit", read.getName());
 
         ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
 
         try (BundleInputStream stream = new BundleInputStream(in)) {
             stream.getBundleable("fruit", read);
-            logger.info("Fruit", read.getName());
+            log.info("Fruit", read.getName());
         } catch (IOException ignored) {
         }
 

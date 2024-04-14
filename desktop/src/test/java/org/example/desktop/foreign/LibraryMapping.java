@@ -1,8 +1,8 @@
 package org.example.desktop.foreign;
 
-import unrefined.app.Logger;
+import unrefined.Lifecycle;
+import unrefined.app.Log;
 import unrefined.nio.Pointer;
-import unrefined.runtime.DesktopRuntime;
 import unrefined.util.UnexpectedError;
 import unrefined.util.foreign.Foreign;
 import unrefined.util.foreign.Library;
@@ -22,7 +22,7 @@ public class LibraryMapping {
     }
 
     public static void main(String[] args) {
-        DesktopRuntime.initialize(args);              // Initialize the Unrefined runtime environment
+        Lifecycle.onMain(args);              // Initialize the Unrefined runtime environment
         Foreign foreign = Foreign.getInstance(); // Get the platform-dependent FFI factory
 
         Random random = ThreadLocalRandom.current();
@@ -32,7 +32,7 @@ public class LibraryMapping {
 
         CLibrary c = foreign.downcallProxy(CLibrary.class);
         try (Pointer format = Pointer.allocateDirect("SUM (%d, %d) = %d")) {
-            Logger.defaultInstance().info("Unrefined FFI", "characters: " +
+            Log.defaultInstance().info("Unrefined FFI", "characters: " +
                     c.printf(format.address(), a, b, a + b));
         }
         catch (IOException e) {

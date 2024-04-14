@@ -1,6 +1,6 @@
 package unrefined;
 
-import unrefined.app.Logger;
+import unrefined.app.Log;
 import unrefined.app.Platform;
 import unrefined.app.Runtime;
 import unrefined.io.asset.AssetLoader;
@@ -10,6 +10,7 @@ import unrefined.io.file.FileWatcher;
 import unrefined.math.Arithmetic;
 import unrefined.media.graphics.Drawing;
 import unrefined.media.sound.Sampled;
+import unrefined.net.Net;
 import unrefined.nio.Allocator;
 import unrefined.util.Base64;
 import unrefined.util.TextManager;
@@ -21,10 +22,10 @@ import unrefined.util.ref.Cleaner;
 import unrefined.util.reflect.Reflection;
 import unrefined.util.signal.Dispatcher;
 
-public class This {
+public class Unrefined {
 
     public static class app {
-        public static final Logger logger = Logger.defaultInstance();
+        public static final Log log = Log.defaultInstance();
         public static final Platform platform = Platform.getInstance();
 
         public static final Runtime runtime = Runtime.getInstance();
@@ -58,6 +59,10 @@ public class This {
 
     public static class nio {
         public static final Allocator allocator = Allocator.getInstance();
+    }
+
+    public static class net {
+        public static final Net net = Net.getInstance();
     }
 
     public static class util {

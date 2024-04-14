@@ -1,8 +1,8 @@
 package org.example.desktop.foreign;
 
-import unrefined.app.Logger;
+import unrefined.Lifecycle;
+import unrefined.app.Log;
 import unrefined.nio.Pointer;
-import unrefined.runtime.DesktopRuntime;
 import unrefined.util.foreign.Aggregate;
 import unrefined.util.foreign.Foreign;
 import unrefined.util.foreign.Symbol;
@@ -68,12 +68,12 @@ public class StructAndUnion {
     }
 
     public static void passInt128(Int128 int128) {
-        Logger.defaultInstance().info("Unrefined FFI", "((union64_t) HI (int128)).d = " + int128.highAsUnion64().doubleValue());
-        Logger.defaultInstance().info("Unrefined FFI", "((union64_t) LO (int128)).d = " + int128.lowAsUnion64().doubleValue());
+        Log.defaultInstance().info("Unrefined FFI", "((union64_t) HI (int128)).d = " + int128.highAsUnion64().doubleValue());
+        Log.defaultInstance().info("Unrefined FFI", "((union64_t) LO (int128)).d = " + int128.lowAsUnion64().doubleValue());
     }
 
     public static void main(String[] args) throws NoSuchMethodException, IOException {
-        DesktopRuntime.initialize(args);
+        Lifecycle.onMain(args);
         Foreign foreign = Foreign.getInstance();
         Symbol symbol = foreign.upcallStub(StructAndUnion.class.getDeclaredMethod("passInt128", Int128.class), void.class, Int128.class);
         Int128 int128 = Int128.allocate();

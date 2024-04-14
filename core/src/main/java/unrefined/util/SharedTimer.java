@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 public class SharedTimer {
 
-    public static Builder build() {
+    public static Builder newBuilder() {
         return new Builder();
     }
 

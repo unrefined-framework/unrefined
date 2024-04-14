@@ -26,12 +26,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public final class ReadWriteIO {
+public final class IOStreams {
 
     private static final int DEFAULT_BUFFER_SIZE = 8192;
 
-    private ReadWriteIO() {
-        throw new NotInstantiableError(ReadWriteIO.class);
+    private IOStreams() {
+        throw new NotInstantiableError(IOStreams.class);
     }
 
     private static final Field inFieldStream;

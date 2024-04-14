@@ -1,15 +1,14 @@
 package unrefined.util.concurrent;
 
-import java.util.concurrent.Callable;
-
 @FunctionalInterface
-public interface IntProducer extends Callable<Integer> {
+public interface IntProducer extends Producer<Integer> {
 
     @Override
     default Integer call() throws Exception {
         return getAsInt();
     }
 
+    @Override
     default Integer get() {
         return getAsInt();
     }

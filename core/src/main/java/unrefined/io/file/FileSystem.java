@@ -1,6 +1,7 @@
 package unrefined.io.file;
 
 import unrefined.context.Environment;
+import unrefined.io.IOStreams;
 import unrefined.util.NotInstantiableError;
 import unrefined.util.ScopedIterable;
 
@@ -14,12 +15,10 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.nio.channels.AsynchronousFileChannel;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 
 public abstract class FileSystem {
 
@@ -106,17 +105,9 @@ public abstract class FileSystem {
         public static final int OTHERS_READ = 1 << 2;
         public static final int OTHERS_WRITE = 1 << 1;
         public static final int OTHERS_EXECUTE = 1;
-        public static final int OWNER_RW = OWNER_READ | OWNER_WRITE;
-        public static final int OWNER_ALL = OWNER_READ | OWNER_WRITE | OWNER_EXECUTE;
-        public static final int GROUP_RW = GROUP_READ | GROUP_WRITE;
-        public static final int GROUP_ALL = GROUP_READ | GROUP_WRITE | GROUP_EXECUTE;
-        public static final int OTHERS_RW = OTHERS_READ | OTHERS_WRITE;
-        public static final int OTHERS_ALL = OTHERS_READ | OTHERS_WRITE | OTHERS_EXECUTE;
         public static final int ALL_READ = OWNER_READ | GROUP_READ | OTHERS_READ;
         public static final int ALL_WRITE = OWNER_WRITE | GROUP_WRITE | OTHERS_WRITE;
         public static final int ALL_EXECUTE = OWNER_EXECUTE | GROUP_EXECUTE | OTHERS_EXECUTE;
-        public static final int ALL_RW = ALL_READ | ALL_WRITE;
-        public static final int ALL = ALL_READ | ALL_WRITE | ALL_EXECUTE;
         public static int removeUnusedBits(int mode) {
             return mode << 23 >>> 23;
         }
@@ -292,7 +283,6 @@ public abstract class FileSystem {
     public abstract void move(File source, File target, int copyOptions) throws IOException;
 
     public abstract Set<File> listRootDirectories();
-    public abstract Iterable<File> lazyListRootDirectories();
     public String getFileSeparator() {
         return File.separator;
     }
@@ -360,14 +350,6 @@ public abstract class FileSystem {
     }
     public abstract FileChannel openFileChannel(File file, int openOptions) throws IOException;
     public abstract FileChannel openFileChannel(File file) throws IOException;
-    public abstract AsynchronousFileChannel openAsynchronousFileChannel(File file, ExecutorService executor, int openOptions) throws IOException;
-    public AsynchronousFileChannel openAsynchronousFileChannel(File file, int openOptions) throws IOException {
-        return openAsynchronousFileChannel(file, null, openOptions);
-    }
-    public abstract AsynchronousFileChannel openAsynchronousFileChannel(File file, ExecutorService executor) throws IOException;
-    public AsynchronousFileChannel openAsynchronousFileChannel(File file) throws IOException {
-        return openAsynchronousFileChannel(file, null);
-    }
     public FileInputStream openFileInputStream(File file, int openOptions) throws IOException {
         FileChannel channel = openFileChannel(file, openOptions);
         return new FileInputStream(getFD(channel)) {
@@ -509,7 +491,6 @@ public abstract class FileSystem {
     public abstract long transfer(FileDescriptor in, FileDescriptor out) throws IOException;
 
     public abstract Set<FileStore> listFileStores();
-    public abstract Iterable<FileStore> lazyListFileStores();
 
     public abstract FileStore getFileStore(File file) throws IOException;
 
@@ -517,6 +498,40 @@ public abstract class FileSystem {
     public abstract FilenameFilter createFilenameFilter(String glob);
 
     public abstract FileDescriptor getFD(FileChannel channel);
-    public abstract FileDescriptor getFD(AsynchronousFileChannel channel);
+    public FileDescriptor getFD(ChannelFile file) {
+        try {
+            return file.getFD();
+        } catch (IOException e) {
+            return null;
+        }
+    }
+    public FileDescriptor getFD(FileInputStream in) {
+        try {
+            return in.getFD();
+        } catch (IOException e) {
+            return null;
+        }
+    }
+    public FileDescriptor getFD(FileOutputStream out) {
+        try {
+            return out.getFD();
+        } catch (IOException e) {
+            return null;
+        }
+    }
+    public FileDescriptor getFD(java.io.FileReader in) {
+        try {
+            return ((FileInputStream) IOStreams.getLock(in)).getFD();
+        } catch (IOException e) {
+            return null;
+        }
+    }
+    public FileDescriptor getFD(java.io.FileWriter out) {
+        try {
+            return ((FileOutputStream) IOStreams.getLock(out)).getFD();
+        } catch (IOException e) {
+            return null;
+        }
+    }
 
 }

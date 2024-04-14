@@ -1,15 +1,14 @@
 package unrefined.util.concurrent;
 
-import java.util.concurrent.Callable;
-
 @FunctionalInterface
-public interface DoubleProducer extends Callable<Double> {
+public interface DoubleProducer extends Producer<Double> {
 
     @Override
     default Double call() throws Exception {
         return getAsDouble();
     }
 
+    @Override
     default Double get() {
         return getAsDouble();
     }

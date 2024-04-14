@@ -1,6 +1,6 @@
 package unrefined.runtime;
 
-import unrefined.app.Logger;
+import unrefined.app.Log;
 import unrefined.app.Preferences;
 import unrefined.core.AnimatedCursor;
 import unrefined.context.ContainerListener;
@@ -105,7 +105,7 @@ public class DesktopContainer extends unrefined.context.Container implements
         local.put("unrefined.runtime.eventBus", EventBus.defaultInstance());
 
         local.put("unrefined.runtime.dispatcher", Dispatcher.defaultInstance());
-        local.put("unrefined.runtime.logger", Logger.defaultInstance());
+        local.put("unrefined.runtime.log", Log.defaultInstance());
         local.put("unrefined.runtime.assetLoader", AssetLoader.defaultInstance());
 
         properties.setProperty("unrefined.app.vendor", Environment.properties.getProperty("unrefined.app.vendor"));

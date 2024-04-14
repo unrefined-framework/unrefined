@@ -1,7 +1,7 @@
 package org.example.desktop.foreign;
 
-import unrefined.app.Logger;
-import unrefined.runtime.DesktopRuntime;
+import unrefined.Lifecycle;
+import unrefined.app.Log;
 import unrefined.util.foreign.Foreign;
 import unrefined.util.foreign.Library;
 import unrefined.util.foreign.Symbol;
@@ -16,9 +16,9 @@ public class PerformanceTest {
 
     public static void main(String[] args) {
 
-        DesktopRuntime.initialize(args);
+        Lifecycle.onMain(args);
 
-        Logger logger = Logger.defaultInstance();
+        Log log = Log.defaultInstance();
 
         Foreign foreign = Foreign.getInstance();
 
@@ -37,7 +37,7 @@ public class PerformanceTest {
 
         time = System.currentTimeMillis() - time;
 
-        logger.info(TAG, "Library Mapping CALL sin(1) " + count + " times: " + time + " ms");
+        log.info(TAG, "Library Mapping CALL sin(1) " + count + " times: " + time + " ms");
 
         time = System.currentTimeMillis();
 
@@ -47,7 +47,7 @@ public class PerformanceTest {
 
         time = System.currentTimeMillis() - time;
 
-        logger.info(TAG, "Handle Mapping CALL sin(1) " + count + " times: " + time + " ms");
+        log.info(TAG, "Handle Mapping CALL sin(1) " + count + " times: " + time + " ms");
     }
 
 }

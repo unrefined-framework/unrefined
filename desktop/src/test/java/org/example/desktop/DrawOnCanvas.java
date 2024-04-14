@@ -1,5 +1,6 @@
 package org.example.desktop;
 
+import unrefined.Lifecycle;
 import unrefined.context.Container;
 import unrefined.context.ContainerAdapter;
 import unrefined.context.Context;
@@ -10,10 +11,7 @@ import unrefined.media.graphics.Drawing;
 import unrefined.media.graphics.Graphics;
 import unrefined.media.graphics.Insets;
 import unrefined.runtime.DesktopContainer;
-import unrefined.runtime.DesktopRuntime;
 import unrefined.util.signal.Dispatcher;
-
-import java.awt.Dimension;
 
 /**
  * After create and add, then you can draw content to the canvas, and it will show to user.
@@ -22,7 +20,7 @@ import java.awt.Dimension;
 public class DrawOnCanvas {
 
     public static void main(String[] args) {
-        DesktopRuntime.initialize(args);             // Initialize the Unrefined runtime environment
+        Lifecycle.onMain(args);             // Initialize the Unrefined runtime environment
 
         // Initialize the Unrefined container (on desktop it's a window)
         DesktopContainer container = new DesktopContainer(new ContainerAdapter() { // The lifecycle listener, it's fully platform-independent

@@ -1,6 +1,6 @@
 package unrefined.context;
 
-import unrefined.app.Logger;
+import unrefined.app.Log;
 import unrefined.app.Preferences;
 import unrefined.app.Runtime;
 import unrefined.io.asset.AssetLoader;
@@ -68,13 +68,13 @@ public abstract class Container implements Runnable {
         }
         return DISPATCHER;
     }
-    private volatile Logger LOGGER;
-    private final Object LOGGER_LOCK = new Object();
-    public Logger getLogger() {
-        if (LOGGER == null) synchronized (LOGGER_LOCK) {
-            if (LOGGER == null) LOGGER = local.get("unrefined.runtime.logger", Logger.class);
+    private volatile Log LOG;
+    private final Object LOG_LOCK = new Object();
+    public Log getLog() {
+        if (LOG == null) synchronized (LOG_LOCK) {
+            if (LOG == null) LOG = local.get("unrefined.runtime.log", Log.class);
         }
-        return LOGGER;
+        return LOG;
     }
     private volatile TextManager TEXT_MANAGER;
     private final Object TEXT_MANAGER_LOCK = new Object();

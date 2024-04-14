@@ -1,8 +1,8 @@
 package org.example.helloworld.desktop;
 
 import org.example.helloworld.HelloWorldContainerAdapter;
+import unrefined.Lifecycle;
 import unrefined.runtime.DesktopContainer;
-import unrefined.runtime.DesktopRuntime;
 
 import java.awt.Frame;
 
@@ -12,7 +12,7 @@ import java.awt.Frame;
 public class Main {
 
     public static void main(String[] args) {
-        DesktopRuntime.initialize(args);
+        Lifecycle.onMain(args);
 
         DesktopContainer container = new DesktopContainer(new HelloWorldContainerAdapter());
 

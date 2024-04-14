@@ -1,7 +1,7 @@
 package org.example.desktop.foreign;
 
-import unrefined.app.Logger;
-import unrefined.runtime.DesktopRuntime;
+import unrefined.Lifecycle;
+import unrefined.app.Log;
 import unrefined.util.foreign.Foreign;
 import unrefined.util.foreign.Symbol;
 
@@ -12,7 +12,7 @@ import unrefined.util.foreign.Symbol;
 public class ForeignFunction {
 
     public static void main(String[] args) throws NoSuchMethodException {
-        DesktopRuntime.initialize(args);             // Initialize the Unrefined runtime environment
+        Lifecycle.onMain(args);             // Initialize the Unrefined runtime environment
 
         // Type mapping:
         // Java void -> void
@@ -38,7 +38,7 @@ public class ForeignFunction {
     }
 
     public static void helloFFI() {
-        Logger.defaultInstance().info("Unrefined FFI", "C call Java from C from Java");
+        Log.defaultInstance().info("Unrefined FFI", "C call Java from C from Java");
     }
 
 }

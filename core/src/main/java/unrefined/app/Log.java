@@ -3,13 +3,13 @@ package unrefined.app;
 import unrefined.context.Environment;
 import unrefined.util.NotInstantiableError;
 
-public abstract class Logger {
+public abstract class Log {
 
-    private static volatile Logger DEFAULT_INSTANCE;
+    private static volatile Log DEFAULT_INSTANCE;
     private static final Object DEFAULT_INSTANCE_LOCK = new Object();
-    public static Logger defaultInstance() {
+    public static Log defaultInstance() {
         if (DEFAULT_INSTANCE == null) synchronized (DEFAULT_INSTANCE_LOCK) {
-            if (DEFAULT_INSTANCE == null) DEFAULT_INSTANCE = Environment.global.get("unrefined.runtime.logger", Logger.class);
+            if (DEFAULT_INSTANCE == null) DEFAULT_INSTANCE = Environment.global.get("unrefined.runtime.log", Log.class);
         }
         return DEFAULT_INSTANCE;
     }

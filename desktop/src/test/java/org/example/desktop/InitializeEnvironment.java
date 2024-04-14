@@ -1,6 +1,6 @@
 package org.example.desktop;
 
-import unrefined.runtime.DesktopRuntime;
+import unrefined.Lifecycle;
 
 /**
  * First, you need to initialize the Unrefined runtime environment for your application.
@@ -8,7 +8,7 @@ import unrefined.runtime.DesktopRuntime;
 public class InitializeEnvironment {
 
     public static void main(String[] args) {
-        DesktopRuntime.initialize(args); // Initialize the Unrefined runtime environment
+        Lifecycle.onMain(args); // Initialize the Unrefined runtime environment
                                          // Make sure the first invocation of this method
                                          // running in your application's main() method!
     }

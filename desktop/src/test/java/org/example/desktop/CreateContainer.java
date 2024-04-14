@@ -1,5 +1,6 @@
 package org.example.desktop;
 
+import unrefined.Lifecycle;
 import unrefined.context.Container;
 import unrefined.context.ContainerAdapter;
 import unrefined.media.graphics.Color;
@@ -7,7 +8,6 @@ import unrefined.media.graphics.Cursor;
 import unrefined.media.graphics.CursorNotFoundException;
 import unrefined.media.graphics.Drawing;
 import unrefined.runtime.DesktopContainer;
-import unrefined.runtime.DesktopRuntime;
 import unrefined.util.UnexpectedError;
 import unrefined.util.signal.Dispatcher;
 
@@ -20,7 +20,7 @@ import java.awt.Dimension;
 public class CreateContainer {
 
     public static void main(String[] args) {
-        DesktopRuntime.initialize(args);             // Initialize the Unrefined runtime environment
+        Lifecycle.onMain(args);             // Initialize the Unrefined runtime environment
 
         // Initialize the Unrefined container (on desktop it's a window)
         DesktopContainer container = new DesktopContainer(new ContainerAdapter() { // The lifecycle listener, it's fully platform-independent

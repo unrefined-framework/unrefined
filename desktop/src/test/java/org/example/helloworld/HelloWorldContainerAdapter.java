@@ -33,7 +33,7 @@ public class HelloWorldContainerAdapter extends ContainerAdapter {
         context.setSize(WIDTH, HEIGHT);
         container.addContext(context);
 
-        timer = SharedTimer.build()
+        timer = SharedTimer.newBuilder()
                 .repeat(true)
                 .period(1000_000_000 / 60L)
                 .timeUnit(TimeUnit.NANOSECONDS)

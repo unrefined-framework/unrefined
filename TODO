@@ -55,11 +55,13 @@ Attributed Text
 --------------------------------
 Networking
 --------------------------------
-TCP/UDP/SSL/ICMP Socket
-HTTP/HTTPS
-WebSocket
+HTTP/Socks Proxy
+SSL/ICMP Socket
 UNIX Domain Socket
-Network [Single-instance factory]
+HTTP/HTTPS Client/Server
+XHR
+WebSocket
+KCP
 --------------------------------
 
 --------------------------------

@@ -1,7 +1,7 @@
 package org.example.desktop.foreign;
 
-import unrefined.app.Logger;
-import unrefined.runtime.DesktopRuntime;
+import unrefined.Lifecycle;
+import unrefined.app.Log;
 import unrefined.util.Strings;
 import unrefined.util.concurrent.LongProducer;
 import unrefined.util.foreign.Foreign;
@@ -20,7 +20,7 @@ public class SymbolManagement {
     public static final boolean IS_LINUX = System.getProperty("os.name").equalsIgnoreCase("linux");
 
     public static void main(String[] args) throws IOException {
-        DesktopRuntime.initialize(args);              // Initialize the Unrefined runtime environment
+        Lifecycle.onMain(args);              // Initialize the Unrefined runtime environment
         Foreign foreign = Foreign.getInstance(); // Get the platform-dependent FFI factory
 
         foreign.loadLibrary(foreign.mapLibraryName(IS_WINDOWS ? "Kernel32" : (IS_LINUX ? "libc.so.6" : "c")),
@@ -43,8 +43,8 @@ public class SymbolManagement {
                 return posix.pidLong();
             }
         };
-        Logger.defaultInstance().info("Unrefined FFI", "PID: " + getpid.invokeNativeLong());
-        Logger.defaultInstance().info("Unrefined FFI", "Library Mapping result == Handle Mapping result: " + (getpid.invokeNativeLong() == pidProducer.getAsLong()));
+        Log.defaultInstance().info("Unrefined FFI", "PID: " + getpid.invokeNativeLong());
+        Log.defaultInstance().info("Unrefined FFI", "Library Mapping result == Handle Mapping result: " + (getpid.invokeNativeLong() == pidProducer.getAsLong()));
     }
 
     private interface Windows extends Library {

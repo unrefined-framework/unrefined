@@ -1,7 +1,7 @@
 package org.example.desktop;
 
-import unrefined.app.Logger;
-import unrefined.runtime.DesktopRuntime;
+import unrefined.Lifecycle;
+import unrefined.app.Log;
 import unrefined.util.event.Event;
 import unrefined.util.event.EventBus;
 import unrefined.util.event.Subscribe;
@@ -9,7 +9,7 @@ import unrefined.util.event.Subscribe;
 public class EventBusExample {
 
     public static void main(String[] args) {
-        DesktopRuntime.initialize(args);
+        Lifecycle.onMain(args);
 
         EventBus bus = EventBus.defaultInstance();
 
@@ -30,7 +30,7 @@ public class EventBusExample {
 
     @Subscribe
     public void onStringEvent(StringEvent event) {
-        Logger.defaultInstance().info("Unrefined EventBus", event.getMessage());
+        Log.defaultInstance().info("Unrefined EventBus", event.getMessage());
     }
 
 }

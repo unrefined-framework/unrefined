@@ -2,10 +2,12 @@ package unrefined.io.file;
 
 import java.io.File;
 import java.io.FileDescriptor;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 
 public class FileWriter extends java.io.FileWriter {
@@ -65,6 +67,14 @@ public class FileWriter extends java.io.FileWriter {
         super(fileDescriptor);
         this.charset = charset == null ? Charset.defaultCharset() : charset;
         this.writer = new OutputStreamWriter((OutputStream) lock, this.charset);
+    }
+
+    public FileDescriptor getFD() throws IOException {
+        return ((FileOutputStream) lock).getFD();
+    }
+
+    public FileChannel getChannel() {
+        return ((FileOutputStream) lock).getChannel();
     }
 
     @Override

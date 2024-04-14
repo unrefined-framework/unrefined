@@ -1,7 +1,7 @@
 package org.example.desktop.nio;
 
-import unrefined.app.Logger;
-import unrefined.runtime.DesktopRuntime;
+import unrefined.Lifecycle;
+import unrefined.app.Log;
 
 import java.io.IOException;
 
@@ -22,18 +22,18 @@ public class StackBuffer {
     }
 
     public static void main(String[] args) {
-        DesktopRuntime.initialize(args);
-        Logger logger = Logger.defaultInstance();
+        Lifecycle.onMain(args);
+        Log log = Log.defaultInstance();
 
         try (unrefined.nio.StackBuffer stack = unrefined.nio.StackBuffer.allocate(1024)) {
-            logger.info("Unrefined NIO", "STACK PUSH INT 1");
+            log.info("Unrefined NIO", "STACK PUSH INT 1");
             stack.pushInt(1);
-            logger.info("Unrefined NIO", "STACK PUSH INT 2");
+            log.info("Unrefined NIO", "STACK PUSH INT 2");
             stack.pushInt(2);
-            logger.info("Unrefined NIO", "STACK PUSH INT (STACK POP INT + STACK POP INT)");
+            log.info("Unrefined NIO", "STACK PUSH INT (STACK POP INT + STACK POP INT)");
             use(stack);
             add();
-            logger.info("Unrefined NIO", "STACK POP INT = " + stack.popInt());
+            log.info("Unrefined NIO", "STACK POP INT = " + stack.popInt());
         } catch (IOException ignored) {
         } finally {
             cleanup();

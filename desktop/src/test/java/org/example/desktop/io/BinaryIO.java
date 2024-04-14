@@ -1,12 +1,12 @@
 package org.example.desktop.io;
 
-import unrefined.app.Logger;
+import unrefined.Lifecycle;
+import unrefined.app.Log;
 import unrefined.io.BinaryInput;
 import unrefined.io.BinaryInputStream;
 import unrefined.io.BinaryOutput;
 import unrefined.io.BinaryOutputStream;
 import unrefined.io.Portable;
-import unrefined.runtime.DesktopRuntime;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -47,13 +47,13 @@ public class BinaryIO {
     }
 
     public static void main(String[] args) {
-        DesktopRuntime.initialize(args);
+        Lifecycle.onMain(args);
 
-        Logger logger = Logger.defaultInstance();
+        Log log = Log.defaultInstance();
 
         Fruit write = new Fruit("Apple");
 
-        logger.info("Fruit", write.getName());
+        log.info("Fruit", write.getName());
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -63,13 +63,13 @@ public class BinaryIO {
         }
 
         Fruit read = new Fruit();
-        logger.info("Fruit", read.getName());
+        log.info("Fruit", read.getName());
 
         ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
 
         try (BinaryInputStream stream = new BinaryInputStream(in)) {
             stream.readPortable(read);
-            logger.info("Fruit", read.getName());
+            log.info("Fruit", read.getName());
         } catch (IOException ignored) {
         }
 

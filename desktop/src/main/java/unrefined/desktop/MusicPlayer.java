@@ -1,7 +1,7 @@
 package unrefined.desktop;
 
 import com.tianscar.javasound.sampled.AudioResourceLoader;
-import unrefined.io.ReadWriteIO;
+import unrefined.io.IOStreams;
 import unrefined.math.FastMath;
 
 import javax.sound.sampled.AudioFileFormat;
@@ -179,7 +179,7 @@ public class MusicPlayer implements AutoCloseable {
     public void seekToFrames(long framePosition) throws IOException {
         checkPrepared();
         if (isPlaying()) throw new IllegalStateException("You need to call the function before playing");
-        ReadWriteIO.discardNBytes(audioInputStream, framePosition * playbackFormat.getFrameSize());
+        IOStreams.discardNBytes(audioInputStream, framePosition * playbackFormat.getFrameSize());
     }
 
     public void seekToMicroseconds(long microsecondPosition) throws IOException {

@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.nio.channels.AsynchronousFileChannel;
 import java.nio.channels.FileChannel;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitOption;
@@ -27,7 +26,6 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
@@ -41,7 +39,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.Spliterator;
-import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -263,32 +260,13 @@ public class DesktopFileSystem extends FileSystem {
         Files.move(source.toPath(), target.toPath(), toCopyOptions(copyOptions));
     }
 
-    private static <T> Set<T> toSet(Iterable<T> iterable) {
-        Set<T> set = new HashSet<>();
-        for (T t : iterable) {
-            set.add(t);
-        }
-        return Collections.unmodifiableSet(set);
-    }
-
     @Override
     public Set<File> listRootDirectories() {
-        return toSet(lazyListRootDirectories());
-    }
-
-    @Override
-    public Iterable<File> lazyListRootDirectories() {
-        Iterator<Path> iterator = FileSystems.getDefault().getRootDirectories().iterator();
-        return () -> new Iterator<File>() {
-            @Override
-            public boolean hasNext() {
-                return iterator.hasNext();
-            }
-            @Override
-            public File next() {
-                return iterator.next().toFile();
-            }
-        };
+        Set<File> set = new HashSet<>();
+        for (Path path : FileSystems.getDefault().getRootDirectories()) {
+            set.add(path.toFile());
+        }
+        return Collections.unmodifiableSet(set);
     }
 
     @Override
@@ -329,16 +307,6 @@ public class DesktopFileSystem extends FileSystem {
     @Override
     public FileChannel openFileChannel(File file) throws IOException {
         return FileChannel.open(file.toPath());
-    }
-
-    @Override
-    public AsynchronousFileChannel openAsynchronousFileChannel(File file, ExecutorService executor, int openOptions) throws IOException {
-        return AsynchronousFileChannel.open(file.toPath(), FileSystemSupport.toStandardOpenOptions(openOptions), executor, NO_ATTRIBUTES);
-    }
-
-    @Override
-    public AsynchronousFileChannel openAsynchronousFileChannel(File file, ExecutorService executor) throws IOException {
-        return AsynchronousFileChannel.open(file.toPath(), EnumSet.noneOf(StandardOpenOption.class), executor);
     }
 
     @Override
@@ -574,22 +542,11 @@ public class DesktopFileSystem extends FileSystem {
 
     @Override
     public Set<FileStore> listFileStores() {
-        return toSet(lazyListFileStores());
-    }
-
-    @Override
-    public Iterable<FileStore> lazyListFileStores() {
-        Iterator<java.nio.file.FileStore> iterator = FileSystems.getDefault().getFileStores().iterator();
-        return () -> new Iterator<FileStore>() {
-            @Override
-            public boolean hasNext() {
-                return iterator.hasNext();
-            }
-            @Override
-            public FileStore next() {
-                return new DesktopFileStore(iterator.next());
-            }
-        };
+        Set<FileStore> set = new HashSet<>();
+        for (java.nio.file.FileStore fileStore : FileSystems.getDefault().getFileStores()) {
+            set.add(new DesktopFileStore(fileStore));
+        }
+        return Collections.unmodifiableSet(set);
     }
 
     @Override
@@ -616,8 +573,4 @@ public class DesktopFileSystem extends FileSystem {
         return FileSystemSupport.getFD(channel);
     }
 
-    @Override
-    public FileDescriptor getFD(AsynchronousFileChannel channel) {
-        return FileSystemSupport.getFD(channel);
-    }
 }

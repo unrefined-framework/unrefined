@@ -12,7 +12,7 @@ import java.nio.charset.Charset;
 import java.util.Locale;
 import java.util.Objects;
 
-import static unrefined.io.ReadWriteIO.getFilteredOutputStream;
+import static unrefined.io.IOStreams.getFilteredOutputStream;
 
 public class ConsoleStream extends OutputStream {
 
@@ -39,33 +39,33 @@ public class ConsoleStream extends OutputStream {
         this.descriptor = descriptor;
     }
 
-    public PrintStream toPrintStream() {
+    public PrintStream asPrintStream() {
         return out == null ? (descriptor == FileDescriptor.out ? System.out : System.err) : out;
     }
 
     @Override
     public void write(byte[] b) throws IOException {
-        toPrintStream().write(b);
+        asPrintStream().write(b);
     }
 
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
-        toPrintStream().write(b, off, len);
+        asPrintStream().write(b, off, len);
     }
 
     @Override
     public void flush() throws IOException {
-        toPrintStream().flush();
+        asPrintStream().flush();
     }
 
     @Override
     public void close() throws IOException {
-        toPrintStream().close();
+        asPrintStream().close();
     }
 
     @Override
     public void write(int b) throws IOException {
-        toPrintStream().write(b);
+        asPrintStream().write(b);
     }
 
     public int print(Object value) {
@@ -148,7 +148,7 @@ public class ConsoleStream extends OutputStream {
         if (charset == null) charset = Foreign.getInstance().systemCharset();
         byte[] bytes = (string = String.valueOf(string)).getBytes(charset);
         try {
-            toPrintStream().write(bytes);
+            asPrintStream().write(bytes);
         } catch (IOException e) {
             throw new UnexpectedError(e);
         }
@@ -235,8 +235,8 @@ public class ConsoleStream extends OutputStream {
         if (charset == null) charset = Foreign.getInstance().systemCharset();
         byte[] bytes = (string = String.valueOf(string)).getBytes(charset);
         try {
-            toPrintStream().write(bytes);
-            toPrintStream().write(System.lineSeparator().getBytes(charset));
+            asPrintStream().write(bytes);
+            asPrintStream().write(System.lineSeparator().getBytes(charset));
         } catch (IOException e) {
             throw new UnexpectedError(e);
         }
@@ -259,7 +259,7 @@ public class ConsoleStream extends OutputStream {
         if (charset == null) charset = Foreign.getInstance().systemCharset();
         byte[] bytes = (format = String.format(String.valueOf(format), args)).getBytes(charset);
         try {
-            toPrintStream().write(bytes);
+            asPrintStream().write(bytes);
         } catch (IOException e) {
             throw new UnexpectedError(e);
         }
@@ -274,7 +274,7 @@ public class ConsoleStream extends OutputStream {
         if (charset == null) charset = Foreign.getInstance().systemCharset();
         byte[] bytes = (format = String.format(locale, String.valueOf(format), args)).getBytes(charset);
         try {
-            toPrintStream().write(bytes);
+            asPrintStream().write(bytes);
         } catch (IOException e) {
             throw new UnexpectedError(e);
         }

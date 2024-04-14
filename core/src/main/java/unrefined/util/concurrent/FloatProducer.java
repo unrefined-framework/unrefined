@@ -1,15 +1,14 @@
 package unrefined.util.concurrent;
 
-import java.util.concurrent.Callable;
-
 @FunctionalInterface
-public interface FloatProducer extends Callable<Float> {
+public interface FloatProducer extends Producer<Float> {
 
     @Override
     default Float call() throws Exception {
         return getAsFloat();
     }
 
+    @Override
     default Float get() {
         return getAsFloat();
     }

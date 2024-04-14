@@ -999,6 +999,16 @@ public abstract class Pointer implements Comparable<Pointer>, Closeable, Duplica
     /**
      * Bulk data transfer from one memory location to another.
      *
+     * @param dstPointer the destination memory location to transfer data to.
+     * @param count the number of bytes to transfer.
+     */
+    public void transferTo(Pointer dstPointer, long count) {
+        transferTo(0, dstPointer, 0, count);
+    }
+
+    /**
+     * Bulk data transfer from one memory location to another.
+     *
      * @param offset the offset from the start of the memory location this {@code Pointer} represents to begin copying to.
      * @param srcPointer the destination memory location to transfer data from.
      * @param srcOffset the offset from the start of the memory location the destination {@code Pointer} represents to begin copying from.
@@ -1006,6 +1016,16 @@ public abstract class Pointer implements Comparable<Pointer>, Closeable, Duplica
      */
     public void transferFrom(long offset, Pointer srcPointer, long srcOffset, long count) {
         srcPointer.transferTo(srcOffset, this, offset, count);
+    }
+
+    /**
+     * Bulk data transfer from one memory location to another.
+     *
+     * @param srcPointer the destination memory location to transfer data from.
+     * @param count the number of bytes to transfer.
+     */
+    public void transferFrom(Pointer srcPointer, long count) {
+        srcPointer.transferTo(0, this, 0, count);
     }
 
     /**

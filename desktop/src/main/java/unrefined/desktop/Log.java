@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static unrefined.app.Logger.Priority.*;
+import static unrefined.app.Log.Priority.*;
 
 public final class Log {
 

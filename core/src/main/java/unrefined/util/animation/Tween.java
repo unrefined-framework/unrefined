@@ -331,7 +331,7 @@ public final class Tween extends Animation {
 		 * <br/><br/>
 		 *
 		 * <pre> {@code
-		 * Tween.build().to(myObject, POSITION, 1.0f)
+		 * Tween.newBuilder().to(myObject, POSITION, 1.0f)
 		 *      .target(50, 70)
 		 *      .ease(Quad.INOUT)
 		 *      .start(myManager);
@@ -367,7 +367,7 @@ public final class Tween extends Animation {
 		 * <br/><br/>
 		 *
 		 * <pre> {@code
-		 * Tween.build().from(myObject, POSITION, 1.0f)
+		 * Tween.newBuilder().from(myObject, POSITION, 1.0f)
 		 *      .target(0, 0)
 		 *      .ease(Quad.INOUT)
 		 *      .start(myManager);
@@ -404,7 +404,7 @@ public final class Tween extends Animation {
 		 * <br/><br/>
 		 *
 		 * <pre> {@code
-		 * Tween.build().set(myObject, POSITION)
+		 * Tween.newBuilder().set(myObject, POSITION)
 		 *      .target(50, 70)
 		 *      .delay(1.0f)
 		 *      .start(myManager);
@@ -433,7 +433,7 @@ public final class Tween extends Animation {
 		 * <br/><br/>
 		 *
 		 * <pre> {@code
-		 * Tween.build().call(myCallback)
+		 * Tween.newBuilder().call(myCallback)
 		 *      .delay(1.0f)
 		 *      .repeat(10, 1000)
 		 *      .start(myManager);
@@ -465,14 +465,14 @@ public final class Tween extends Animation {
 	/**
 	 * Creates a new tween editor.
 	 */
-	public static Editor build() {
+	public static Editor newBuilder() {
 		return new Editor(new Tween());
 	}
 
 	/**
 	 * Creates a new tween editor with specified limits.
 	 */
-	public static Editor build(int combinedAttrsLimit, int waypointsLimit) {
+	public static Editor newBuilder(int combinedAttrsLimit, int waypointsLimit) {
 		return new Editor(new Tween(combinedAttrsLimit, waypointsLimit));
 	}
 

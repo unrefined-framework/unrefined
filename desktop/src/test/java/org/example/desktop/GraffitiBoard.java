@@ -1,5 +1,6 @@
 package org.example.desktop;
 
+import unrefined.Lifecycle;
 import unrefined.context.Container;
 import unrefined.context.ContainerAdapter;
 import unrefined.context.Context;
@@ -14,11 +15,8 @@ import unrefined.media.graphics.Graphics;
 import unrefined.media.graphics.Insets;
 import unrefined.media.graphics.Path;
 import unrefined.runtime.DesktopContainer;
-import unrefined.runtime.DesktopRuntime;
 import unrefined.util.UnexpectedError;
 import unrefined.util.signal.Dispatcher;
-
-import java.awt.Dimension;
 
 /**
  * This class creates a simple graffiti board, with a white background and a "plain black" brush.
@@ -26,7 +24,7 @@ import java.awt.Dimension;
 public class GraffitiBoard {
 
     public static void main(String[] args) {
-        DesktopRuntime.initialize(args);             // Initialize the Unrefined runtime environment
+        Lifecycle.onMain(args);             // Initialize the Unrefined runtime environment
 
         // Initialize the Unrefined container (on desktop it's a window)
         DesktopContainer container = new DesktopContainer(new ContainerAdapter() { // The lifecycle listener, it's fully platform-independent

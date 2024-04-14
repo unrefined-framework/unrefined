@@ -55,7 +55,7 @@ public class Board extends ContextAdapter {
         
         placeFood();
 
-        timer = SharedTimer.build()
+        timer = SharedTimer.newBuilder()
                 .period(Constant.DELAY)
                 .repeat(true)
                 .onPerform(signal -> signal.connect(event -> doGameCycle(context)))

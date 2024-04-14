@@ -1,15 +1,14 @@
 package unrefined.util.concurrent;
 
-import java.util.concurrent.Callable;
-
 @FunctionalInterface
-public interface ByteProducer extends Callable<Byte> {
+public interface ByteProducer extends Producer<Byte> {
 
     @Override
     default Byte call() throws Exception {
         return getAsByte();
     }
 
+    @Override
     default Byte get() {
         return getAsByte();
     }
