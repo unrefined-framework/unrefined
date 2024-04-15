@@ -2,6 +2,7 @@ package unrefined.nio.channels;
 
 import unrefined.net.ClientSocket;
 import unrefined.net.InetSocketAddress;
+import unrefined.net.Net;
 
 import java.io.FileDescriptor;
 import java.io.IOException;
@@ -10,6 +11,16 @@ import java.nio.channels.ByteChannel;
 
 public abstract class ClientSocketChannel extends SelectableChannel
         implements ByteChannel, ScatteringByteChannel, GatheringByteChannel, NetworkChannel {
+
+    public static ClientSocketChannel open() throws IOException {
+        return Net.getInstance().openClientSocketChannel();
+    }
+    public static ClientSocketChannel open(InetSocketAddress remote) throws IOException {
+        return Net.getInstance().openClientSocketChannel(remote);
+    }
+    public static ClientSocketChannel open(InetSocketAddress remote, InetSocketAddress local) throws IOException {
+        return Net.getInstance().openClientSocketChannel(remote, local);
+    }
 
     @Override
     public final int getValidOperations() {

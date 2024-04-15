@@ -5,6 +5,19 @@ import java.util.Set;
 
 public abstract class NetworkInterface {
 
+    public NetworkInterface of(String name) throws SocketException {
+        return Net.getInstance().getNetworkInterface(name);
+    }
+    public NetworkInterface of(InetAddress address) throws SocketException {
+        return Net.getInstance().getNetworkInterface(address);
+    }
+    public NetworkInterface get(int index) throws SocketException {
+        return Net.getInstance().getNetworkInterface(index);
+    }
+    public Set<NetworkInterface> getAll() throws SocketException {
+        return Net.getInstance().getNetworkInterfaces();
+    }
+
     public static class Address {
 
         private final InetAddress address;

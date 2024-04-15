@@ -7,6 +7,16 @@ import java.io.IOException;
 
 public abstract class DatagramSocket extends MulticastSocket {
 
+    public static DatagramSocket of() throws IOException {
+        return Net.getInstance().createDatagramSocket();
+    }
+    public static DatagramSocket of(InetSocketAddress remote) throws IOException {
+        return Net.getInstance().createDatagramSocket(remote);
+    }
+    public static DatagramSocket of(InetSocketAddress remote, InetSocketAddress local) throws IOException {
+        return Net.getInstance().createDatagramSocket(remote, local);
+    }
+
     @Override
     public abstract void bind(InetSocketAddress address) throws SocketException;
     public abstract void connect(InetAddress address, int port) throws IOException;

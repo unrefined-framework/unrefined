@@ -9,6 +9,16 @@ import java.io.OutputStream;
 
 public abstract class ClientSocket extends Socket {
 
+    public static ClientSocket of() throws IOException {
+        return Net.getInstance().createClientSocket();
+    }
+    public static ClientSocket of(InetSocketAddress remote) throws IOException {
+        return Net.getInstance().createClientSocket(remote);
+    }
+    public static ClientSocket of(InetSocketAddress remote, InetSocketAddress local) throws IOException {
+        return Net.getInstance().createClientSocket(remote, local);
+    }
+
     public abstract void connect(InetSocketAddress remote) throws IOException;
     public abstract void connect(InetSocketAddress remote, int timeout) throws IOException;
     @Override

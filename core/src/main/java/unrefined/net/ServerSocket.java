@@ -7,6 +7,16 @@ import java.io.IOException;
 
 public abstract class ServerSocket extends Socket {
 
+    public static ServerSocket of() throws IOException {
+        return Net.getInstance().createServerSocket();
+    }
+    public static ServerSocket of(InetSocketAddress local) throws IOException {
+        return Net.getInstance().createServerSocket(local);
+    }
+    public static ServerSocket of(InetSocketAddress local, int backlog) throws IOException {
+        return Net.getInstance().createServerSocket(local, backlog);
+    }
+
     @Override
     public abstract void bind(InetSocketAddress endpoint) throws IOException;
     public abstract void bind(InetSocketAddress endpoint, int backlog) throws IOException;

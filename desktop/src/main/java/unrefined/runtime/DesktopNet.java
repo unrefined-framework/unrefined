@@ -53,7 +53,7 @@ public class DesktopNet extends Net {
     }
 
     @Override
-    public InetAddress createInetAddress(String host) throws UnknownHostException {
+    public InetAddress getInetAddress(String host) throws UnknownHostException {
         try {
             return NetSupport.toUnrefinedInetAddress(java.net.InetAddress.getByName(host));
         } catch (java.net.UnknownHostException e) {
@@ -107,22 +107,22 @@ public class DesktopNet extends Net {
     }
 
     @Override
-    public InetSocketAddress createSocketAddress(int port) {
+    public InetSocketAddress createInetSocketAddress(int port) {
         return new DesktopInetSocketAddress(new java.net.InetSocketAddress(port));
     }
 
     @Override
-    public InetSocketAddress createSocketAddress(InetAddress address, int port) {
+    public InetSocketAddress createInetSocketAddress(InetAddress address, int port) {
         return new DesktopInetSocketAddress(new java.net.InetSocketAddress(address == null ? null : NetSupport.toInetAddress(address), port));
     }
 
     @Override
-    public InetSocketAddress createSocketAddress(String host, int port) {
+    public InetSocketAddress createInetSocketAddress(String host, int port) {
         return new DesktopInetSocketAddress(new java.net.InetSocketAddress(host, port));
     }
 
     @Override
-    public InetSocketAddress createUnresolvedSocketAddress(String host, int port) {
+    public InetSocketAddress createUnresolvedInetSocketAddress(String host, int port) {
         return new DesktopInetSocketAddress(java.net.InetSocketAddress.createUnresolved(host, port));
     }
 

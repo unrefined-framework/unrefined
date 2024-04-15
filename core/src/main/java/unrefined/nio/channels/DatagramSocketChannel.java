@@ -2,6 +2,7 @@ package unrefined.nio.channels;
 
 import unrefined.net.DatagramSocket;
 import unrefined.net.InetSocketAddress;
+import unrefined.net.Net;
 
 import java.io.FileDescriptor;
 import java.io.IOException;
@@ -12,6 +13,16 @@ import java.nio.channels.ScatteringByteChannel;
 
 public abstract class DatagramSocketChannel extends SelectableChannel
         implements ByteChannel, ScatteringByteChannel, GatheringByteChannel, MulticastChannel {
+
+    public static DatagramSocketChannel open() throws IOException {
+        return Net.getInstance().openDatagramSocketChannel();
+    }
+    public static DatagramSocketChannel open(InetSocketAddress remote) throws IOException {
+        return Net.getInstance().openDatagramSocketChannel(remote);
+    }
+    public static DatagramSocketChannel open(InetSocketAddress remote, InetSocketAddress local) throws IOException {
+        return Net.getInstance().openDatagramSocketChannel(remote, local);
+    }
 
     @Override
     public final int getValidOperations() {

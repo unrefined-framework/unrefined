@@ -26,17 +26,17 @@ public abstract class Net {
 
     public abstract InetAddress createInetAddress(String host, byte[] address) throws UnknownHostException;
     public abstract InetAddress createInetAddress(byte[] address) throws UnknownHostException;
-    public abstract InetAddress createInetAddress(String host) throws UnknownHostException;
+    public abstract InetAddress getInetAddress(String host) throws UnknownHostException;
     public abstract Set<InetAddress> getInetAddresses(String host) throws UnknownHostException;
     public abstract InetAddress getLoopback();
     public abstract InetAddress getLocalHost() throws UnknownHostException;
     public abstract Inet6Address createInet6Address(String host, byte[] address, NetworkInterface nif) throws UnknownHostException;
     public abstract Inet6Address createInet6Address(String host, byte[] address, int scope) throws UnknownHostException;
 
-    public abstract InetSocketAddress createSocketAddress(int port);
-    public abstract InetSocketAddress createSocketAddress(InetAddress address, int port);
-    public abstract InetSocketAddress createSocketAddress(String host, int port);
-    public abstract InetSocketAddress createUnresolvedSocketAddress(String host, int port);
+    public abstract InetSocketAddress createInetSocketAddress(int port);
+    public abstract InetSocketAddress createInetSocketAddress(InetAddress address, int port);
+    public abstract InetSocketAddress createInetSocketAddress(String host, int port);
+    public abstract InetSocketAddress createUnresolvedInetSocketAddress(String host, int port);
 
     public abstract ClientSocket createClientSocket() throws IOException;
     public abstract ClientSocket createClientSocket(InetSocketAddress remote) throws IOException;
