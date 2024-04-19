@@ -571,6 +571,10 @@ public class GrowableCharArray implements Cloneable, Iterable<Character> {
         return result;
     }
 
+    public char[] array() {
+        return elements;
+    }
+
     public String asString(int offset, int length) {
         return new String(elements, offset, length);
     }

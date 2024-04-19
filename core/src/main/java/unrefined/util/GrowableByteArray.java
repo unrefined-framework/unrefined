@@ -572,6 +572,10 @@ public class GrowableByteArray implements Cloneable, Iterable<Byte> {
         return result;
     }
 
+    public byte[] array() {
+        return elements;
+    }
+
     public String asString(int offset, int length) {
         return asString(offset, length, null);
     }

@@ -13,6 +13,7 @@ import unrefined.runtime.DesktopAtomic;
 import unrefined.runtime.DesktopBase64;
 import unrefined.runtime.DesktopCleaner;
 import unrefined.runtime.DesktopConsole;
+import unrefined.runtime.DesktopDateTime;
 import unrefined.runtime.DesktopDispatcher;
 import unrefined.runtime.DesktopDrawing;
 import unrefined.runtime.DesktopFileSystem;
@@ -126,6 +127,7 @@ public class Lifecycle {
             Environment.global.put("unrefined.runtime.fileSystem", new DesktopFileSystem());
             Environment.global.put("unrefined.runtime.fileWatcher", new DesktopFileWatcher());
             Environment.global.put("unrefined.runtime.net", new DesktopNet());
+            Environment.global.put("unrefined.runtime.dateTime", new DesktopDateTime());
 
             Environment.global.put("unrefined.runtime.textManager", new BaseTextManager());
             Environment.global.put("unrefined.runtime.eventBus", new BaseEventBus());

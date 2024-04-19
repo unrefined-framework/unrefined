@@ -3,6 +3,7 @@ package unrefined.util;
 import unrefined.nio.charset.Charsets;
 
 import java.util.Arrays;
+import java.util.Locale;
 
 public final class Strings {
 
@@ -89,6 +90,16 @@ public final class Strings {
 
     public static boolean nullEmpty(String s) {
         return s == null || s.isEmpty();
+    }
+
+    public static String firstCharToUpperCase(String s, Locale locale) {
+        String upper = s.substring(0, 1).toUpperCase(locale == null ? Locale.getDefault() : locale);
+        return upper + s.substring(1);
+    }
+
+    public static String firstCharToUpperCase(String s) {
+        String upper = s.substring(0, 1).toUpperCase();
+        return upper + s.substring(1);
     }
 
 }

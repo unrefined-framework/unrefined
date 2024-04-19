@@ -4,6 +4,7 @@ import unrefined.desktop.AWTSupport;
 import unrefined.desktop.AttributedCharSequence;
 import unrefined.desktop.CharArrayIterator;
 import unrefined.desktop.CleanerSupport;
+import unrefined.desktop.DropShadow;
 import unrefined.desktop.FontSupport;
 import unrefined.desktop.TextHints;
 import unrefined.desktop.TextPathLayout;
@@ -159,8 +160,28 @@ public class DesktopGraphics extends Graphics {
     public void drawShape(Shape shape) {
         if (isDisposed()) throw new AlreadyDisposedException();
         switch (info.getStyle()) {
-            case Style.STROKE: graphics2D.draw(shape); break;
-            case Style.FILL: graphics2D.fill(shape); break;
+            case Style.STROKE:
+                if (info.getShadowColor() != unrefined.media.graphics.Color.TRANSPARENT) {
+                    Graphics2D shadow = (Graphics2D) graphics2D.create();
+                    shadow.setColor(shadowColor);
+                    if (info.getShadowBlur() == 0)
+                        shadow.draw(AffineTransform.getTranslateInstance(info.getShadowOffsetX(), info.getShadowOffsetY()).createTransformedShape(shape));
+                    else new DropShadow(getShadowOffsetX(), getShadowOffsetY(), getShadowBlur(), 0).draw(shape, shadow);
+                    shadow.dispose();
+                }
+                graphics2D.draw(shape);
+                break;
+            case Style.FILL:
+                if (info.getShadowColor() != unrefined.media.graphics.Color.TRANSPARENT) {
+                    Graphics2D shadow = (Graphics2D) graphics2D.create();
+                    shadow.setColor(shadowColor);
+                    if (getShadowBlur() == 0)
+                        shadow.fill(AffineTransform.getTranslateInstance(getShadowOffsetX(), getShadowOffsetY()).createTransformedShape(shape));
+                    else new DropShadow(getShadowOffsetX(), getShadowOffsetY(), getShadowBlur(), 0).fill(shape, shadow);
+                    shadow.dispose();
+                }
+                graphics2D.fill(shape);
+                break;
         }
     }
 
@@ -273,7 +294,7 @@ public class DesktopGraphics extends Graphics {
         if (text instanceof String) {
             String string = (String) text;
             if (start == 0 && end == string.length() && graphics2D.getFont().hasLayoutAttributes() && getStyle() == Style.FILL &&
-                    textAlignment == Text.Alignment.START) {
+                    textAlignment == Text.Alignment.START && info.getShadowColor() == unrefined.media.graphics.Color.TRANSPARENT) {
                 graphics2D.drawString(string, x, y);
                 return;
             }
@@ -289,8 +310,30 @@ public class DesktopGraphics extends Graphics {
             case Text.Alignment.END: x -= advance; break;
             case Text.Alignment.MIDDLE: x -= advance / 2; break;
         }
-        if (getStyle() == Style.STROKE) graphics2D.draw(textLayout.getOutline(AffineTransform.getTranslateInstance(x, y)));
-        else textLayout.draw(graphics2D, x, y);
+        if (info.getShadowColor() == unrefined.media.graphics.Color.TRANSPARENT) {
+            if (getStyle() == Style.STROKE) graphics2D.draw(textLayout.getOutline(AffineTransform.getTranslateInstance(x, y)));
+            else textLayout.draw(graphics2D, x, y);
+        }
+        else {
+            if (getStyle() == Style.STROKE) {
+                Shape outline = textLayout.getOutline(AffineTransform.getTranslateInstance(x, y));
+                Graphics2D shadow = (Graphics2D) graphics2D.create();
+                shadow.setColor(shadowColor);
+                if (getShadowBlur() == 0) shadow.draw(AffineTransform.getTranslateInstance(getShadowOffsetX(), getShadowOffsetY()).createTransformedShape(outline));
+                else new DropShadow(getShadowOffsetX(), getShadowOffsetY(), getShadowBlur(), 0)
+                        .draw(outline, shadow);
+                graphics2D.draw(outline);
+            }
+            else {
+                Shape outline = textLayout.getOutline(AffineTransform.getTranslateInstance(x, y));
+                Graphics2D shadow = (Graphics2D) graphics2D.create();
+                shadow.setColor(shadowColor);
+                if (getShadowBlur() == 0) shadow.fill(AffineTransform.getTranslateInstance(getShadowOffsetX(), getShadowOffsetY()).createTransformedShape(outline));
+                else new DropShadow(getShadowOffsetX(), getShadowOffsetY(), getShadowBlur(), 0)
+                        .fill(outline, shadow);
+                graphics2D.fill(outline);
+            }
+        }
     }
 
     @Override
@@ -300,22 +343,68 @@ public class DesktopGraphics extends Graphics {
                 new AttributedCharSequence(text.subSequence(start, end), graphics2D.getFont().getAttributes()).getIterator(),
                 graphics2D.getFontRenderContext());
         int textAlignment = getTextAlignment();
-        if (getStyle() == Style.STROKE && textAlignment == Text.Alignment.START)
-            graphics2D.draw(textLayout.getOutline(((DesktopTransform) transform).getAffineTransform()));
-        else {
-            AffineTransform affineTransform = graphics2D.getTransform();
-            graphics2D.transform(((DesktopTransform) transform).getAffineTransform());
-            try {
-                float x = 0;
-                float advance = textLayout.getAdvance();
-                switch (textAlignment) {
-                    case Text.Alignment.END: x -= advance; break;
-                    case Text.Alignment.MIDDLE: x -= advance / 2; break;
+        if (getShadowColor() == unrefined.media.graphics.Color.TRANSPARENT) {
+            if (getStyle() == Style.STROKE && textAlignment == Text.Alignment.START)
+                graphics2D.draw(textLayout.getOutline(((DesktopTransform) transform).getAffineTransform()));
+            else {
+                AffineTransform affineTransform = graphics2D.getTransform();
+                graphics2D.transform(((DesktopTransform) transform).getAffineTransform());
+                try {
+                    float x = 0;
+                    float advance = textLayout.getAdvance();
+                    switch (textAlignment) {
+                        case Text.Alignment.END: x -= advance; break;
+                        case Text.Alignment.MIDDLE: x -= advance / 2; break;
+                    }
+                    if (getStyle() == Style.STROKE) graphics2D.draw(textLayout.getOutline(AffineTransform.getTranslateInstance(x, 0)));
+                    else textLayout.draw(graphics2D, x, 0);
                 }
-                textLayout.draw(graphics2D, x, 0);
+                finally {
+                    graphics2D.setTransform(affineTransform);
+                }
             }
-            finally {
-                graphics2D.setTransform(affineTransform);
+        }
+        else {
+            if (getStyle() == Style.STROKE && textAlignment == Text.Alignment.START) {
+                Shape outline = textLayout.getOutline(((DesktopTransform) transform).getAffineTransform());
+                Graphics2D shadow = (Graphics2D) graphics2D.create();
+                shadow.setColor(shadowColor);
+                if (getShadowBlur() == 0) shadow.draw(AffineTransform.getTranslateInstance(getShadowOffsetX(), getShadowOffsetY()).createTransformedShape(outline));
+                else new DropShadow(getShadowOffsetX(), getShadowOffsetY(), getShadowBlur(), 0)
+                        .draw(outline, shadow);
+                graphics2D.draw(outline);
+            }
+            else {
+                AffineTransform affineTransform = graphics2D.getTransform();
+                graphics2D.transform(((DesktopTransform) transform).getAffineTransform());
+                try {
+                    float x = 0;
+                    float advance = textLayout.getAdvance();
+                    switch (textAlignment) {
+                        case Text.Alignment.END: x -= advance; break;
+                        case Text.Alignment.MIDDLE: x -= advance / 2; break;
+                    }
+                    Shape outline = textLayout.getOutline(AffineTransform.getTranslateInstance(x, 0));
+                    if (getStyle() == Style.STROKE) {
+                        Graphics2D shadow = (Graphics2D) graphics2D.create();
+                        shadow.setColor(shadowColor);
+                        if (getShadowBlur() == 0) shadow.draw(AffineTransform.getTranslateInstance(getShadowOffsetX(), getShadowOffsetY()).createTransformedShape(outline));
+                        else new DropShadow(getShadowOffsetX(), getShadowOffsetY(), getShadowBlur(), 0)
+                                .draw(outline, shadow);
+                        graphics2D.draw(outline);
+                    }
+                    else {
+                        Graphics2D shadow = (Graphics2D) graphics2D.create();
+                        shadow.setColor(shadowColor);
+                        if (getShadowBlur() == 0) shadow.fill(AffineTransform.getTranslateInstance(getShadowOffsetX(), getShadowOffsetY()).createTransformedShape(outline));
+                        else new DropShadow(getShadowOffsetX(), getShadowOffsetY(), getShadowBlur(), 0)
+                                .fill(outline, shadow);
+                        graphics2D.fill(outline);
+                    }
+                }
+                finally {
+                    graphics2D.setTransform(affineTransform);
+                }
             }
         }
     }
@@ -673,6 +762,56 @@ public class DesktopGraphics extends Graphics {
         if (isDisposed()) throw new AlreadyDisposedException();
         info.setStroke(width, join, cap, miterLimit, dash, dashPhase);
         graphics2D.setStroke(new BasicStroke(width, join, cap, miterLimit, dash, dashPhase));
+    }
+
+    @Override
+    public int getShadowColor() {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        return info.getShadowColor();
+    }
+
+    private volatile Color shadowColor = AWTSupport.TRANSPARENT;
+    @Override
+    public void setShadowColor(int color) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        info.setShadowColor(color);
+        shadowColor = new Color(color, false);
+    }
+
+    @Override
+    public float getShadowBlur() {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        return info.getShadowBlur();
+    }
+
+    @Override
+    public void setShadowBlur(float blur) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        info.setShadowBlur(blur);
+    }
+
+    @Override
+    public void setShadowOffsetX(float offsetX) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        info.setShadowOffsetX(offsetX);
+    }
+
+    @Override
+    public void setShadowOffsetY(float offsetY) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        info.setShadowOffsetY(offsetY);
+    }
+
+    @Override
+    public float getShadowOffsetX() {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        return info.getShadowOffsetX();
+    }
+
+    @Override
+    public float getShadowOffsetY() {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        return info.getShadowOffsetY();
     }
 
     @Override

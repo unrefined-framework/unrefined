@@ -32,7 +32,7 @@ Process API
 String Template API
 Collection/Map Utilities
 String/CharSequence Utilities
-Time/Date Utilities
+Time/Date Utilities [Calendar-like LocalDate API]
 --------------------------------
 
 --------------------------------

@@ -571,6 +571,10 @@ public class GrowableBooleanArray implements Cloneable, Iterable<Boolean> {
         return result;
     }
 
+    public boolean[] array() {
+        return elements;
+    }
+
     @Override
     public String toString() {
         if (size == 0) {

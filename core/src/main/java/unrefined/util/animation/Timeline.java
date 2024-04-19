@@ -228,7 +228,7 @@ public final class Timeline extends Animation {
 	/**
 	 * Creates a new timeline editor with the specified mode.
 	 */
-	public static Editor build(int mode) {
+	public static Editor newBuilder(int mode) {
 		return new Editor(new Timeline(), mode);
 	}
 

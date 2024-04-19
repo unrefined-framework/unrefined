@@ -13,6 +13,7 @@ import unrefined.media.sound.Sampled;
 import unrefined.net.Net;
 import unrefined.nio.Allocator;
 import unrefined.util.Base64;
+import unrefined.util.DateTime;
 import unrefined.util.TextManager;
 import unrefined.util.Threading;
 import unrefined.util.concurrent.atomic.Atomic;
@@ -70,6 +71,7 @@ public class Unrefined {
 
         public static final Base64 base64 = Base64.getInstance();
         public static final Threading threading = Threading.getInstance();
+        public static final DateTime dateTime = DateTime.getInstance();
         public static class concurrent {
             public static class atomic {
                 public static final Atomic atomic = Atomic.getInstance();

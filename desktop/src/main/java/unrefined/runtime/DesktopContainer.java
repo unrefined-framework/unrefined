@@ -123,7 +123,7 @@ public class DesktopContainer extends unrefined.context.Container implements
                 @Override
                 public void addNotify() {
                     super.addNotify();
-                    ContainerListener listener = getContainerListener();
+                    ContainerListener listener = listener();
                     if (listener != null) listener.onCreate(DesktopContainer.this);
                 }
             };
@@ -206,7 +206,7 @@ public class DesktopContainer extends unrefined.context.Container implements
             AttributedCharacterIterator text = event.getText();
             if (text != null) {
                 for (int i = text.getBeginIndex(); i < text.getEndIndex(); i ++) {
-                    ContainerListener listener = getContainerListener();
+                    ContainerListener listener = listener();
                     if (listener != null) listener.onKeyTyped(DesktopContainer.this, text.current(), false);
                     text.next();
                 }
@@ -260,7 +260,7 @@ public class DesktopContainer extends unrefined.context.Container implements
         super.addContext(context);
         container.add(((DesktopEmbeddedContext) context).getComponent());
         EventQueue.invokeLater(() -> {
-            ContainerListener listener = getContainerListener();
+            ContainerListener listener = listener();
             if (listener != null) listener.onContextAdd(DesktopContainer.this, context);
         });
     }
@@ -270,7 +270,7 @@ public class DesktopContainer extends unrefined.context.Container implements
         super.removeContext(context);
         container.remove(((DesktopEmbeddedContext) context).getComponent());
         EventQueue.invokeLater(() -> {
-            ContainerListener listener = getContainerListener();
+            ContainerListener listener = listener();
             if (listener != null) listener.onContextRemove(DesktopContainer.this, context);
         });
     }
@@ -813,7 +813,7 @@ public class DesktopContainer extends unrefined.context.Container implements
     public void componentResized(ComponentEvent e) {
         if (BUFFERED) updateBuffer(e.getComponent().getGraphicsConfiguration().getDevice().getDisplayMode());
         EventQueue.invokeLater(() -> {
-            ContainerListener listener = getContainerListener();
+            ContainerListener listener = listener();
             if (listener != null) listener.onResize(DesktopContainer.this, e.getComponent().getWidth(), e.getComponent().getHeight());
         });
     }
@@ -821,7 +821,7 @@ public class DesktopContainer extends unrefined.context.Container implements
     @Override
     public void componentMoved(ComponentEvent e) {
         EventQueue.invokeLater(() -> {
-            ContainerListener listener = getContainerListener();
+            ContainerListener listener = listener();
             if (listener != null) listener.onMove(DesktopContainer.this, e.getComponent().getX(), e.getComponent().getY());
         });
     }
@@ -834,15 +834,13 @@ public class DesktopContainer extends unrefined.context.Container implements
 
     @Override
     public void windowGainedFocus(WindowEvent e) {
-        ContainerListener listener = getContainerListener();
-        if (listener != null) listener.onResume(this);
+        listener().onResume(this);
     }
 
     @Override
     public void windowLostFocus(WindowEvent e) {
         pressedCode.clear();
-        ContainerListener listener = getContainerListener();
-        if (listener != null) listener.onPause(this);
+        listener().onPause(this);
     }
 
     @Override
@@ -851,47 +849,41 @@ public class DesktopContainer extends unrefined.context.Container implements
 
     @Override
     public void windowClosing(WindowEvent e) {
-        ContainerListener listener = getContainerListener();
+        ContainerListener listener = listener();
         if (listener == null) e.getWindow().dispose();
         else if (listener.onCloseRequest(this)) e.getWindow().dispose();
     }
 
     @Override
     public void windowClosed(WindowEvent e) {
-        ContainerListener listener = getContainerListener();
-        if (listener != null) listener.onDispose(this);
+        listener().onDispose(this);
     }
 
     @Override
     public void windowIconified(WindowEvent e) {
-        ContainerListener listener = getContainerListener();
-        if (listener != null) listener.onHide(this);
+        listener().onHide(this);
     }
 
     @Override
     public void windowDeiconified(WindowEvent e) {
-        ContainerListener listener = getContainerListener();
-        if (listener != null) listener.onShow(this);
+        listener().onShow(this);
     }
 
     @Override
     public void windowActivated(WindowEvent e) {
-        ContainerListener listener = getContainerListener();
-        if (listener != null) listener.onStart(this);
+        listener().onStart(this);
     }
 
     @Override
     public void windowDeactivated(WindowEvent e) {
-        ContainerListener listener = getContainerListener();
-        if (listener != null) listener.onStop(this);
+        listener().onStop(this);
     }
 
     private final Set<String> pressedCode = new HashSet<>();
 
     @Override
     public void keyTyped(KeyEvent e) {
-        ContainerListener listener = getContainerListener();
-        if (listener != null) listener.onKeyTyped(this, e.getKeyChar(),
+        listener().onKeyTyped(this, e.getKeyChar(),
                 pressedCode.contains(KeyEventParser.parseCode(e)));
     }
 
@@ -900,8 +892,7 @@ public class DesktopContainer extends unrefined.context.Container implements
         String code = KeyEventParser.parseCode(e);
         boolean repeat = pressedCode.contains(code);
         pressedCode.add(code);
-        ContainerListener listener = getContainerListener();
-        if (listener != null) listener.onKeyDown(this,
+        listener().onKeyDown(this,
                 KeyEventParser.parseKey(e),
                 code,
                 e.getKeyLocation() - 1,
@@ -912,7 +903,7 @@ public class DesktopContainer extends unrefined.context.Container implements
     public void keyReleased(KeyEvent e) {
         String code = KeyEventParser.parseCode(e);
         if (pressedCode.contains(code)) {
-            ContainerListener listener = getContainerListener();
+            ContainerListener listener = listener();
             if (listener != null) listener.onKeyUp(this,
                     KeyEventParser.parseKey(e),
                     KeyEventParser.parseCode(e),
@@ -927,16 +918,14 @@ public class DesktopContainer extends unrefined.context.Container implements
 
     @Override
     public void mousePressed(MouseEvent e) {
-        ContainerListener listener = getContainerListener();
-        if (listener != null) listener.onPointerDown(this, e.getX(), e.getY(),
+        listener().onPointerDown(this, e.getX(), e.getY(),
                 Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6),
                 e.getClickCount(), e.getButton() - 1);
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        ContainerListener listener = getContainerListener();
-        if (listener != null) listener.onPointerUp(this, e.getX(), e.getY(),
+        listener().onPointerUp(this, e.getX(), e.getY(),
                 Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6),
                 e.getClickCount(), e.getButton() - 1);
     }
@@ -945,31 +934,27 @@ public class DesktopContainer extends unrefined.context.Container implements
     public void mouseEntered(MouseEvent e) {
         if (!GraphicsEnvironment.isHeadless() && cursor instanceof AnimatedCursor)
             EventQueue.invokeLater(() -> CursorAnimator.register(container, (AnimatedCursor) cursor));
-        ContainerListener listener = getContainerListener();
-        if (listener != null) listener.onMouseEnter(this, e.getX(), e.getY(),
+        listener().onMouseEnter(this, e.getX(), e.getY(),
                 Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6));
     }
 
     @Override
     public void mouseExited(MouseEvent e) {
         if (!GraphicsEnvironment.isHeadless()) EventQueue.invokeLater(() -> CursorAnimator.unregister(container));
-        ContainerListener listener = getContainerListener();
-        if (listener != null) listener.onMouseExit(this, e.getX(), e.getY(),
+        listener().onMouseExit(this, e.getX(), e.getY(),
                 Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6));
     }
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        ContainerListener listener = getContainerListener();
-        if (listener != null) listener.onPointerDrag(this, e.getX(), e.getY(),
+        listener().onPointerDrag(this, e.getX(), e.getY(),
                 Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6),
                 e.getClickCount());
     }
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        ContainerListener listener = getContainerListener();
-        if (listener != null) listener.onMouseMove(this, e.getX(), e.getY(),
+        listener().onMouseMove(this, e.getX(), e.getY(),
                 Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6));
     }
 
@@ -991,8 +976,7 @@ public class DesktopContainer extends unrefined.context.Container implements
             amountX = 0;
             amountY = amount;
         }
-        ContainerListener listener = getContainerListener();
-        if (listener != null) listener.onScroll(this, amountX, amountY,
+        listener().onScroll(this, amountX, amountY,
                 scrollType == MouseWheelEvent.WHEEL_BLOCK_SCROLL ? 2 : 0);
     }
 

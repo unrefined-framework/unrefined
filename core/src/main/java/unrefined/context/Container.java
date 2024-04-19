@@ -17,31 +17,24 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class Container implements Runnable {
-
-    public static Container of() {
-        return Runtime.getInstance().createContainer();
-    }
 
     public static Container of(ContainerListener containerListener) {
         return Runtime.getInstance().createContainer(containerListener);
     }
 
-    private volatile ContainerListener containerListener;
+    private final ContainerListener containerListener;
 
     public final Environment local;
     public final Environment properties;
 
     public Container(ContainerListener containerListener) {
-        this.containerListener = containerListener;
+        this.containerListener = Objects.requireNonNull(containerListener);
         local = new Environment(new ConcurrentHashMap<>(), "LOCAL ENVIRONMENT " + Integer.toHexString(hashCode()));
         properties = new Environment(new ConcurrentHashMap<>(), "LOCAL PROPERTIES " + Integer.toHexString(hashCode()));
-    }
-
-    public Container() {
-        this(null);
     }
 
     public abstract void invokeLater(Runnable runnable);
@@ -204,12 +197,8 @@ public abstract class Container implements Runnable {
         return Collections.unmodifiableList(new ArrayList<>(contexts));
     }
 
-    public ContainerListener getContainerListener() {
+    public ContainerListener listener() {
         return containerListener;
-    }
-
-    public void setContainerListener(ContainerListener containerListener) {
-        this.containerListener = containerListener;
     }
 
     public abstract void setX(int x);
@@ -335,9 +324,6 @@ public abstract class Container implements Runnable {
     public abstract int getInputMethodHeight();
 
     public abstract Context createContext(ContextListener contextListener);
-    public Context createContext() {
-        return createContext(null);
-    }
 
     public abstract int getScreenWidth();
     public abstract int getScreenHeight();

@@ -571,6 +571,10 @@ public class GrowableFloatArray implements Cloneable, Iterable<Float> {
         return result;
     }
 
+    public float[] array() {
+        return elements;
+    }
+
     @Override
     public String toString() {
         if (size == 0) {

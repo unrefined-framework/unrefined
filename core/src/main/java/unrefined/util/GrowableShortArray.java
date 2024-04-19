@@ -571,6 +571,10 @@ public class GrowableShortArray implements Cloneable, Iterable<Short> {
         return result;
     }
 
+    public short[] array() {
+        return elements;
+    }
+
     @Override
     public String toString() {
         if (size == 0) {

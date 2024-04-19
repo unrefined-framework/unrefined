@@ -6,8 +6,7 @@ import java.util.List;
 
 /**
  * An AnimationManager updates all your tweens and timelines at once.
- * Its main interest is that it handles the tween/timeline life-cycles for you,
- * as well as the pooling constraints (if object pooling is enabled).
+ * Its main interest is that it handles the tween/timeline life-cycles for you.
  * <p/>
  *
  * Just give it a bunch of tweens or timelines and call update() periodically,

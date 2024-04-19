@@ -44,9 +44,6 @@ public abstract class Runtime {
     }
 
     public abstract Container createContainer(ContainerListener containerListener);
-    public Container createContainer() {
-        return createContainer(null);
-    }
 
     private volatile String APP_VENDOR;
     private final Object APP_VENDOR_LOCK = new Object();

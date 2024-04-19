@@ -571,6 +571,10 @@ public class GrowableDoubleArray implements Cloneable, Iterable<Double> {
         return result;
     }
 
+    public double[] array() {
+        return elements;
+    }
+
     @Override
     public String toString() {
         if (size == 0) {

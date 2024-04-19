@@ -9,36 +9,24 @@ import java.util.Objects;
 
 public abstract class Context {
 
-    public static Context of(Container container) {
-        return container.createContext();
-    }
-
     public static Context of(Container container, ContextListener contextListener) {
         return container.createContext(contextListener);
     }
 
     private final Container container;
-    private volatile ContextListener contextListener;
-
-    public Context(Container container) {
-        this(container, null);
-    }
+    private final ContextListener contextListener;
 
     public Context(Container container, ContextListener contextListener) {
         this.container = Objects.requireNonNull(container);
-        this.contextListener = contextListener;
+        this.contextListener = Objects.requireNonNull(contextListener);
     }
 
     public Container getContainer() {
         return container;
     }
 
-    public ContextListener getContextListener() {
+    public ContextListener listener() {
         return contextListener;
-    }
-
-    public void setContextListener(ContextListener contextListener) {
-        this.contextListener = contextListener;
     }
 
     public abstract void setX(int x);
@@ -90,8 +78,8 @@ public abstract class Context {
     public abstract void paint();
     public abstract void snapshot();
     public void paint(boolean snapshot) {
-        if (snapshot) requestSnapshot();
-        else requestPaint();
+        if (snapshot) snapshot();
+        else paint();
     }
     public abstract void requestPaint();
     public abstract void requestSnapshot();

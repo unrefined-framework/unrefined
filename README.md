@@ -9,22 +9,22 @@ This library is designed for multimedia application, but it not just a multimedi
 You can also use it as a game engine or a utility toolkit.
 
 It provides:  
-[Extended Console API](/core/src/main/java/unrefined/io/console)  
+[Console API](/core/src/main/java/unrefined/io/console)  
 [Window & Widget Management API](/core/src/main/java/unrefined/context)  
-[Feature-rich 2D Graphics API](/core/src/main/java/unrefined/media/graphics)  
-[Extended Memory Management API](/core/src/main/java/unrefined/nio)  
+[Graphics API that 90% compatible with HTML5 &lt;canvas&gt;](/core/src/main/java/unrefined/media/graphics)  
+[Memory Management API](/core/src/main/java/unrefined/nio)  
 [Qt-like Signal/Slot API](/core/src/main/java/unrefined/util/signal)  
 [Pub/sub Event Bus API](/core/src/main/java/unrefined/util/event)  
 [Functional Programming Helper API](/core/src/main/java/unrefined/util/function/Function.java)  
 [Extended Collections API](/core/src/main/java/unrefined/util/)  
 [Animation API](/core/src/main/java/unrefined/util/animation)  
 [Serialization/Deserialization API](/core/src/main/java/unrefined/io/Savable.java)  
-[Extended File API](/core/src/main/java/unrefined/io/file)  
-[Log API](/core/src/main/java/unrefined/app/Log.java)
+[FileSystem API](/core/src/main/java/unrefined/io/file)  
+[Log API](/core/src/main/java/unrefined/app/Log.java)  
 [Net API](/core/src/main/java/unrefined/net)  
 [MVVM Data Binding API](/core/src/main/java/unrefined/beans)  
 [Foreign Function Interface API](/core/src/main/java/unrefined/util/foreign)  
-[Extended Runtime API](/core/src/main/java/unrefined/app/Runtime.java)  
+[Runtime API](/core/src/main/java/unrefined/app/Runtime.java)  
 ...and more
 
 It is also designed to work properly in "headless mode".

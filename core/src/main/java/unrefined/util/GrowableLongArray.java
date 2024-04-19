@@ -571,6 +571,10 @@ public class GrowableLongArray implements Cloneable, Iterable<Long> {
         return result;
     }
 
+    public long[] array() {
+        return elements;
+    }
+
     @Override
     public String toString() {
         if (size == 0) {

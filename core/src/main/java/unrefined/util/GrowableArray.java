@@ -605,6 +605,10 @@ public class GrowableArray<E> implements Cloneable, Iterable<E> {
         return result;
     }
 
+    public E[] array() {
+        return elements;
+    }
+
     @Override
     public String toString() {
         if (size == 0) {

@@ -571,6 +571,10 @@ public class GrowableIntArray implements Cloneable, Iterable<Integer> {
         return result;
     }
 
+    public int[] array() {
+        return elements;
+    }
+
     @Override
     public String toString() {
         if (size == 0) {

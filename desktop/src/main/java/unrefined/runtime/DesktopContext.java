@@ -6,6 +6,7 @@ import unrefined.desktop.BitmapSupport;
 import unrefined.media.graphics.Bitmap;
 import unrefined.util.function.Slot;
 
+import java.awt.AlphaComposite;
 import java.awt.Canvas;
 import java.awt.EventQueue;
 import java.awt.Graphics;
@@ -48,39 +49,35 @@ public class DesktopContext extends DesktopEmbeddedContext {
                     }
                 }
                 EventQueue.invokeLater(() -> {
-                    ContextListener listener = getContextListener();
+                    ContextListener listener = listener();
                     if (listener != null) listener.onResize(DesktopContext.this, width, height);
                 });
             }
             @Override
             public void componentMoved(ComponentEvent e) {
                 EventQueue.invokeLater(() -> {
-                    ContextListener listener = getContextListener();
+                    ContextListener listener = listener();
                     if (listener != null) listener.onMove(DesktopContext.this, e.getComponent().getX(), e.getComponent().getY());
                 });
             }
             @Override
             public void componentShown(ComponentEvent e) {
-                ContextListener listener = getContextListener();
-                if (listener != null) listener.onShow(DesktopContext.this);
+                listener().onShow(DesktopContext.this);
                 e.getComponent().requestFocus();
             }
             @Override
             public void componentHidden(ComponentEvent e) {
-                ContextListener listener = getContextListener();
-                if (listener != null) listener.onHide(DesktopContext.this);
+                listener().onHide(DesktopContext.this);
             }
         });
         component.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
-                ContextListener listener = getContextListener();
-                if (listener != null) listener.onFocusGain(DesktopContext.this);
+                listener().onFocusGain(DesktopContext.this);
             }
             @Override
             public void focusLost(FocusEvent e) {
-                ContextListener listener = getContextListener();
-                if (listener != null) listener.onFocusLost(DesktopContext.this);
+                listener().onFocusLost(DesktopContext.this);
             }
         });
         component.onCreate = () -> {
@@ -89,8 +86,7 @@ public class DesktopContext extends DesktopEmbeddedContext {
                 graphics = new DesktopGraphics();
             }
             EventQueue.invokeLater(() -> {
-                ContextListener listener = getContextListener();
-                if (listener != null) listener.onCreate(DesktopContext.this);
+                listener().onCreate(DesktopContext.this);
             });
         };
         component.onDispose = () -> {
@@ -103,15 +99,14 @@ public class DesktopContext extends DesktopEmbeddedContext {
                 graphics = null;
             }
             //EventQueue.invokeLater(() -> {
-                ContextListener listener = getContextListener();
-                if (listener != null) listener.onDispose(DesktopContext.this);
+                listener().onDispose(DesktopContext.this);
             //});
         };
         component.onPaint = graphics2D -> {
             if (graphics == null) return;
             if (BUFFERED) ((DesktopContainer) container).lockBufferAndPost(buffer -> {
                 if (graphics == null) return;
-                ContextListener listener = getContextListener();
+                ContextListener listener = listener();
                 if (listener != null) {
                     int width = getWidth();
                     int height = getHeight();
@@ -124,6 +119,7 @@ public class DesktopContext extends DesktopEmbeddedContext {
                         }
                         finally {
                             try {
+                                graphics2D.setComposite(AlphaComposite.Src);
                                 graphics2D.clipRect(0, 0, width, height);
                                 graphics2D.drawImage(buffer, 0, 0, null);
                             }
@@ -136,7 +132,7 @@ public class DesktopContext extends DesktopEmbeddedContext {
             });
             else synchronized (graphicsLock) {
                 if (graphics == null) return;
-                ContextListener listener = getContextListener();
+                ContextListener listener = listener();
                 if (listener != null) {
                     int width = getWidth();
                     int height = getHeight();
@@ -163,7 +159,7 @@ public class DesktopContext extends DesktopEmbeddedContext {
 
     private void doSnapshot() {
         if (graphics == null) return;
-        ContextListener listener = getContextListener();
+        ContextListener listener = listener();
         if (listener != null) {
             int width = getWidth();
             int height = getHeight();
