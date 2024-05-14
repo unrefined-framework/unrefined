@@ -1,6 +1,6 @@
 package unrefined.runtime;
 
-import unrefined.desktop.ThreadingSupport;
+import android.os.Looper;
 import unrefined.math.FastMath;
 import unrefined.util.Threading;
 import unrefined.util.concurrent.worker.Worker;
@@ -9,7 +9,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 
-public class DesktopThreading extends Threading {
+public class AndroidThreading extends Threading {
 
     @Override
     public boolean isPlatformThreadSupported() {
@@ -18,7 +18,7 @@ public class DesktopThreading extends Threading {
 
     @Override
     public boolean isVirtualThreadSupported() {
-        return ThreadingSupport.isVirtualThreadSupported();
+        return false;
     }
 
     @Override
@@ -34,17 +34,17 @@ public class DesktopThreading extends Threading {
 
     @Override
     public Thread createVirtualThread(Runnable task, String name, Thread.UncaughtExceptionHandler exceptionHandler) {
-        return ThreadingSupport.createVirtualThread(task, name, exceptionHandler);
+        throw new UnsupportedOperationException("Virtual thread not supported");
     }
 
     @Override
     public boolean isVirtualThread(Thread thread) {
-        return ThreadingSupport.isVirtual(thread);
+        return false;
     }
 
     @Override
     public boolean isPlatformThread(Thread thread) {
-        return !ThreadingSupport.isVirtual(thread);
+        return true;
     }
 
     @Override
@@ -73,7 +73,7 @@ public class DesktopThreading extends Threading {
 
     @Override
     public boolean isMainThread(Thread thread) {
-        return thread.getId() == 1;
+        return Looper.getMainLooper().getThread() == thread;
     }
 
     @Override

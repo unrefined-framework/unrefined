@@ -174,12 +174,24 @@ public abstract class Threading {
         return Thread.holdsLock(object);
     }
 
-    public abstract void park(long time, boolean absolute);
-    public void park(long timestamp) {
-        park(timestamp, true);
+
+    public abstract void park(Object blocker);
+    public void park() {
+        park(null);
     }
+    public abstract void parkUntil(Object blocker, long timestamp);
+    public void parkUntil(long timestamp) {
+        parkUntil(null, timestamp);
+    }
+    public abstract void park(Object blocker, long timeout, TimeUnit timeUnit);
     public void park(long timeout, TimeUnit timeUnit) {
-        park(timeUnit == null ? timeout : timeUnit.toMillis(timeout), false);
+        park(null, timeout, timeUnit);
+    }
+    public void park(Object blocker, long timeout) {
+        park(blocker, timeout, null);
+    }
+    public void park(long timeout) {
+        park(null, timeout, null);
     }
     public abstract void unpark(Thread thread);
     public void unpark() {

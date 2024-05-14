@@ -1,7 +1,7 @@
 package unrefined.runtime;
 
-import unrefined.desktop.ReflectionSupport;
 import unrefined.util.concurrent.worker.Worker;
+import unrefined.util.reflect.Reflection;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -10,7 +10,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class DesktopWorker extends Worker {
+public class BaseWorker extends Worker {
 
     /**
      * This ID is used to generate thread names.
@@ -25,7 +25,7 @@ public class DesktopWorker extends Worker {
     private final String name;
     private final Method main;
 
-    public DesktopWorker(String name, Class<?> clazz) throws IllegalArgumentException {
+    public BaseWorker(String name, Class<?> clazz) throws IllegalArgumentException {
         super(clazz);
         try {
             main = clazz.getDeclaredMethod("main", Worker.class);
@@ -40,17 +40,17 @@ public class DesktopWorker extends Worker {
         executor = Executors.newSingleThreadExecutor(runnable -> {
             if (thread == null) {
                 thread = new Thread(runnable);
-                thread.setUncaughtExceptionHandler((t, e) -> DesktopWorker.this.onException().emit(e));
+                thread.setUncaughtExceptionHandler((t, e) -> BaseWorker.this.onException().emit(e));
                 thread.setDaemon(true);
-                thread.setName(DesktopWorker.this.name);
+                thread.setName(BaseWorker.this.name);
             }
             return thread;
         });
         executor.execute(() -> {
             try {
-                ReflectionSupport.invokeVoidMethod(null, main, DesktopWorker.this);
+                Reflection.getInstance().invokeVoidMethod(null, main, BaseWorker.this);
             } catch (InvocationTargetException e) {
-                DesktopWorker.this.onException().emit(e.getTargetException());
+                BaseWorker.this.onException().emit(e.getTargetException());
             }
         });
     }

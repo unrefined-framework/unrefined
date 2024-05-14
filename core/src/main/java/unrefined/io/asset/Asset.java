@@ -11,7 +11,10 @@ public class Asset {
     private final AssetLoader assetLoader;
     private final String pathname;
     private final String name;
-    private volatile long length = -1;
+    private volatile Boolean exists = null;
+    private final Object existsLock = new Object();
+    private volatile Long length = null;
+    private final Object lengthLock = new Object();
 
     public Asset(String pathname) {
         this(pathname, null);
@@ -37,13 +40,26 @@ public class Asset {
     }
 
     public InputStream openStream() throws IOException {
-        InputStream stream = assetLoader.openStream(pathname);
-        if (length == -1) length = stream.available();
-        return stream;
+        try {
+            InputStream stream = assetLoader.openStream(pathname);
+            if (length == null) synchronized (lengthLock) {
+                if (length == null) length = (long) stream.available();
+            }
+            return stream;
+        }
+        catch (AssetNotFoundException e) {
+            if (exists == null) synchronized (existsLock) {
+                if (exists == null) exists = assetLoader.exists(pathname);
+            }
+            throw e;
+        }
     }
 
     public boolean exists() {
-        return assetLoader.exists(pathname);
+        if (exists == null) synchronized (existsLock) {
+            if (exists == null) exists = assetLoader.exists(pathname);
+        }
+        return exists;
     }
 
     public URL toURL() throws AssetNotFoundException, MalformedURLException {
@@ -51,7 +67,9 @@ public class Asset {
     }
 
     public long length() throws IOException {
-        if (length == -1) length = assetLoader.length(pathname);
+        if (length == null) synchronized (lengthLock) {
+            if (length == null) length = assetLoader.length(pathname);
+        }
         return length;
     }
 
