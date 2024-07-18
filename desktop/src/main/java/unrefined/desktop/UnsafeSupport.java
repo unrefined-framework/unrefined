@@ -269,4 +269,12 @@ public final class UnsafeSupport {
         return v;
     }
 
+    public static boolean getBoolean(long address) {
+        return UNSAFE.getByte(address) != 0;
+    }
+
+    public static void putBoolean(long address, boolean x) {
+        UNSAFE.putByte(address, (byte) (x ? 1 : 0));
+    }
+
 }

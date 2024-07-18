@@ -107,7 +107,7 @@ public final class ArrayMap<K, V> implements Map<K, V> {
 
     private static int binarySearchHashes(int[] hashes, int N, int hash) {
         try {
-            return FastArray.binarySearchUnchecked(hashes, 0, N, hash);
+            return Arrays.binarySearchUnchecked(hashes, 0, N, hash);
         } catch (ArrayIndexOutOfBoundsException e) {
             if (CONCURRENT_MODIFICATION_EXCEPTIONS) {
                 throw new ConcurrentModificationException();

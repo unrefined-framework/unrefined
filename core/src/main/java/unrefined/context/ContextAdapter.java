@@ -56,7 +56,7 @@ public abstract class ContextAdapter implements ContextListener {
     }
 
     @Override
-    public boolean onKeyDown(Context context, String key, String code, int location, int modifiers) {
+    public boolean onKeyDown(Context context, String key, String code, int location, int modifiers, boolean repeat) {
         return false;
     }
 
@@ -66,7 +66,7 @@ public abstract class ContextAdapter implements ContextListener {
     }
 
     @Override
-    public boolean onKeyTyped(Context context, char key) {
+    public boolean onKeyTyped(Context context, char key, boolean repeat) {
         return false;
     }
 

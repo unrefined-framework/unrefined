@@ -19,8 +19,8 @@ subprojects {
         libraryDescription = 'Cross-platform multimedia application framework written in pure Java.'
         libraryUrl = 'https://github.com/unrefined-framework/unrefined'
 
-        libraryVersionCode = '80-SNAPSHOT'
-        libraryVersionName = '0.8.0-SNAPSHOT'
+        libraryVersionCode = '91-SNAPSHOT'
+        libraryVersionName = '0.9.1-SNAPSHOT'
         libraryVersionCodeName = 'Claw Hammer'
 
         libraryLicenseName = 'The Apache License, Version 2.0'
@@ -75,7 +75,7 @@ configure (desktopProjects) {
     sourceCompatibility = libraryDesktopSourceCompatibility
     targetCompatibility = libraryDesktopTargetCompatibility
 
-    if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_21)) {
+    if (JavaVersion.current().ordinal() >= 21) {
         tasks.withType(Test).configureEach {
             jvmArgs += '--enable-native-access=ALL-UNNAMED'
         }

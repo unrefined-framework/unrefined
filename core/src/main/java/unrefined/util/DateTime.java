@@ -43,9 +43,7 @@ public abstract class DateTime {
         return System.nanoTime();
     }
 
-    public long nowSeconds() {
-        return System.currentTimeMillis() / 1000L;
-    }
+    public abstract long nowSeconds();
 
     public abstract int nowNanos();
 

@@ -13,13 +13,13 @@ import unrefined.desktop.DefaultIcon;
 import unrefined.desktop.KeyEventParser;
 import unrefined.desktop.OSInfo;
 import unrefined.desktop.StandardDirectories;
-import unrefined.internal.X11.X11FontSupport;
-import unrefined.internal.macos.MacFontSupport;
-import unrefined.internal.macos.MacPreferences;
-import unrefined.internal.posix.PosixPreferences;
-import unrefined.internal.windows.WindowsAWTSupport;
-import unrefined.internal.windows.WindowsFontSupport;
-import unrefined.internal.windows.WindowsPreferences;
+import unrefined.desktop.X11.X11FontSupport;
+import unrefined.desktop.macos.MacFontSupport;
+import unrefined.desktop.macos.MacPreferences;
+import unrefined.desktop.posix.PosixPreferences;
+import unrefined.desktop.windows.WindowsAWTSupport;
+import unrefined.desktop.windows.WindowsFontSupport;
+import unrefined.desktop.windows.WindowsPreferences;
 import unrefined.io.asset.AssetLoader;
 import unrefined.media.graphics.Cursor;
 import unrefined.media.graphics.Dimension;
@@ -880,17 +880,17 @@ public class DesktopContainer extends unrefined.context.Container implements
     }
 
     private final Set<String> pressedCode = new HashSet<>();
+    private volatile boolean repeat = false;
 
     @Override
     public void keyTyped(KeyEvent e) {
-        listener().onKeyTyped(this, e.getKeyChar(),
-                pressedCode.contains(KeyEventParser.parseCode(e)));
+        listener().onKeyTyped(this, e.getKeyChar(), repeat);
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
         String code = KeyEventParser.parseCode(e);
-        boolean repeat = pressedCode.contains(code);
+        repeat = pressedCode.contains(code);
         pressedCode.add(code);
         listener().onKeyDown(this,
                 KeyEventParser.parseKey(e),
@@ -903,8 +903,7 @@ public class DesktopContainer extends unrefined.context.Container implements
     public void keyReleased(KeyEvent e) {
         String code = KeyEventParser.parseCode(e);
         if (pressedCode.contains(code)) {
-            ContainerListener listener = listener();
-            if (listener != null) listener.onKeyUp(this,
+            listener().onKeyUp(this,
                     KeyEventParser.parseKey(e),
                     KeyEventParser.parseCode(e),
                     e.getKeyLocation() - 1,

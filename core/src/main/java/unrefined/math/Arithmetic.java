@@ -169,19 +169,19 @@ public class Arithmetic {
         return new BigDecimal(value, mathContext == null ? MathContext.UNLIMITED : mathContext);
     }
 
-    public BigDecimal parseBigDecimal(CharSequence value, int start, int end) {
+    public BigDecimal parseBigDecimal(String value, int start, int end) {
         return new BigDecimal(CharSequences.toCharArray(value, start, end));
     }
 
-    public BigDecimal parseBigDecimal(CharSequence value, int start, int end, MathContext mathContext) {
+    public BigDecimal parseBigDecimal(String value, int start, int end, MathContext mathContext) {
         return new BigDecimal(CharSequences.toCharArray(value, start, end), mathContext == null ? MathContext.UNLIMITED : mathContext);
     }
 
-    public BigDecimal parseBigDecimal(CharSequence value) {
+    public BigDecimal parseBigDecimal(String value) {
         return new BigDecimal(CharSequences.toCharArray(value));
     }
 
-    public BigDecimal parseBigDecimal(CharSequence value, MathContext mathContext) {
+    public BigDecimal parseBigDecimal(String value, MathContext mathContext) {
         return new BigDecimal(CharSequences.toCharArray(value), mathContext == null ? MathContext.UNLIMITED : mathContext);
     }
 

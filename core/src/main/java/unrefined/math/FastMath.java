@@ -914,36 +914,124 @@ public final class FastMath {
         return ExtendedMath.unsign(x);
     }
 
-    public static int compare(byte a, byte b) {
-        return Byte.compare(a, b);
+    public static boolean isInteger(float x) {
+        return x % 1 == 0;
     }
 
-    public static int compareUnsigned(byte a, byte b) {
-        return Byte.toUnsignedInt(a) - Byte.toUnsignedInt(b);
+    public static boolean isInteger(double x) {
+        return x % 1 == 0;
     }
 
-    public static int compare(short a, short b) {
-        return Short.compare(a, b);
+    public static byte unsignedMax(byte a, byte b) {
+        return ExtendedMath.unsignedMax(a, b);
     }
 
-    public static int compareUnsigned(short a, short b) {
-        return Short.toUnsignedInt(a) - Short.toUnsignedInt(b);
+    public static short unsignedMax(short a, short b) {
+        return ExtendedMath.unsignedMax(a, b);
     }
 
-    public static int compare(int a, int b) {
-        return Integer.compare(a, b);
+    public static int unsignedMax(int a, int b) {
+        return ExtendedMath.unsignedMax(a, b);
     }
 
-    public static int compareUnsigned(int a, int b) {
-        return Integer.compareUnsigned(a, b);
+    public static long unsignedMax(long a, long b) {
+        return ExtendedMath.unsignedMax(a, b);
     }
 
-    public static int compare(long a, long b) {
-        return Long.compare(a, b);
+    public static byte unsignedMax(byte a, byte b, byte c) {
+        return ExtendedMath.unsignedMax(a, b, c);
     }
 
-    public static int compareUnsigned(long a, long b) {
-        return Long.compareUnsigned(a, b);
+    public static short unsignedMax(short a, short b, short c) {
+        return ExtendedMath.unsignedMax(a, b, c);
+    }
+
+    public static int unsignedMax(int a, int b, int c) {
+        return ExtendedMath.unsignedMax(a, b, c);
+    }
+
+    public static long unsignedMax(long a, long b, long c) {
+        return ExtendedMath.unsignedMax(a, b, c);
+    }
+
+    public static byte unsignedMin(byte a, byte b) {
+        return ExtendedMath.unsignedMin(a, b);
+    }
+
+    public static short unsignedMin(short a, short b) {
+        return ExtendedMath.unsignedMin(a, b);
+    }
+
+    public static int unsignedMin(int a, int b) {
+        return ExtendedMath.unsignedMin(a, b);
+    }
+
+    public static long unsignedMin(long a, long b) {
+        return ExtendedMath.unsignedMin(a, b);
+    }
+
+    public static byte unsignedMin(byte a, byte b, byte c) {
+        return ExtendedMath.unsignedMin(a, b, c);
+    }
+
+    public static short unsignedMin(short a, short b, short c) {
+        return ExtendedMath.unsignedMin(a, b, c);
+    }
+
+    public static int unsignedMin(int a, int b, int c) {
+        return ExtendedMath.unsignedMin(a, b, c);
+    }
+
+    public static long unsignedMin(long a, long b, long c) {
+        return ExtendedMath.unsignedMin(a, b, c);
+    }
+
+    public static byte sign(short x) throws ArithmeticException {
+        return ExtendedMath.sign(x);
+    }
+
+    public static short sign(int x) throws ArithmeticException {
+        return ExtendedMath.sign(x);
+    }
+
+    public static int sign(long x) throws ArithmeticException {
+        return ExtendedMath.sign(x);
+    }
+
+    public static long sign(BigInteger x) throws ArithmeticException {
+        return ExtendedMath.sign(x);
+    }
+
+    public static int divideUnsigned(int dividend, int divisor) {
+        return ExtendedMath.divideUnsigned(dividend, divisor);
+    }
+
+    public static int remainderUnsigned(int dividend, int divisor) {
+        return ExtendedMath.remainderUnsigned(dividend, divisor);
+    }
+
+    public static long divideUnsigned(long dividend, long divisor) {
+        return ExtendedMath.divideUnsigned(dividend, divisor);
+    }
+
+    public static long remainderUnsigned(long dividend, long divisor) {
+        return ExtendedMath.remainderUnsigned(dividend, divisor);
+    }
+
+    public static int add(int a, int b) {
+        return ExtendedMath.add(a, b);
+    }
+
+    public static long add(long a, long b) {
+        return ExtendedMath.add(a, b);
+    }
+
+    public static float add(float a, float b) {
+        return ExtendedMath.add(a, b);
+    }
+
+    public static double add(double a, double b) {
+        return ExtendedMath.add(a, b);
     }
 
 }

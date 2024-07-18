@@ -1,10 +1,13 @@
 package unrefined.runtime;
 
+import unrefined.desktop.DateTimeSupport;
 import unrefined.desktop.FileSystemSupport;
+import unrefined.io.IOStreams;
 import unrefined.io.file.FileStore;
 import unrefined.io.file.FileSystem;
 import unrefined.io.file.FileVisitor;
 import unrefined.util.ScopedIterable;
+import unrefined.util.Timestamp;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -270,33 +273,33 @@ public class DesktopFileSystem extends FileSystem {
     }
 
     @Override
-    public long getLastModifiedTime(File file) throws IOException {
-        return Files.getLastModifiedTime(file.toPath(), LinkOption.NOFOLLOW_LINKS).toMillis();
+    public Timestamp getLastModifiedTime(File file) throws IOException {
+        return DateTimeSupport.toTimestamp(Files.getLastModifiedTime(file.toPath(), LinkOption.NOFOLLOW_LINKS).toInstant());
     }
 
     @Override
-    public void setLastModifiedTime(File file, long timestamp) throws IOException {
-        Files.setLastModifiedTime(file.toPath(), FileTime.fromMillis(timestamp));
+    public void setLastModifiedTime(File file, Timestamp timestamp) throws IOException {
+        Files.setLastModifiedTime(file.toPath(), FileTime.from(DateTimeSupport.toInstant(timestamp)));
     }
 
     @Override
-    public long getLastAccessTime(File file) throws IOException {
-        return FileSystemSupport.getLastAccessTime(file.toPath(), LinkOption.NOFOLLOW_LINKS).toMillis();
+    public Timestamp getLastAccessTime(File file) throws IOException {
+        return DateTimeSupport.toTimestamp(FileSystemSupport.getLastAccessTime(file.toPath(), LinkOption.NOFOLLOW_LINKS).toInstant());
     }
 
     @Override
-    public void setLastAccessTime(File file, long timestamp) throws IOException {
-        FileSystemSupport.setLastAccessTime(file.toPath(), FileTime.fromMillis(timestamp));
+    public void setLastAccessTime(File file, Timestamp timestamp) throws IOException {
+        FileSystemSupport.setLastAccessTime(file.toPath(), FileTime.from(DateTimeSupport.toInstant(timestamp)));
     }
 
     @Override
-    public long getCreationTime(File file) throws IOException {
-        return FileSystemSupport.getCreationTime(file.toPath(), LinkOption.NOFOLLOW_LINKS).toMillis();
+    public Timestamp getCreationTime(File file) throws IOException {
+        return DateTimeSupport.toTimestamp(FileSystemSupport.getCreationTime(file.toPath(), LinkOption.NOFOLLOW_LINKS).toInstant());
     }
 
     @Override
-    public void setCreationTime(File file, long timestamp) throws IOException {
-        FileSystemSupport.setCreationTime(file.toPath(), FileTime.fromMillis(timestamp));
+    public void setCreationTime(File file, Timestamp timestamp) throws IOException {
+        FileSystemSupport.setCreationTime(file.toPath(), FileTime.from(DateTimeSupport.toInstant(timestamp)));
     }
 
     @Override
@@ -537,7 +540,22 @@ public class DesktopFileSystem extends FileSystem {
 
     @Override
     public long transfer(FileDescriptor in, FileDescriptor out) throws IOException {
-        return new FileInputStream(in).transferTo(new FileOutputStream(out));
+        try (FileInputStream inputStream = new FileInputStream(in); FileOutputStream outputStream = new FileOutputStream(out)) {
+            long transferred;
+            FileChannel fc = inputStream.getChannel();
+            long pos = fc.position();
+            transferred = fc.transferTo(pos, Long.MAX_VALUE, outputStream.getChannel());
+            long newPos = pos + transferred;
+            fc.position(newPos);
+            if (newPos >= fc.size()) {
+                return transferred;
+            }
+            try {
+                return Math.addExact(transferred, IOStreams.transfer(inputStream, outputStream));
+            } catch (ArithmeticException ignore) {
+                return Long.MAX_VALUE;
+            }
+        }
     }
 
     @Override

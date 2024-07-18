@@ -30,9 +30,11 @@ Single Instance Checker
 Stream API
 Process API
 String Template API
+Bidi API
 String/CharSequence Utilities
 Time/Date Utilities [Calendar-like LocalDate API]
 Future/Executors API
+More NIO Pointers[ByteArrayPointer, ReflectPointer...]
 --------------------------------
 
 --------------------------------
@@ -49,7 +51,8 @@ Bridge between JVM and Objective-C Runtime
 2D Graphics
 --------------------------------
 Panel Application
-Attributed Text
+MVC Utilities
+Rich Text
 --------------------------------
 
 --------------------------------
@@ -67,7 +70,6 @@ KCP
 --------------------------------
 Console/Terminal
 --------------------------------
-ANSI Escape Code [Windows require extra work, other platforms natively supported]
 REPL Console
 Curses
 --------------------------------
@@ -75,8 +77,8 @@ Curses
 --------------------------------
 Data Serialization/Deserialization
 --------------------------------
-JSON [Desktop org.json, Android/RoboVM SDK JSON API, TeaVM HTML5 JSON API]
-XML DOM SAX XPath [Desktop javax.xml, Android/RoboVM SDK XML API, TeaVM HTML5 XML API]
+JSON [JSONB JSONPath]
+XML DOM SAX StAX XPath [Desktop javax.xml, Android/RoboVM SDK XML API, TeaVM HTML5 XML API]
 SQLite
 --------------------------------
 

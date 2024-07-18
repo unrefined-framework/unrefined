@@ -3,7 +3,6 @@ package unrefined.runtime;
 import unrefined.app.Platform;
 import unrefined.context.Environment;
 import unrefined.desktop.ABI;
-import unrefined.desktop.ConsoleSupport;
 import unrefined.desktop.StandardDirectories;
 import unrefined.desktop.OSInfo;
 
@@ -42,7 +41,7 @@ public class DesktopPlatform extends Platform {
         Environment.properties.putProperty("unrefined.environment.charset.default", Charset.defaultCharset().displayName());
         Environment.properties.putProperty("unrefined.environment.charset.system", OSInfo.NATIVE_CHARSET.displayName());
         Environment.properties.putProperty("unrefined.environment.charset.wide", OSInfo.WIDE_CHARSET.displayName());
-        Environment.properties.putProperty("unrefined.environment.charset.console", ConsoleSupport.CHARSET.displayName());
+        Environment.properties.putProperty("unrefined.environment.charset.console", OSInfo.CONSOLE_CHARSET.displayName());
         Environment.properties.putBooleanProperty("unrefined.environment.headless", Boolean.parseBoolean(System.getProperty("java.awt.headless")));
         Environment.properties.putProperty("unrefined.os.separator.line", System.lineSeparator());
         Environment.properties.putProperty("unrefined.os.separator.file", File.separator);

@@ -35,6 +35,10 @@ import java.util.Set;
  */
 public class AttributedCharSequence {
 
+    public CharSequence getText() {
+        return text;
+    }
+
     CharSequence text;
 
     Map<Attribute, List<Range>> attributeMap;
@@ -630,6 +634,20 @@ public class AttributedCharSequence {
             Attribute[] attributes, int start,
             int end) {
         return new AttributedIterator(this, attributes, start, end);
+    }
+
+    @Override
+    public AttributedCharSequence clone() {
+        AttributedCharSequence clone;
+        try {
+            clone = (AttributedCharSequence) super.clone();
+        }
+        catch (CloneNotSupportedException e) {
+            clone = new AttributedCharSequence(text);
+        }
+        clone.attributeMap = new HashMap<>(11);
+        clone.attributeMap.putAll(attributeMap);
+        return clone;
     }
 
 }

@@ -2,11 +2,188 @@ package unrefined.media.graphics;
 
 import unrefined.util.Cacheable;
 import unrefined.util.NotInstantiableError;
+import unrefined.util.Objects;
+import unrefined.util.PhantomString;
+import unrefined.util.function.Assert;
 
-public final class Text {
-    
-    private Text() {
-        throw new NotInstantiableError(Text.class);
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+public class Text implements CharSequence, Cloneable {
+
+    private final PhantomString string;
+    private final List<SpanMark> spanMarks = new CopyOnWriteArrayList<>();
+
+    public Text(char[] array, int offset, int length) {
+        this.string = new PhantomString(array, offset, length);
+    }
+
+    public Text(char[] array) {
+        this.string = new PhantomString(array);
+    }
+
+    public Text(CharSequence sequence, int offset, int length) {
+        this.string = new PhantomString(sequence, offset, length);
+    }
+
+    public Text(CharSequence sequence) {
+        this.string = new PhantomString(sequence);
+    }
+
+    public Text(char[] array, int offset, int length, List<SpanMark> spanMarks) {
+        this.string = new PhantomString(array, offset, length);
+        if (spanMarks != null) this.spanMarks.addAll(spanMarks);
+    }
+
+    public Text(char[] array, List<SpanMark> spanMarks) {
+        this.string = new PhantomString(array);
+        if (spanMarks != null) this.spanMarks.addAll(spanMarks);
+    }
+
+    public Text(CharSequence sequence, int offset, int length, List<SpanMark> spanMarks) {
+        this.string = new PhantomString(sequence, offset, length);
+        if (spanMarks != null) this.spanMarks.addAll(spanMarks);
+    }
+
+    public Text(CharSequence sequence, List<SpanMark> spanMarks) {
+        this.string = new PhantomString(sequence);
+        if (spanMarks != null) this.spanMarks.addAll(spanMarks);
+    }
+
+    public List<SpanMark> spanMarks() {
+        return spanMarks;
+    }
+
+    @Override
+    public int length() {
+        return string.length();
+    }
+
+    @Override
+    public char charAt(int index) {
+        return string.charAt(index);
+    }
+
+    @Override
+    public CharSequence subSequence(int start, int end) {
+        return new Text(string, start, end);
+    }
+
+    @Override
+    public Text clone() {
+        Text clone;
+        try {
+            clone = (Text) super.clone();
+        }
+        catch (CloneNotSupportedException e) {
+            clone = new Text(string);
+        }
+        clone.spanMarks().addAll(spanMarks);
+        return clone;
+    }
+
+    public static class SpanMark {
+
+        private final int start, end;
+        private final Map<Attribute, Object> attributeMap;
+
+        public SpanMark(int start, int end, Map<Attribute, Object> attributes) {
+            this.start = start;
+            this.end = end;
+            this.attributeMap = Collections.unmodifiableMap(new HashMap<>(attributes));
+        }
+
+        public int getStart() {
+            return start;
+        }
+
+        public int getEnd() {
+            return end;
+        }
+
+        public Map<Attribute, Object> getAttributes() {
+            return attributeMap;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            SpanMark spanMark = (SpanMark) o;
+            return start == spanMark.start && end == spanMark.end && attributeMap.equals(spanMark.attributeMap);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = start;
+            result = 31 * result + end;
+            result = 31 * result + attributeMap.hashCode();
+            return result;
+        }
+
+        @Override
+        public String toString() {
+            return getClass().getName()
+                    + '{' +
+                    "start=" + start +
+                    ", end=" + end +
+                    '}';
+        }
+
+    }
+
+    public enum Attribute implements unrefined.beans.Attribute {
+
+        BRUSH(Font.class),
+        //STYLE(Integer.class),
+        //STROKE_WIDTH(Float.class),
+        FONT(Font.class),
+        BACKGROUND(Brush.class),
+        FOREGROUND(Brush.class),
+        SIZE(Float.class),
+        DIRECTION(Integer.class),
+        //ALIGNMENT(Integer.class),
+        //SUBPIXEL(Boolean.class),
+        UNDERLINE(Boolean.class),
+        STRIKETHROUGH(Boolean.class),
+        KERNING(Boolean.class),
+        VARIANT_LIGATURES(Boolean.class),
+        SUPERSCRIPT(Integer.class),
+        LETTER_SPACING(Float.class),
+        SCALE_X(Float.class),
+        SCALE_Y(Float.class),
+        SKEW_X(Float.class),
+        SKEW_Y(Float.class),
+        //SHADOW_BLUR(Float.class),
+        //SHADOW_OFFSET_X(Float.class),
+        //SHADOW_OFFSET_Y(Float.class),
+        //SHADOW_COLOR(Integer.class),
+
+        REPLACEMENT(Bitmap.class),
+        REPLACEMENT_BASELINE(Integer.class);
+
+        private final Class<?> type;
+        private final Assert<Object> predicate;
+        Attribute(Class<?> type) {
+            this.type = Objects.requireNonNull(type);
+            this.predicate = null;
+        }
+        Attribute(Class<?> type, Assert<Object> predicate) {
+            this.type = Objects.requireNonNull(type);
+            this.predicate = predicate;
+        }
+        @Override
+        public Class<?> getType() {
+            return type;
+        }
+        @Override
+        public boolean isValid(Object value) {
+            return predicate == null ? unrefined.beans.Attribute.super.isValid(value) : predicate.test(value);
+        }
     }
 
     public static class Metrics implements Cacheable {
@@ -332,6 +509,36 @@ public final class Text {
 
     }
 
+    public static final class Baseline {
+        private Baseline() {
+            throw new NotInstantiableError(Baseline.class);
+        }
+        public static final int ALPHABETIC  = 0;
+        public static final int IDEOGRAPHIC = 1;
+        public static final int HANGING     = 2;
+        public static final int BOTTOM      = 3;
+        public static final int CENTER      = 4;
+        public static final int TOP         = 5;
+        public static int checkValid(int baseline) {
+            if (baseline < ALPHABETIC || baseline > TOP) throw new IllegalArgumentException("Illegal text baseline: " + baseline);
+            else return baseline;
+        }
+        public static boolean isValid(int baseline) {
+            return baseline >= ALPHABETIC && baseline <= TOP;
+        }
+        public static String toString(int baseline) {
+            switch (baseline) {
+                case ALPHABETIC: return "ALPHABETIC";
+                case IDEOGRAPHIC: return "IDEOGRAPHIC";
+                case HANGING: return "HANGING";
+                case BOTTOM: return "BOTTOM";
+                case CENTER: return "CENTER";
+                case TOP: return "TOP";
+                default: throw new IllegalArgumentException("Illegal text baseline: " + baseline);
+            }
+        }
+    }
+
     public static final class Direction {
         private Direction() {
             throw new NotInstantiableError(Direction.class);
@@ -368,8 +575,8 @@ public final class Text {
             if (alignment < START || alignment > END) throw new IllegalArgumentException("Illegal text alignment: " + alignment);
             else return alignment;
         }
-        public static boolean isValid(int align) {
-            return align >= START && align <= END;
+        public static boolean isValid(int alignment) {
+            return alignment >= START && alignment <= END;
         }
         public static String toString(int alignment) {
             switch (alignment) {
@@ -379,6 +586,36 @@ public final class Text {
                 default: throw new IllegalArgumentException("Illegal text alignment: " + alignment);
             }
         }
+    }
+
+    public static final class Superscript {
+        private Superscript() {
+            throw new NotInstantiableError(Alignment.class);
+        }
+        public static final int SUB  = -1;
+        public static final int NONE = 0;
+        public static final int SUP  = 1;
+
+        public static int checkValid(int superscript) {
+            if (superscript < SUB || superscript > SUP) throw new IllegalArgumentException("Illegal text superscript: " + superscript);
+            else return superscript;
+        }
+        public static boolean isValid(int superscript) {
+            return superscript >= SUB && superscript <= SUP;
+        }
+        public static String toString(int superscript) {
+            switch (superscript) {
+                case SUB: return "SUB";
+                case NONE: return "NONE";
+                case SUP: return "SUP";
+                default: throw new IllegalArgumentException("Illegal text superscript: " + superscript);
+            }
+        }
+    }
+
+    @Override
+    public String toString() {
+        return string.toString();
     }
 
 }

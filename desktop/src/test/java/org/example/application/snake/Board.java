@@ -205,7 +205,7 @@ public class Board extends ContextAdapter {
     }
 
     @Override
-    public boolean onKeyDown(Context context, String key, String code, int location, int modifiers) {
+    public boolean onKeyDown(Context context, String key, String code, int location, int modifiers, boolean repeat) {
 
         if (("KeyA".equals(code) || "ArrowLeft".equals(code)) && (!rightDirection)) {
             leftDirection = true;

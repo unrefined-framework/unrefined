@@ -1,6 +1,6 @@
 package unrefined.desktop;
 
-import unrefined.internal.X11.X11CursorSupport;
+import unrefined.desktop.X11.X11CursorSupport;
 import unrefined.media.graphics.CursorNotFoundException;
 import unrefined.util.NotInstantiableError;
 

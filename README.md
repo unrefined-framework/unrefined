@@ -1,6 +1,6 @@
 # Unrefined
-Version Name: 0.8.0  
-Version Code: 80  
+Version Name: 0.9.0  
+Version Code: 91  
 Version Codename: Claw Hammer
 
 Cross-platform multimedia application framework written in pure Java.
@@ -12,13 +12,19 @@ It provides:
 [Console API](/core/src/main/java/unrefined/io/console)  
 [Window & Widget Management API](/core/src/main/java/unrefined/context)  
 [Graphics API that 90% compatible with HTML5 &lt;canvas&gt;](/core/src/main/java/unrefined/media/graphics)  
+[Music & Sound Effects API](/core/src/main/java/unrefined/media/sound)  
 [Memory Management API](/core/src/main/java/unrefined/nio)  
 [Qt-like Signal/Slot API](/core/src/main/java/unrefined/util/signal)  
 [Pub/sub Event Bus API](/core/src/main/java/unrefined/util/event)  
 [Functional Programming Helper API](/core/src/main/java/unrefined/util/function/Function.java)  
 [Extended Collections API](/core/src/main/java/unrefined/util/)  
+[Extended Math API](/core/src/main/java/unrefined/math/)  
 [Animation API](/core/src/main/java/unrefined/util/animation)  
-[Serialization/Deserialization API](/core/src/main/java/unrefined/io/Savable.java)  
+[Serialization/Deserialization API](/core/src/main/java/unrefined/io/)  
+[Preferences API](/core/src/main/java/unrefined/app/Preferences.java)  
+[Extended Properties & INI API](/core/src/main/java/unrefined/util/HierarchicalProperties.java)  
+[JSON API](/core/src/main/java/unrefined/json/)  
+[XML DOM/SAX/StAX/XPath API](/core/src/main/java/unrefined/xml/)  
 [FileSystem API](/core/src/main/java/unrefined/io/file)  
 [Log API](/core/src/main/java/unrefined/app/Log.java)  
 [Net API](/core/src/main/java/unrefined/net)  

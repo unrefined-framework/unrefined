@@ -5,6 +5,10 @@ import java.util.Date;
 
 public class Timestamp implements Serializable, Cloneable, Comparable<Timestamp> {
 
+    public static final Timestamp EPOCH = new Timestamp(0, 0);
+    public static final Timestamp MIN = new Timestamp(-31557014167219200L, 0);
+    public static final Timestamp MAX = new Timestamp(31556889864403199L, 999_999_999);
+
     private static final long serialVersionUID = -2385148509521130156L;
 
     private final long seconds;
@@ -24,7 +28,7 @@ public class Timestamp implements Serializable, Cloneable, Comparable<Timestamp>
     }
 
     public Timestamp() {
-        this(System.currentTimeMillis(), DateTime.getInstance().nowNanos());
+        this(DateTime.getInstance().nowSeconds(), DateTime.getInstance().nowNanos());
     }
 
     public long seconds() {

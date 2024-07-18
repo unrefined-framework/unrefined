@@ -1,6 +1,6 @@
 package unrefined.io;
 
-import unrefined.util.FastArray;
+import unrefined.util.Arrays;
 import unrefined.util.NotInstantiableError;
 import unrefined.util.reflect.Reflection;
 
@@ -22,13 +22,12 @@ import java.io.Reader;
 import java.io.Writer;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
 public final class IOStreams {
 
-    private static final int DEFAULT_BUFFER_SIZE = 8192;
+    public static final int DEFAULT_BUFFER_SIZE = 8192;
 
     private IOStreams() {
         throw new NotInstantiableError(IOStreams.class);
@@ -53,12 +52,24 @@ public final class IOStreams {
     }
 
     public static InputStream getFilteredInputStream(InputStream in) {
-        if (!(in instanceof FilterInputStream)) return in;
+        if (!(in instanceof FilterInputStream)) {
+            if (in instanceof ReaderInputStream) {
+                Reader reader = getFilteredReader(((ReaderInputStream) in).getReader());
+                if (reader instanceof InputStreamReader) return getFilteredInputStream(getInputStream((InputStreamReader) reader));
+            }
+            else return in;
+        }
         return getFilteredInputStream((InputStream) Reflection.getInstance().getObjectField(in, inFieldStream));
     }
 
     public static OutputStream getFilteredOutputStream(OutputStream out) {
-        if (!(out instanceof FilterOutputStream)) return out;
+        if (!(out instanceof FilterOutputStream)) {
+            if (out instanceof WriterOutputStream) {
+                Writer writer = getFilteredWriter(((WriterOutputStream) out).getWriter());
+                if (writer instanceof OutputStreamWriter) return getFilteredOutputStream(getOutputStream((OutputStreamWriter) writer));
+            }
+            else return out;
+        }
         return getFilteredOutputStream((OutputStream) Reflection.getInstance().getObjectField(out, outFieldStream));
     }
 
@@ -128,7 +139,7 @@ public final class IOStreams {
     }
 
     public static byte[] readAllBytes(InputStream in) throws IOException {
-        return readNBytes(in, FastArray.ARRAY_LENGTH_MAX);
+        return readNBytes(in, Arrays.ARRAY_LENGTH_MAX);
     }
 
     public int readNBytes(InputStream in, byte[] b, int off, int len) throws IOException {
@@ -171,11 +182,11 @@ public final class IOStreams {
             }
 
             if (nread > 0) {
-                if (FastArray.ARRAY_LENGTH_MAX - total < nread) {
+                if (Arrays.ARRAY_LENGTH_MAX - total < nread) {
                     throw new OutOfMemoryError("Required array size too large");
                 }
                 if (nread < buf.length) {
-                    buf = Arrays.copyOfRange(buf, 0, nread);
+                    buf = java.util.Arrays.copyOfRange(buf, 0, nread);
                 }
                 total += nread;
                 if (result == null) {
@@ -197,7 +208,7 @@ public final class IOStreams {
                 return new byte[0];
             }
             return result.length == total ?
-                    result : Arrays.copyOf(result, total);
+                    result : java.util.Arrays.copyOf(result, total);
         }
 
         result = new byte[total];
@@ -260,10 +271,10 @@ public final class IOStreams {
     public static void discardNBytes(InputStream in, long n) throws IOException {
         if (n < 0) throw new IllegalArgumentException("n < 0");
         Objects.requireNonNull(in, "in");
-        int last = (int) (n % FastArray.ARRAY_LENGTH_MAX);
-        long times = n / FastArray.ARRAY_LENGTH_MAX;
+        int last = (int) (n % Arrays.ARRAY_LENGTH_MAX);
+        long times = n / Arrays.ARRAY_LENGTH_MAX;
         for (long i = 0; i < times; i ++) {
-            discardNBytes(in, FastArray.ARRAY_LENGTH_MAX);
+            discardNBytes(in, Arrays.ARRAY_LENGTH_MAX);
         }
         if (last > 0) discardNBytes(in, last);
     }
@@ -311,12 +322,24 @@ public final class IOStreams {
     }
 
     public static Reader getFilteredReader(Reader in) {
-        if (!(in instanceof FilterReader)) return in;
+        if (!(in instanceof FilterReader)) {
+            if (in instanceof InputStreamReader) {
+                InputStream stream = getInputStream((InputStreamReader) in);
+                if (stream instanceof ReaderInputStream) return ((ReaderInputStream) stream).getReader();
+            }
+            return in;
+        }
         return getFilteredReader((Reader) Reflection.getInstance().getObjectField(in, inFieldReader));
     }
 
     public static Writer getFilteredWriter(Writer out) {
-        if (!(out instanceof FilterWriter)) return out;
+        if (!(out instanceof FilterWriter)) {
+            if (out instanceof OutputStreamWriter) {
+                OutputStream stream = getOutputStream((OutputStreamWriter) out);
+                if (stream instanceof WriterOutputStream) return ((WriterOutputStream) stream).getWriter();
+            }
+            return out;
+        }
         return getFilteredWriter((Writer) Reflection.getInstance().getObjectField(out, outFieldWriter));
     }
 

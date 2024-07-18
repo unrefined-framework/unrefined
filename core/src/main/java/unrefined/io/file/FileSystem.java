@@ -4,6 +4,7 @@ import unrefined.context.Environment;
 import unrefined.io.IOStreams;
 import unrefined.util.NotInstantiableError;
 import unrefined.util.ScopedIterable;
+import unrefined.util.Timestamp;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -335,12 +336,12 @@ public abstract class FileSystem {
         return DEFAULT_CWD;
     }
 
-    public abstract long getLastModifiedTime(File file) throws IOException;
-    public abstract void setLastModifiedTime(File file, long timestamp) throws IOException;
-    public abstract long getLastAccessTime(File file) throws IOException;
-    public abstract void setLastAccessTime(File file, long timestamp) throws IOException;
-    public abstract long getCreationTime(File file) throws IOException;
-    public abstract void setCreationTime(File file, long timestamp) throws IOException;
+    public abstract Timestamp getLastModifiedTime(File file) throws IOException;
+    public abstract void setLastModifiedTime(File file, Timestamp timestamp) throws IOException;
+    public abstract Timestamp getLastAccessTime(File file) throws IOException;
+    public abstract void setLastAccessTime(File file, Timestamp timestamp) throws IOException;
+    public abstract Timestamp getCreationTime(File file) throws IOException;
+    public abstract void setCreationTime(File file, Timestamp timestamp) throws IOException;
 
     public ChannelFile openChannelFile(File file, int openOptions) throws IOException {
         return new ChannelFile(file, openOptions);

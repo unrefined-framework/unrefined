@@ -84,4 +84,9 @@ public final class OSInfo {
 
     public static final File NULL_FILE = IS_WINDOWS ? new File(File.listRoots()[0], "NUL") : new File("/dev/null");
 
+    public static final Charset CONSOLE_CHARSET =
+            Charset.forName(System.getProperty("stdout.encoding", System.getProperty("sun.stdout.encoding",
+            System.getProperty("native.encoding", System.getProperty("sun.jnu.encoding")))));
+
+
 }

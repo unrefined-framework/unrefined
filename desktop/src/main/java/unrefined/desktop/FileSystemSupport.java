@@ -1,6 +1,6 @@
 package unrefined.desktop;
 
-import unrefined.internal.windows.WindowsFileSystemSupport;
+import unrefined.desktop.windows.WindowsFileSystemSupport;
 import unrefined.io.file.FileSystem;
 import unrefined.util.NotInstantiableError;
 import unrefined.util.UnexpectedError;

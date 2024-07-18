@@ -6,6 +6,9 @@ import unrefined.util.Rational;
 import unrefined.util.concurrent.Producer;
 import unrefined.util.function.Functor;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
@@ -18,13 +21,37 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Environment implements Map<Object, Object> {
 
-    public static <S> S obtain(Class<S> clazz, ClassLoader classLoader) {
+    @SuppressWarnings("unchecked")
+    public static <T> T defaultInstance(Class<T> clazz) {
+        try {
+            Method method = clazz.getMethod("defaultInstance");
+            if (Modifier.isStatic(method.getModifiers()) && clazz.isAssignableFrom(method.getReturnType())) {
+                return (T) method.invoke(null);
+            }
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
+        }
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T getInstance(Class<T> clazz) {
+        try {
+            Method method = clazz.getMethod("getInstance");
+            if (Modifier.isStatic(method.getModifiers()) && clazz.isAssignableFrom(method.getReturnType())) {
+                return (T) method.invoke(null);
+            }
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
+        }
+        return null;
+    }
+
+    public static <S> S obtainService(Class<S> clazz, ClassLoader classLoader) {
         Iterator<S> iterator = ServiceLoader.load(clazz, classLoader).iterator();
         if (iterator.hasNext()) return iterator.next();
         else return null;
     }
 
-    public static <S> S obtain(Class<S> clazz) {
+    public static <S> S obtainService(Class<S> clazz) {
         Iterator<S> iterator = ServiceLoader.load(clazz).iterator();
         if (iterator.hasNext()) return iterator.next();
         else return null;
@@ -116,6 +143,46 @@ public class Environment implements Map<Object, Object> {
     public String removeProperty(String key) {
         Object result = remove(key);
         return result instanceof String ? (String) result : null;
+    }
+    
+    public byte decodeByteProperty(String key, byte defaultValue) {
+        String value = getProperty(key);
+        try {
+            return value == null ? defaultValue : Byte.decode(value);
+        }
+        catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    public short decodeShortProperty(String key, short defaultValue) {
+        String value = getProperty(key);
+        try {
+            return value == null ? defaultValue : Short.decode(value);
+        }
+        catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    public int decodeIntProperty(String key, int defaultValue) {
+        String value = getProperty(key);
+        try {
+            return value == null ? defaultValue : Integer.decode(value);
+        }
+        catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    public long decodeLongProperty(String key, long defaultValue) {
+        String value = getProperty(key);
+        try {
+            return value == null ? defaultValue : Long.decode(value);
+        }
+        catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     public boolean parseBooleanProperty(String key) {

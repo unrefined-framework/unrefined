@@ -97,7 +97,7 @@ public class SparseCharArray implements Cloneable, Iterable<Character> {
      * if no such mapping has been made.
      */
     public char get(int key, char valueIfKeyNotFound) {
-        int i = FastArray.binarySearchUnchecked(keys, 0, size, key);
+        int i = Arrays.binarySearchUnchecked(keys, 0, size, key);
 
         if (i < 0) {
             return valueIfKeyNotFound;
@@ -110,7 +110,7 @@ public class SparseCharArray implements Cloneable, Iterable<Character> {
      * Removes the mapping from the specified key, if there was any.
      */
     public void remove(int key) {
-        int i = FastArray.binarySearchUnchecked(keys, 0, size, key);
+        int i = Arrays.binarySearchUnchecked(keys, 0, size, key);
 
         if (i >= 0) {
             removeAt(i);
@@ -148,7 +148,7 @@ public class SparseCharArray implements Cloneable, Iterable<Character> {
      * was one.
      */
     public void put(int key, char value) {
-        int i = FastArray.binarySearchUnchecked(keys, 0, size, key);
+        int i = Arrays.binarySearchUnchecked(keys, 0, size, key);
 
         if (i >= 0) {
             values[i] = value;
@@ -257,7 +257,7 @@ public class SparseCharArray implements Cloneable, Iterable<Character> {
      * key is not mapped.
      */
     public int indexOfKey(int key) {
-        return FastArray.binarySearchUnchecked(keys, 0, size, key);
+        return Arrays.binarySearchUnchecked(keys, 0, size, key);
     }
 
     /**

@@ -1,10 +1,31 @@
 package unrefined.util.foreign;
 
+import unrefined.nio.AddressArrayHandle;
+import unrefined.nio.AddressHandle;
+import unrefined.nio.BooleanArrayHandle;
+import unrefined.nio.BooleanHandle;
+import unrefined.nio.ByteArrayHandle;
+import unrefined.nio.ByteHandle;
+import unrefined.nio.CharArrayHandle;
+import unrefined.nio.CharHandle;
+import unrefined.nio.DoubleArrayHandle;
+import unrefined.nio.DoubleHandle;
+import unrefined.nio.FloatArrayHandle;
+import unrefined.nio.FloatHandle;
+import unrefined.nio.IntArrayHandle;
+import unrefined.nio.IntHandle;
+import unrefined.nio.LongArrayHandle;
+import unrefined.nio.LongHandle;
+import unrefined.nio.NativeIntArrayHandle;
+import unrefined.nio.NativeIntHandle;
+import unrefined.nio.NativeLongArrayHandle;
+import unrefined.nio.NativeLongHandle;
 import unrefined.nio.Pointer;
+import unrefined.nio.ShortArrayHandle;
+import unrefined.nio.ShortHandle;
 import unrefined.util.UnexpectedError;
 import unrefined.util.reflect.Reflection;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -14,9 +35,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
 
-public abstract class Aggregate implements Comparable<Aggregate>, Closeable {
+public abstract class Aggregate extends Pointer.Handle implements Comparable<Aggregate> {
 
     private static final Descriptor EMPTY = new Descriptor(Collections.emptyList(), 0);
 
@@ -25,7 +45,8 @@ public abstract class Aggregate implements Comparable<Aggregate>, Closeable {
     }
 
     public static Descriptor declare(Object[] memberTypes, long[] memberOffsets, long[] memberRepetitions, long padding) {
-        if (memberOffsets.length != memberTypes.length) throw new IndexOutOfBoundsException("Array length mismatch");
+        if (memberTypes.length != memberOffsets.length) throw new IndexOutOfBoundsException("Array length mismatch");
+        if (memberOffsets.length != memberRepetitions.length) throw new IndexOutOfBoundsException("Array length mismatch");
         int length = memberOffsets.length;
         if (length == 0) return new Descriptor(Collections.emptyList(), padding);
         else {
@@ -33,7 +54,8 @@ public abstract class Aggregate implements Comparable<Aggregate>, Closeable {
             for (int i = 0; i < length; i ++) {
                 list.add(new Member(memberTypes[i], memberOffsets[i], memberRepetitions[i]));
             }
-            return new Descriptor(Collections.unmodifiableList(list), list.getLast().getOffset() + list.getLast().size() + padding);
+            Member last = list.get(length - 1);
+            return new Descriptor(Collections.unmodifiableList(list), last.getOffset() + last.size() + padding);
         }
     }
 
@@ -49,11 +71,12 @@ public abstract class Aggregate implements Comparable<Aggregate>, Closeable {
                                      int length, long padding) {
         if (length == 0) return new Descriptor(Collections.emptyList(), padding);
         else {
-            List<Member> list = new ArrayList<>(memberTypes.length);
+            List<Member> list = new ArrayList<>(length);
             for (int i = 0; i < length; i ++) {
                 list.add(new Member(memberTypes[memberTypesOffset + i], memberOffsets[memberOffsetsOffset + i], memberRepetitions[memberRepetitionsOffset + i]));
             }
-            return new Descriptor(Collections.unmodifiableList(list), list.getLast().getOffset() + list.getLast().size() + padding);
+            Member last = list.get(length - 1);
+            return new Descriptor(Collections.unmodifiableList(list), last.getOffset() + last.size() + padding);
         }
     }
 
@@ -78,7 +101,7 @@ public abstract class Aggregate implements Comparable<Aggregate>, Closeable {
             list.add(first);
             offset += first.size();
             for (int i = 1; i < length; i ++) {
-                long tmpTypeSize = Math.min(Foreign.getInstance().addressSize(), sizeOf(memberTypes[i + memberTypesOffset]));
+                long tmpTypeSize = Math.min(Foreign.getInstance().addressSize(), alignSizeOf(memberTypes[i + memberTypesOffset]));
                 long left = offset % tmpTypeSize;
                 if (left > 0) offset += tmpTypeSize - left;
                 Member tmpMember = new Member(memberTypes[i + memberTypesOffset], offset, memberRepetitions[i + memberRepetitionsOffset]);
@@ -87,7 +110,7 @@ public abstract class Aggregate implements Comparable<Aggregate>, Closeable {
                 offset += tmpMember.size();
             }
             if (length - 1 != 0) {
-                long left = list.getLast().typeSize() % alignment;
+                long left = list.get(list.size() - 1).typeSize() % alignment;
                 return new Descriptor(Collections.unmodifiableList(list), offset + (left == 0 ? 0 : alignment - left));
             }
             else return new Descriptor(Collections.unmodifiableList(list), offset);
@@ -143,10 +166,8 @@ public abstract class Aggregate implements Comparable<Aggregate>, Closeable {
         return declareUnion(memberTypes, memberRepetitions);
     }
 
-    private final AtomicReference<Pointer> memory = new AtomicReference<>();
-
     protected Aggregate(Pointer memory) {
-        this.memory.set(Objects.requireNonNull(memory));
+        super(memory);
     }
 
     public static Aggregate newProxyInstance(Descriptor descriptor, Pointer memory) {
@@ -175,19 +196,6 @@ public abstract class Aggregate implements Comparable<Aggregate>, Closeable {
 
     public static Pointer allocateDirect(Descriptor descriptor) throws IOException {
         return Pointer.allocateDirect(descriptor.size());
-    }
-
-    public void useMemory(Pointer memory) {
-        this.memory.set(Objects.requireNonNull(memory));
-    }
-
-    public Pointer memory() {
-        return memory.get();
-    }
-
-    @Override
-    public void close() throws IOException {
-        memory.get().close();
     }
 
     public static long sizeOfType(Class<? extends Aggregate> clazz) {
@@ -252,6 +260,25 @@ public abstract class Aggregate implements Comparable<Aggregate>, Closeable {
         throw new IllegalArgumentException("Illegal member type: " + memberType);
     }
 
+    private static long alignSizeOf(Object memberType) {
+        if (memberType instanceof Descriptor) {
+            long size = 0;
+            for (Member member : ((Descriptor) memberType).getMembers()) {
+                size = Math.max(size, alignSizeOf(member.getType()));
+            }
+            return size;
+        }
+        else if (memberType instanceof Class) {
+            if (memberType == boolean.class || memberType == byte.class) return 1;
+            else if (memberType == short.class || memberType == char.class) return 2;
+            else if (memberType == int.class || memberType == float.class) return 4;
+            else if (memberType == long.class || memberType == double.class) return 8;
+            else if (Aggregate.class.isAssignableFrom((Class<?>) memberType)) return
+                    alignSizeOf(descriptorOf((Class<? extends Aggregate>) memberType));
+        }
+        throw new IllegalArgumentException("Illegal member type: " + memberType);
+    }
+
     private static Object checkMemberType(Object memberType) {
         if (memberType instanceof Class && (memberType == boolean.class || memberType == byte.class || memberType == char.class ||
                 memberType == short.class || memberType == int.class || memberType == long.class ||
@@ -268,7 +295,7 @@ public abstract class Aggregate implements Comparable<Aggregate>, Closeable {
     }
 
     public final static class Member {
-
+        
         private final Object type;
         private final long offset;
         private final long repetition;
@@ -318,6 +345,18 @@ public abstract class Aggregate implements Comparable<Aggregate>, Closeable {
             return (int) (size ^ (size >>> 32));
         }
 
+        @Override
+        public String toString() {
+            return getClass().getName()
+                    + '{' +
+                    "type=" + type +
+                    ", offset=" + offset +
+                    ", repetition=" + repetition +
+                    ", size=" + size +
+                    ", typeSize=" + typeSize +
+                    '}';
+        }
+
     }
 
     public final static class Descriptor {
@@ -330,8 +369,8 @@ public abstract class Aggregate implements Comparable<Aggregate>, Closeable {
             this.size = size;
         }
 
-        public List<Member> members() {
-            return members;
+        public List<Member> getMembers() {
+            return new ArrayList<>(members);
         }
 
         public long size() {
@@ -356,6 +395,14 @@ public abstract class Aggregate implements Comparable<Aggregate>, Closeable {
             return result;
         }
 
+        @Override
+        public String toString() {
+            return getClass().getName()
+                    + '{' +
+                    "size=" + size +
+                    '}';
+        }
+
     }
 
     private final static class Proxy extends Aggregate {
@@ -364,11 +411,225 @@ public abstract class Aggregate implements Comparable<Aggregate>, Closeable {
             super(memory);
             this.descriptor = Objects.requireNonNull(descriptor);
         }
+        @Override
+        public void set(Pointer memory, long offset) {
+            payload().transferFrom(0, memory, offset, descriptor.size());
+        }
+        @Override
+        public void get(Pointer memory, long offset) {
+            payload().transferTo(0, memory, offset, descriptor.size());
+        }
+    }
+
+    @Override
+    public void set(Pointer memory, long offset) {
+        payload().transferFrom(0, memory, offset, getDescriptor().size());
+    }
+
+    @Override
+    public void get(Pointer memory, long offset) {
+        payload().transferTo(0, memory, offset, getDescriptor().size());
     }
 
     @Override
     public int compareTo(Aggregate other) {
-        return memory().compareTo(other.memory(), 0, getDescriptor().size());
+        return payload().compareTo(other.payload(), 0, getDescriptor().size());
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getName()
+                + '{' +
+                "payload=" + payload() +
+                ", descriptor=" + getDescriptor() +
+                '}';
+    }
+
+    public static class ArrayHandle<T extends Aggregate> extends Pointer.Handle implements Comparable<ArrayHandle<? extends Aggregate>> {
+
+        public static <T extends Aggregate> ArrayHandle<T> wrap(Pointer memory, Class<T> clazz, int length) {
+            return new ArrayHandle<>(memory, descriptorOf(clazz).size(), length);
+        }
+
+        public static <T extends Aggregate> ArrayHandle<T> allocate(Class<T> clazz, int length) throws IOException {
+            long typeSize = descriptorOf(clazz).size();
+            return new ArrayHandle<>(Pointer.allocate((long) length * typeSize), typeSize, length);
+        }
+
+        public static <T extends Aggregate> ArrayHandle<T> allocateDirect(Class<T> clazz, int length) throws IOException {
+            long typeSize = descriptorOf(clazz).size();
+            return new ArrayHandle<>(Pointer.allocateDirect((long) length * typeSize), typeSize, length);
+        }
+
+        public static ArrayHandle<?> wrap(Pointer memory, Descriptor descriptor, int length) {
+            return new ArrayHandle<>(memory, descriptor.size(), length);
+        }
+
+        public static ArrayHandle<?> allocate(Descriptor descriptor, int length) throws IOException {
+            long typeSize = descriptor.size();
+            return new ArrayHandle<>(Pointer.allocate((long) length * typeSize), typeSize, length);
+        }
+
+        public static ArrayHandle<?> allocateDirect(Descriptor descriptor, int length) throws IOException {
+            long typeSize = descriptor.size();
+            return new ArrayHandle<>(Pointer.allocateDirect((long) length * typeSize), typeSize, length);
+        }
+
+        private final int length;
+        private final long typeSize;
+
+        protected ArrayHandle(Pointer memory, long typeSize, int length) {
+            super(memory);
+            this.typeSize = typeSize;
+            this.length = length;
+        }
+
+        public int length() {
+            return length;
+        }
+
+        public void get(T[] array, int index) {
+            long offset = 0;
+            for (int i = 0; i < length; i ++) {
+                payload().transferTo(offset, array[index + i].payload(), 0, typeSize);
+                offset += typeSize;
+            }
+        }
+
+        public void get(T[] array) {
+            long offset = 0;
+            for (int i = 0; i < length; i ++) {
+                payload().transferTo(offset, array[i].payload(), 0, typeSize);
+                offset += typeSize;
+            }
+        }
+
+        public void set(T[] array, int index) {
+            long offset = 0;
+            for (int i = 0; i < length; i ++) {
+                payload().transferFrom(offset, array[index + i].payload(), 0, typeSize);
+                offset += typeSize;
+            }
+        }
+
+        public void set(T[] array) {
+            long offset = 0;
+            for (int i = 0; i < length; i ++) {
+                payload().transferFrom(offset, array[i].payload(), 0, typeSize);
+                offset += typeSize;
+            }
+        }
+
+        @Override
+        public int compareTo(ArrayHandle<? extends Aggregate> other) {
+            return payload().compareTo(other.payload(), 0, (long) length * typeSize);
+        }
+
+        @Override
+        public void set(Pointer memory, long offset) {
+            payload().transferFrom(0, memory, offset, (long) length * typeSize);
+        }
+        @Override
+        public void get(Pointer memory, long offset) {
+            payload().transferTo(0, memory, offset, (long) length * typeSize);
+        }
+
+    }
+    
+    public BooleanHandle declareBoolean(int index) {
+        return BooleanHandle.wrap(payload().slice(getDescriptor().getMembers().get(index).getOffset(), 1));
+    }
+
+    public ByteHandle declareByte(int index) {
+        return ByteHandle.wrap(payload().slice(getDescriptor().getMembers().get(index).getOffset(), 1));
+    }
+
+    public CharHandle declareChar(int index) {
+        return CharHandle.wrap(payload().slice(getDescriptor().getMembers().get(index).getOffset(), 2));
+    }
+
+    public ShortHandle declareShort(int index) {
+        return ShortHandle.wrap(payload().slice(getDescriptor().getMembers().get(index).getOffset(), 2));
+    }
+
+    public IntHandle declareInt(int index) {
+        return IntHandle.wrap(payload().slice(getDescriptor().getMembers().get(index).getOffset(), 4));
+    }
+
+    public LongHandle declareLong(int index) {
+        return LongHandle.wrap(payload().slice(getDescriptor().getMembers().get(index).getOffset(), 8));
+    }
+
+    public FloatHandle declareFloat(int index) {
+        return FloatHandle.wrap(payload().slice(getDescriptor().getMembers().get(index).getOffset(), 4));
+    }
+
+    public DoubleHandle declareDouble(int index) {
+        return DoubleHandle.wrap(payload().slice(getDescriptor().getMembers().get(index).getOffset(), 8));
+    }
+
+    public NativeIntHandle declareNativeInt(int index) {
+        return NativeIntHandle.wrap(payload().slice(getDescriptor().getMembers().get(index).getOffset(), Foreign.getInstance().nativeIntSize()));
+    }
+
+    public NativeLongHandle declareNativeLong(int index) {
+        return NativeLongHandle.wrap(payload().slice(getDescriptor().getMembers().get(index).getOffset(), Foreign.getInstance().nativeLongSize()));
+    }
+
+    public AddressHandle declareAddress(int index) {
+        return AddressHandle.wrap(payload().slice(getDescriptor().getMembers().get(index).getOffset(), Foreign.getInstance().addressSize()));
+    }
+
+    public <T extends Aggregate> T declareAggregate(Class<T> clazz, int index) {
+        return newInstance(clazz, payload().slice(getDescriptor().getMembers().get(index).getOffset(), descriptorOf(clazz).size()));
+    }
+    
+    public BooleanArrayHandle declareBooleanArray(int index, int length) {
+        return BooleanArrayHandle.wrap(payload().slice(getDescriptor().getMembers().get(index).getOffset(), length), length);
+    }
+
+    public ByteArrayHandle declareByteArray(int index, int length) {
+        return ByteArrayHandle.wrap(payload().slice(getDescriptor().getMembers().get(index).getOffset(), length), length);
+    }
+
+    public CharArrayHandle declareCharArray(int index, int length) {
+        return CharArrayHandle.wrap(payload().slice(getDescriptor().getMembers().get(index).getOffset(), (long) length << 1), length);
+    }
+
+    public ShortArrayHandle declareShortArray(int index, int length) {
+        return ShortArrayHandle.wrap(payload().slice(getDescriptor().getMembers().get(index).getOffset(), (long) length << 1), length);
+    }
+
+    public IntArrayHandle declareIntArray(int index, int length) {
+        return IntArrayHandle.wrap(payload().slice(getDescriptor().getMembers().get(index).getOffset(), (long) length << 2), length);
+    }
+
+    public LongArrayHandle declareLongArray(int index, int length) {
+        return LongArrayHandle.wrap(payload().slice(getDescriptor().getMembers().get(index).getOffset(), (long) length << 3), length);
+    }
+
+    public FloatArrayHandle declareFloatArray(int index, int length) {
+        return FloatArrayHandle.wrap(payload().slice(getDescriptor().getMembers().get(index).getOffset(), (long) length << 2), length);
+    }
+
+    public DoubleArrayHandle declareDoubleArray(int index, int length) {
+        return DoubleArrayHandle.wrap(payload().slice(getDescriptor().getMembers().get(index).getOffset(), (long) length << 3), length);
+    }
+
+    public NativeIntArrayHandle declareNativeIntArray(int index, int length) {
+        return NativeIntArrayHandle.wrap(payload().slice(getDescriptor().getMembers().get(index).getOffset(), (long) length * Foreign.getInstance().nativeIntSize()), length);
+    }
+
+    public NativeLongArrayHandle declareNativeLongArray(int index, int length) {
+        return NativeLongArrayHandle.wrap(payload().slice(getDescriptor().getMembers().get(index).getOffset(), (long) length * Foreign.getInstance().nativeLongSize()), length);
+    }
+
+    public AddressArrayHandle declareAddressArray(int index, int length) {
+        return AddressArrayHandle.wrap(payload().slice(getDescriptor().getMembers().get(index).getOffset(), (long) length * Foreign.getInstance().addressSize()), length);
+    }
+
+    public <T extends Aggregate> ArrayHandle<T> declareAggregateArray(Class<T> clazz, int index, int length) {
+        return ArrayHandle.wrap(payload().slice(getDescriptor().getMembers().get(index).getOffset(), (long) length * descriptorOf(clazz).size()), clazz, length);
     }
 
 }

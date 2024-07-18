@@ -142,7 +142,7 @@ public class SparseArray<E> implements Cloneable, Iterable<E> {
      */
     @SuppressWarnings("unchecked")
     public E get(int key, E valueIfKeyNotFound) {
-        int i = FastArray.binarySearchUnchecked(keys, 0, size, key);
+        int i = Arrays.binarySearchUnchecked(keys, 0, size, key);
 
         if (i < 0 || values[i] == DELETED) {
             return valueIfKeyNotFound;
@@ -155,7 +155,7 @@ public class SparseArray<E> implements Cloneable, Iterable<E> {
      * Removes the mapping from the specified key, if there was any.
      */
     public void remove(int key) {
-        int i = FastArray.binarySearchUnchecked(keys, 0, size, key);
+        int i = Arrays.binarySearchUnchecked(keys, 0, size, key);
 
         if (i >= 0) {
             if (values[i] != DELETED) {
@@ -233,7 +233,7 @@ public class SparseArray<E> implements Cloneable, Iterable<E> {
      * was one.
      */
     public void put(int key, E value) {
-        int i = FastArray.binarySearchUnchecked(keys, 0, size, key);
+        int i = Arrays.binarySearchUnchecked(keys, 0, size, key);
 
         if (i >= 0) {
             values[i] = value;
@@ -250,7 +250,7 @@ public class SparseArray<E> implements Cloneable, Iterable<E> {
                 gc();
 
                 // Search again because indices may have changed.
-                i = ~ FastArray.binarySearchUnchecked(keys, 0, size, key);
+                i = ~ Arrays.binarySearchUnchecked(keys, 0, size, key);
             }
 
             if (size >= keys.length) {
@@ -376,7 +376,7 @@ public class SparseArray<E> implements Cloneable, Iterable<E> {
             gc();
         }
 
-        return FastArray.binarySearchUnchecked(keys, 0, size, key);
+        return Arrays.binarySearchUnchecked(keys, 0, size, key);
     }
 
     /**

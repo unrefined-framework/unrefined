@@ -5,14 +5,14 @@ import unrefined.desktop.UnsafeSupport;
 import unrefined.desktop.OSInfo;
 import unrefined.math.FastMath;
 import unrefined.nio.Allocator;
-import unrefined.util.FastArray;
+import unrefined.util.Arrays;
+import unrefined.util.Objects;
 
 import java.math.BigInteger;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 
 import static unrefined.desktop.ForeignSupport.MEMORY_IO;
 import static unrefined.desktop.UnsafeSupport.UNSAFE;
@@ -25,11 +25,21 @@ public class DesktopAllocator extends Allocator {
         return MEMORY_IO.newDirectByteBuffer(address, capacity).order(ByteOrder.nativeOrder());
     }
 
+    @Override
+    public void copyMemory(Object srcArray, long srcOffset, Object dstArray, long dstOffset, long bytes) {
+        UNSAFE.copyMemory(srcArray, rangeCheck(srcArray, srcOffset), dstArray, rangeCheck(dstArray, dstOffset), bytes);
+    }
+
+    @Override
+    public void setMemory(Object array, long offset, long bytes, byte value) {
+        UNSAFE.setMemory(rangeCheck(array, offset), offset, bytes, value);
+    }
+
     private static long rangeCheck(Object array, long offset) {
         Class<?> clazz = array.getClass();
         if (clazz.isArray() && clazz.getComponentType().isPrimitive()) {
             if (offset < 0) throw new ArrayIndexOutOfBoundsException("Array index out of range: " + FastMath.unsign(offset));
-            else if (offset >= FastArray.ARRAY_LENGTH_MAX || offset / UNSAFE.arrayIndexScale(clazz) >= FastArray.ARRAY_LENGTH_MAX)
+            else if (offset / UNSAFE.arrayIndexScale(clazz) >= Arrays.ARRAY_LENGTH_MAX)
                 throw new ArrayIndexOutOfBoundsException("Array index out of range: " + FastMath.unsign(offset));
             else return UNSAFE.arrayBaseOffset(clazz) + offset;
         }
@@ -77,6 +87,46 @@ public class DesktopAllocator extends Allocator {
     }
 
     @Override
+    public void putBoolean(Object array, long offset, boolean value) {
+        UNSAFE.putBoolean(array, rangeCheck(array, offset), value);
+    }
+
+    @Override
+    public void putByte(Object array, long offset, byte value) {
+        UNSAFE.putByte(array, rangeCheck(array, offset), value);
+    }
+
+    @Override
+    public void putChar(Object array, long offset, char value) {
+        UNSAFE.putChar(array, rangeCheck(array, offset + 1), value);
+    }
+
+    @Override
+    public void putShort(Object array, long offset, short value) {
+        UNSAFE.putShort(array, rangeCheck(array, offset + 1), value);
+    }
+
+    @Override
+    public void putInt(Object array, long offset, int value) {
+        UNSAFE.putInt(array, rangeCheck(array, offset + 3), value);
+    }
+
+    @Override
+    public void putLong(Object array, long offset, long value) {
+        UNSAFE.putLong(array, rangeCheck(array, offset + 7), value);
+    }
+
+    @Override
+    public void putFloat(Object array, long offset, float value) {
+        UNSAFE.putFloat(array, rangeCheck(array, offset + 3), value);
+    }
+
+    @Override
+    public void putDouble(Object array, long offset, double value) {
+        UNSAFE.putDouble(array, rangeCheck(array, offset + 7), value);
+    }
+
+    @Override
     public int compareMemory(long srcAddress, long srcOffset, long dstAddress, long dstOffset, long length) {
         long compared = ForeignSupport.memcmp(srcAddress + srcOffset, dstAddress + dstOffset, length);
         return compared == 0 ? 0 : (compared < 0 ? -1 : 1);
@@ -90,7 +140,7 @@ public class DesktopAllocator extends Allocator {
             else {
                 long range = offset + length;
                 if (range < 0) throw new ArrayIndexOutOfBoundsException("Array index out of range: " + FastMath.unsign(range));
-                else if (range >= FastArray.ARRAY_LENGTH_MAX || range / UNSAFE.arrayIndexScale(clazz) >= FastArray.ARRAY_LENGTH_MAX)
+                else if (range >= Arrays.ARRAY_LENGTH_MAX || range / UNSAFE.arrayIndexScale(clazz) >= Arrays.ARRAY_LENGTH_MAX)
                     throw new ArrayIndexOutOfBoundsException("Array index out of range: " + FastMath.unsign(offset));
             }
         }
@@ -107,7 +157,7 @@ public class DesktopAllocator extends Allocator {
             byte oa = UNSAFE.getByte(srcArray, UNSAFE.arrayBaseOffset(srcType) + srcOffset + i);
             byte ob = UNSAFE.getByte(dstArray, UNSAFE.arrayBaseOffset(dstType) + dstOffset + i);
             if (oa != ob) {
-                return FastMath.compareUnsigned(oa, ob);
+                return Objects.compareUnsigned(oa, ob);
             }
         }
         return 0;
@@ -121,7 +171,7 @@ public class DesktopAllocator extends Allocator {
             byte oa = UNSAFE.getByte(srcAddress + srcOffset + i);
             byte ob = UNSAFE.getByte(dstArray, UNSAFE.arrayBaseOffset(dstType) + dstOffset + i);
             if (oa != ob) {
-                return FastMath.compareUnsigned(oa, ob);
+                return Objects.compareUnsigned(oa, ob);
             }
         }
         return 0;
@@ -135,7 +185,7 @@ public class DesktopAllocator extends Allocator {
             byte oa = UNSAFE.getByte(srcArray, UNSAFE.arrayBaseOffset(srcType) + srcOffset + i);
             byte ob = UNSAFE.getByte(dstAddress + dstOffset + i);
             if (oa != ob) {
-                return FastMath.compareUnsigned(oa, ob);
+                return Objects.compareUnsigned(oa, ob);
             }
         }
         return 0;
@@ -212,6 +262,21 @@ public class DesktopAllocator extends Allocator {
     }
 
     @Override
+    public boolean getBoolean(long address) {
+        return UnsafeSupport.getBoolean(address);
+    }
+
+    @Override
+    public boolean getBoolean(ByteBuffer buffer) {
+        return buffer.get() != 0;
+    }
+
+    @Override
+    public boolean getBoolean(ByteBuffer buffer, int index) {
+        return buffer.get(index) != 0;
+    }
+
+    @Override
     public byte getByte(long address) {
         return MEMORY_IO.getByte(address);
     }
@@ -239,6 +304,21 @@ public class DesktopAllocator extends Allocator {
     @Override
     public double getDouble(long address) {
         return MEMORY_IO.getDouble(address);
+    }
+
+    @Override
+    public void putBoolean(long address, boolean value) {
+        UnsafeSupport.putBoolean(address, value);
+    }
+
+    @Override
+    public void putBoolean(ByteBuffer buffer, boolean value) {
+        buffer.put((byte) (value ? 1 : 0));
+    }
+
+    @Override
+    public void putBoolean(ByteBuffer buffer, int index, boolean value) {
+        buffer.put(index, (byte) (value ? 1 : 0));
     }
 
     @Override
@@ -290,22 +370,22 @@ public class DesktopAllocator extends Allocator {
     public long searchMemory(long address, byte[] value, int valueOffset, int valueLength, long size) {
         if (valueLength == 1) return MEMORY_IO.memchr(address, value[valueOffset], size);
         else {
-            byte[] expected = Arrays.copyOfRange(value, valueOffset, valueOffset + valueLength);
+            byte[] expected = java.util.Arrays.copyOfRange(value, valueOffset, valueOffset + valueLength);
             byte[] buffer = new byte[valueLength];
             if (size < 0) {
                 for (long searched = 0; searched < Long.MAX_VALUE; searched ++) {
                     MEMORY_IO.getByteArray(address + searched, buffer, valueOffset, valueLength);
-                    if (Arrays.equals(expected, buffer)) return address + searched;
+                    if (java.util.Arrays.equals(expected, buffer)) return address + searched;
                 }
                 for (long searched = Long.MIN_VALUE; searched < Allocator.UINT64_MAX; searched ++) {
                     MEMORY_IO.getByteArray(address + searched, buffer, valueOffset, valueLength);
-                    if (Arrays.equals(expected, buffer)) return address + searched;
+                    if (java.util.Arrays.equals(expected, buffer)) return address + searched;
                 }
             }
             else {
                 for (long searched = 0; searched < size; searched ++) {
                     MEMORY_IO.getByteArray(address + searched, buffer, valueOffset, valueLength);
-                    if (Arrays.equals(expected, buffer)) return address + searched;
+                    if (java.util.Arrays.equals(expected, buffer)) return address + searched;
                 }
             }
             return 0;
@@ -320,17 +400,17 @@ public class DesktopAllocator extends Allocator {
             if (size < 0) {
                 for (long searched = 0; searched < Long.MAX_VALUE; searched ++) {
                     MEMORY_IO.getByteArray(address + searched, buffer, 0, value.length);
-                    if (Arrays.equals(value, buffer)) return address + searched;
+                    if (java.util.Arrays.equals(value, buffer)) return address + searched;
                 }
                 for (long searched = Long.MIN_VALUE; searched < Allocator.UINT64_MAX; searched ++) {
                     MEMORY_IO.getByteArray(address + searched, buffer, 0, value.length);
-                    if (Arrays.equals(value, buffer)) return address + searched;
+                    if (java.util.Arrays.equals(value, buffer)) return address + searched;
                 }
             }
             else {
                 for (long searched = 0; searched < size; searched ++) {
                     MEMORY_IO.getByteArray(address + searched, buffer, 0, value.length);
-                    if (Arrays.equals(value, buffer)) return address + searched;
+                    if (java.util.Arrays.equals(value, buffer)) return address + searched;
                 }
             }
             return 0;
@@ -374,7 +454,7 @@ public class DesktopAllocator extends Allocator {
             byte[] buffer = new byte[size];
             while (true) {
                 MEMORY_IO.getByteArray(address, buffer, 0, size);
-                if (Arrays.equals(terminator, buffer)) return length;
+                if (java.util.Arrays.equals(terminator, buffer)) return length;
                 else length ++;
                 address += size;
             }
@@ -393,7 +473,7 @@ public class DesktopAllocator extends Allocator {
             byte[] buffer = new byte[size];
             while (true) {
                 MEMORY_IO.getByteArray(address, buffer, 0, size);
-                if (Arrays.equals(terminator, buffer)) return length;
+                if (java.util.Arrays.equals(terminator, buffer)) return length;
                 else length ++;
                 address += size;
             }
@@ -412,7 +492,7 @@ public class DesktopAllocator extends Allocator {
             byte[] buffer = new byte[size];
             while (true) {
                 MEMORY_IO.getByteArray(address, buffer, 0, size);
-                if (Arrays.equals(terminator, buffer)) return builder.toString();
+                if (java.util.Arrays.equals(terminator, buffer)) return builder.toString();
                 else builder.append(new String(buffer, charset));
                 address += size;
             }

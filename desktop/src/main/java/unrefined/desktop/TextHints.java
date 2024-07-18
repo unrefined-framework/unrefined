@@ -30,6 +30,8 @@ public final class TextHints {
     }
     public static final Integer UNDERLINE_OFF = -1;
     public static final Boolean STRIKETHROUGH_OFF = Boolean.FALSE;
+    public static final Integer KERNING_OFF = 0;
+    public static final Integer LIGATURES_OFF = 0;
 
     public static Boolean toRunDirection(int direction) {
         switch (direction) {

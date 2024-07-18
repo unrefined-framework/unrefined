@@ -3,6 +3,7 @@ package org.example.application.breakout;
 import unrefined.context.Context;
 import unrefined.context.ContextAdapter;
 import unrefined.io.asset.Asset;
+import unrefined.math.FastMath;
 import unrefined.media.graphics.Brush;
 import unrefined.media.graphics.Color;
 import unrefined.media.graphics.Graphics;
@@ -52,9 +53,8 @@ public class Board extends ContextAdapter {
 
     void playCollisionSound() {
 
-        Random random = ThreadLocalRandom.current();
-        float volume = random.nextFloat(0.9f, 1.1f);
-        float speed = random.nextFloat(0.9f, 1.1f);
+        float volume = FastMath.randomFloat(0.9f, 1.1f);
+        float speed = FastMath.randomFloat(0.9f, 1.1f);
         collision.start(volume, volume, speed);
     }
 
@@ -132,7 +132,7 @@ public class Board extends ContextAdapter {
     }
 
     @Override
-    public boolean onKeyDown(Context context, String key, String code, int location, int modifiers) {
+    public boolean onKeyDown(Context context, String key, String code, int location, int modifiers, boolean repeat) {
         return paddle.onKeyDown(code);
     }
 

@@ -9,6 +9,7 @@
 package unrefined.io.console;
 
 import unrefined.io.IOStreams;
+import unrefined.media.graphics.Color;
 
 import java.io.FilterOutputStream;
 import java.io.IOException;
@@ -17,9 +18,6 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
-import static unrefined.io.console.Ansi.Colors.roundColor;
-import static unrefined.io.console.Ansi.Colors.roundRgbColor;
 
 /**
  * An ANSI print stream extracts ANSI escape codes written to an output stream.
@@ -397,7 +395,7 @@ public class AnsiOutputStream extends FilterOutputStream {
                             int g = getNextOptionInt(optionsIterator);
                             int b = getNextOptionInt(optionsIterator);
                             if (colors == 256) {
-                                int col = roundRgbColor(r, g, b, 256);
+                                int col = Ansi.Color256.round(Color.rgb(r, g, b), 256);
                                 if (!first) {
                                     builder.append(';');
                                 }
@@ -408,7 +406,7 @@ public class AnsiOutputStream extends FilterOutputStream {
                                 builder.append(';');
                                 builder.append(col);
                             } else {
-                                int col = roundRgbColor(r, g, b, 16);
+                                int col = Ansi.Color256.round(Color.rgb(r, g, b), 16);
                                 if (!first) {
                                     builder.append(';');
                                 }
@@ -432,7 +430,7 @@ public class AnsiOutputStream extends FilterOutputStream {
                                 builder.append(';');
                                 builder.append(paletteIndex);
                             } else {
-                                int col = roundColor(paletteIndex, 16);
+                                int col = Ansi.Color256.pick(paletteIndex, 16);
                                 if (!first) {
                                     builder.append(';');
                                 }

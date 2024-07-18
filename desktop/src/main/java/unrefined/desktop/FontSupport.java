@@ -1,8 +1,8 @@
 package unrefined.desktop;
 
-import unrefined.internal.X11.X11FontSupport;
-import unrefined.internal.macos.MacFontSupport;
-import unrefined.internal.windows.WindowsFontSupport;
+import unrefined.desktop.X11.X11FontSupport;
+import unrefined.desktop.macos.MacFontSupport;
+import unrefined.desktop.windows.WindowsFontSupport;
 import unrefined.io.UnsupportedFormatException;
 import unrefined.media.graphics.FontNotFoundException;
 import unrefined.media.graphics.Text;
@@ -10,6 +10,7 @@ import unrefined.util.NotInstantiableError;
 
 import java.awt.Font;
 import java.awt.FontFormatException;
+import java.awt.font.GraphicAttribute;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -76,11 +77,24 @@ public final class FontSupport {
         }
     }
 
-    public static int toFontFlag(int direction) {
+    public static int toFontLayout(int direction) {
         switch (direction) {
             case Text.Direction.LTR: return Font.LAYOUT_LEFT_TO_RIGHT;
             case Text.Direction.RTL: return Font.LAYOUT_RIGHT_TO_LEFT;
             default: throw new IllegalArgumentException("Illegal text direction: " + direction);
         }
     }
+
+    public static int toFontBaseline(int baseline) {
+        switch (baseline) {
+            case Text.Baseline.ALPHABETIC: return GraphicAttribute.ROMAN_BASELINE;
+            case Text.Baseline.IDEOGRAPHIC: return GraphicAttribute.CENTER_BASELINE;
+            case Text.Baseline.HANGING: return GraphicAttribute.HANGING_BASELINE;
+            case Text.Baseline.BOTTOM: return GraphicAttribute.BOTTOM_ALIGNMENT;
+            case Text.Baseline.CENTER: return -3;
+            case Text.Baseline.TOP: return GraphicAttribute.TOP_ALIGNMENT;
+            default: throw new IllegalArgumentException("Illegal text baseline: " + baseline);
+        }
+    }
+
 }

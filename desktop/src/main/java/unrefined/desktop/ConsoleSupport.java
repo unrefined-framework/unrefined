@@ -2,12 +2,13 @@ package unrefined.desktop;
 
 import com.kenai.jffi.CallContext;
 import com.kenai.jffi.CallingConvention;
-import com.kenai.jffi.Function;
 import com.kenai.jffi.HeapInvocationBuffer;
-import com.kenai.jffi.Library;
 import com.kenai.jffi.Type;
-import unrefined.internal.posix.PosixConsoleSupport;
-import unrefined.internal.windows.WindowsConsoleSupport;
+import unrefined.desktop.posix.PosixConsoleSupport;
+import unrefined.desktop.windows.WindowsAnsiWriter;
+import unrefined.desktop.windows.WindowsConsole;
+import unrefined.desktop.windows.WindowsConsoleSupport;
+import unrefined.io.WriterOutputStream;
 import unrefined.io.console.Ansi;
 import unrefined.io.console.AnsiOutputStream;
 import unrefined.media.graphics.Dimension;
@@ -21,6 +22,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
@@ -31,10 +33,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static unrefined.desktop.ForeignSupport.INVOKER;
-import static unrefined.desktop.ForeignSupport.MEMORY_IO;
 import static unrefined.desktop.UnsafeSupport.UNSAFE;
-import static unrefined.internal.windows.WindowsSupport.Kernel32;
 
 public final class ConsoleSupport {
 
@@ -42,7 +41,7 @@ public final class ConsoleSupport {
     private static final String EMACS = System.getenv("INSIDE_EMACS");
     private static final String COLORTERM = System.getenv("COLORTERM");
     
-    public static final Charset CHARSET;
+    public static final Charset CHARSET = OSInfo.CONSOLE_CHARSET;
     public static final int ANSI_TYPE;
     public static final int MAX_COLORS;
     public static final boolean IS_TERMINAL;
@@ -71,8 +70,6 @@ public final class ConsoleSupport {
     private static final int SIZE_PRODUCER_TYPE_EXECUTOR = 3;
 
     static {
-        CHARSET = Charset.forName(System.getProperty("stdout.encoding", System.getProperty("sun.stdout.encoding",
-                System.getProperty("native.encoding", System.getProperty("sun.jnu.encoding")))));
         int colors = -1; String property;
         if ((property = System.getProperty("unrefined.io.console.colors")) != null) {
             try {
@@ -99,13 +96,12 @@ public final class ConsoleSupport {
         }
         MAX_COLORS = colors;
 
-        long isatty = Library.getDefault().getSymbolAddress("isatty");
+        long isatty = ForeignSupport.C.getSymbolAddress("isatty");
         if (isatty == 0) {
             IS_TERMINAL = WindowsConsoleSupport.IS_TERMINAL;
             if (IS_TERMINAL) {
                 if (WindowsConsoleSupport.IS_ANSI_TERMINAL) ANSI_TYPE = Ansi.Type.NATIVE;
-                else if (WindowsConsoleSupport.EMULATION_AVAILABLE) ANSI_TYPE = Ansi.Type.EMULATION;
-                else ANSI_TYPE = Ansi.Type.UNSUPPORTED;
+                else ANSI_TYPE = Ansi.Type.EMULATION;
                 if (WindowsConsoleSupport.IS_MINGW) SIZE_PRODUCER_TYPE = SIZE_PRODUCER_TYPE_EXECUTOR;
                 else SIZE_PRODUCER_TYPE = SIZE_PRODUCER_TYPE_WINDOWS;
             }
@@ -115,7 +111,7 @@ public final class ConsoleSupport {
             }
         }
         else {
-            CallContext context = CallContext.getCallContext(Type.SINT, new Type[] {Type.SINT}, CallingConvention.DEFAULT, false, true);
+            CallContext context = CallContext.getCallContext(Type.SINT, new Type[] {Type.SINT}, CallingConvention.DEFAULT, false);
             HeapInvocationBuffer heapInvocationBuffer = new HeapInvocationBuffer(context);
             if (ABI.I == 8) heapInvocationBuffer.putLong(1);
             else heapInvocationBuffer.putInt(1);
@@ -132,9 +128,12 @@ public final class ConsoleSupport {
             }
         }
         if (ANSI_TYPE == Ansi.Type.EMULATION) {
-            // FIXME
-            FILTERED_OUTPUT = null;
-            FILTERED_ERROR = null;
+            try {
+                FILTERED_OUTPUT = new WriterOutputStream(new WindowsAnsiWriter(new OutputStreamWriter(SYSTEM_OUTPUT), WindowsConsoleSupport.OUTPUT));
+                FILTERED_ERROR = new WriterOutputStream(new WindowsAnsiWriter(new OutputStreamWriter(SYSTEM_ERROR), WindowsConsoleSupport.ERROR));
+            } catch (IOException e) {
+                throw new UnexpectedError(e);
+            }
         }
         else {
             FILTERED_OUTPUT = SYSTEM_OUTPUT;
@@ -178,86 +177,77 @@ public final class ConsoleSupport {
                 };
                 break;
             case SIZE_PRODUCER_TYPE_POSIX:
-                long winsize = UNSAFE.allocateMemory(Type.USHORT.size() * 4L);
-                final Function ioctl = new Function(Library.getDefault().getSymbolAddress("ioctl"),
-                        CallContext.getCallContext(Type.SINT, new Type[] {Type.SINT, Type.SINT, Type.POINTER},
-                                CallingConvention.DEFAULT, false, true));
-                HeapInvocationBuffer ioctlBuffer = new HeapInvocationBuffer(ioctl);
-                if (ABI.I == 8) {
-                    ioctlBuffer.putLong(1);
-                }
-                else {
-                    ioctlBuffer.putInt(1);
-                }
-                if (ABI.I == 8) {
-                    ioctlBuffer.putLong(PosixConsoleSupport.TIOCGWINSZ);
-                }
-                else {
-                    ioctlBuffer.putInt(PosixConsoleSupport.TIOCGWINSZ);
-                }
-                ioctlBuffer.putAddress(winsize);
                 SIZE_PRODUCER = new SizeProducer() {
                     @Override
                     public int width() {
-                        synchronized (ioctl) {
-                            INVOKER.invokeInt(ioctl, ioctlBuffer);
-                            return MEMORY_IO.getShort(winsize + Type.USHORT.size());
+                        long winsize = UNSAFE.allocateMemory(8);
+                        try {
+                            PosixConsoleSupport.getConsoleWindowSize(1, winsize);
+                            return Short.toUnsignedInt(UNSAFE.getShort(winsize + 2));
+                        } finally {
+                            UNSAFE.freeMemory(winsize);
                         }
                     }
                     @Override
                     public int height() {
-                        synchronized (ioctl) {
-                            INVOKER.invokeInt(ioctl, ioctlBuffer);
-                            return MEMORY_IO.getShort(winsize);
+                        long winsize = UNSAFE.allocateMemory(8);
+                        try {
+                            PosixConsoleSupport.getConsoleWindowSize(1, winsize);
+                            return Short.toUnsignedInt(UNSAFE.getShort(winsize));
+                        } finally {
+                            UNSAFE.freeMemory(winsize);
                         }
                     }
                     @Override
                     public void size(Dimension size) {
-                        synchronized (ioctl) {
-                            INVOKER.invokeInt(ioctl, ioctlBuffer);
-                            size.setDimension(MEMORY_IO.getShort(winsize + Type.USHORT.size()), MEMORY_IO.getShort(winsize));
+                        long winsize = UNSAFE.allocateMemory(8);
+                        try {
+                            PosixConsoleSupport.getConsoleWindowSize(1, winsize);
+                            size.setDimension(Short.toUnsignedInt(UNSAFE.getShort(winsize + 2)),
+                                    Short.toUnsignedInt(UNSAFE.getShort(winsize)));
+                        } finally {
+                            UNSAFE.freeMemory(winsize);
                         }
                     }
                 };
                 break;
             case SIZE_PRODUCER_TYPE_WINDOWS:
-                long lpConsoleScreenBufferInfo = UNSAFE.allocateMemory(32);
-                final Function GetConsoleScreenBufferInfo = new Function(Kernel32.getSymbolAddress("GetConsoleScreenBufferInfo"),
-                        CallContext.getCallContext(Type.SINT, new Type[] {Type.POINTER, Type.POINTER}, CallingConvention.STDCALL, false, true));
-                HeapInvocationBuffer heapInvocationBuffer = new HeapInvocationBuffer(GetConsoleScreenBufferInfo);
-                heapInvocationBuffer.putAddress(WindowsConsoleSupport.OUTPUT);
-                heapInvocationBuffer.putAddress(lpConsoleScreenBufferInfo);
                 SIZE_PRODUCER = new SizeProducer() {
                     @Override
                     public int width() {
-                        synchronized (GetConsoleScreenBufferInfo) {
-                            if (INVOKER.invokeInt(GetConsoleScreenBufferInfo, heapInvocationBuffer) != 0) {
-                                return MEMORY_IO.getShort(lpConsoleScreenBufferInfo + 20)
-                                        - MEMORY_IO.getShort(lpConsoleScreenBufferInfo + 16) + 1;
-                            }
-                            else return 0;
+                        long info = UNSAFE.allocateMemory(22);
+                        try {
+                            if (WindowsConsole.GetConsoleScreenBufferInfo(WindowsConsoleSupport.OUTPUT, info) != 0) {
+                                return UNSAFE.getShort(info + 14) - UNSAFE.getShort(info + 10) + 1;
+                            } else return 0;
+                        }
+                        finally {
+                            UNSAFE.freeMemory(info);
                         }
                     }
                     @Override
                     public int height() {
-                        synchronized (GetConsoleScreenBufferInfo) {
-                            if (INVOKER.invokeInt(GetConsoleScreenBufferInfo, heapInvocationBuffer) != 0) {
-                                return MEMORY_IO.getShort(lpConsoleScreenBufferInfo + 22)
-                                        - MEMORY_IO.getShort(lpConsoleScreenBufferInfo + 18) + 1;
-                            }
-                            else return 0;
+                        long info = UNSAFE.allocateMemory(22);
+                        try {
+                            if (WindowsConsole.GetConsoleScreenBufferInfo(WindowsConsoleSupport.OUTPUT, info) != 0) {
+                                return UNSAFE.getShort(info + 16) - UNSAFE.getShort(info + 12) + 1;
+                            } else return 0;
+                        }
+                        finally {
+                            UNSAFE.freeMemory(info);
                         }
                     }
                     @Override
                     public void size(Dimension size) {
-                        synchronized (GetConsoleScreenBufferInfo) {
-                            if (INVOKER.invokeInt(GetConsoleScreenBufferInfo, heapInvocationBuffer) != 0) {
-                                size.setDimension(MEMORY_IO.getShort(lpConsoleScreenBufferInfo + 20)
-                                                - MEMORY_IO.getShort(lpConsoleScreenBufferInfo + 16) + 1,
-                                        MEMORY_IO.getShort(lpConsoleScreenBufferInfo + 22)
-                                                - MEMORY_IO.getShort(lpConsoleScreenBufferInfo + 18) + 1);
-                            }
-                            else size.setDimension(0, 0);
+                        long info = UNSAFE.allocateMemory(22);
+                        try {
+                            if (WindowsConsole.GetConsoleScreenBufferInfo(WindowsConsoleSupport.OUTPUT, info) != 0) {
+                                size.setDimension(UNSAFE.getShort(info + 14) - UNSAFE.getShort(info + 10) + 1,
+                                        UNSAFE.getShort(info + 16) - UNSAFE.getShort(info + 12) + 1);
+                            } else size.setDimension(0, 0);
+                        }
+                        finally {
+                            UNSAFE.freeMemory(info);
                         }
                     }
                 };

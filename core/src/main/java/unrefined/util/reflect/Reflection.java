@@ -1,7 +1,7 @@
 package unrefined.util.reflect;
 
 import unrefined.context.Environment;
-import unrefined.util.FastArray;
+import unrefined.util.Arrays;
 import unrefined.util.UnexpectedError;
 import unrefined.util.function.Slot;
 
@@ -1526,7 +1526,7 @@ public abstract class Reflection {
 
     @SuppressWarnings("unchecked")
     public <T> T newInstance(Class<T> arrayType, int length) throws NegativeArraySizeException {
-        return (T) Array.newInstance(FastArray.getComponentType(arrayType), length);
+        return (T) Array.newInstance(Arrays.getComponentType(arrayType), length);
     }
 
     /**

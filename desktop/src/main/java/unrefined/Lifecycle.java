@@ -26,7 +26,7 @@ import unrefined.runtime.DesktopReflection;
 import unrefined.runtime.DesktopRuntime;
 import unrefined.runtime.DesktopSampled;
 import unrefined.runtime.DesktopThreading;
-import unrefined.util.FastArray;
+import unrefined.util.Arrays;
 import unrefined.util.UnexpectedError;
 
 import java.io.IOException;
@@ -53,7 +53,7 @@ public class Lifecycle {
     private static String getDomain(Package p) {
         String text = p.getName();
         String[] split = text.split("\\.");
-        FastArray.reverse(split);
+        Arrays.reverse(split);
         StringBuilder builder = new StringBuilder();
         int last = split.length - 1;
         for (int i = 0; i < last; i ++) {
@@ -121,9 +121,9 @@ public class Lifecycle {
             Environment.global.put("unrefined.runtime.base64", new DesktopBase64());
             Environment.global.put("unrefined.runtime.atomic", new DesktopAtomic());
             Environment.global.put("unrefined.runtime.cleaner", new DesktopCleaner());
-            Environment.global.put("unrefined.runtime.console", new DesktopConsole());
             Environment.global.put("unrefined.runtime.foreign", new DesktopForeign());
             Environment.global.put("unrefined.runtime.allocator", new DesktopAllocator());
+            Environment.global.put("unrefined.runtime.console", new DesktopConsole());
             Environment.global.put("unrefined.runtime.fileSystem", new DesktopFileSystem());
             Environment.global.put("unrefined.runtime.fileWatcher", new DesktopFileWatcher());
             Environment.global.put("unrefined.runtime.net", new DesktopNet());

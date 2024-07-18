@@ -2,7 +2,7 @@ package unrefined.desktop;
 
 import unrefined.io.IOStreams;
 import unrefined.math.FastMath;
-import unrefined.util.FastArray;
+import unrefined.util.Arrays;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -10,7 +10,6 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.Mixer;
 import javax.sound.sampled.SourceDataLine;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -97,7 +96,7 @@ public class SoundClip implements AutoCloseable {
 	}
 
 	public float[] copyPCM() {
-		return Arrays.copyOf(pcm, pcm.length);
+		return java.util.Arrays.copyOf(pcm, pcm.length);
 	}
 
 	public void open() throws LineUnavailableException {
@@ -252,7 +251,7 @@ public class SoundClip implements AutoCloseable {
 		checkActive(instanceID);
 		checkNotPlaying(instanceID);
 
-		double frames = Math.min(((double) DEFAULT_AUDIO_FORMAT.getFrameRate() * microsecondPosition) / 1000_000.0, FastArray.ARRAY_LENGTH_MAX / 2.0);
+		double frames = Math.min(((double) DEFAULT_AUDIO_FORMAT.getFrameRate() * microsecondPosition) / 1000_000.0, Arrays.ARRAY_LENGTH_MAX / 2.0);
 		cursors[instanceID].cursor = FastMath.clamp(frameLength, 0, frames);
 	}
 	
@@ -445,7 +444,7 @@ public class SoundClip implements AutoCloseable {
 		else if (offset + length > buffer.length) throw new ArrayIndexOutOfBoundsException(offset + length);
 		// Start with 0-filled buffer, send out silence
 		// if nothing playing.
-		Arrays.fill(buffer, offset, offset + length, 0);
+		java.util.Arrays.fill(buffer, offset, offset + length, 0);
 		
 		for (int ci = 0; ci < polyphony; ci ++) {
 			if (cursors[ci].isPlaying) {

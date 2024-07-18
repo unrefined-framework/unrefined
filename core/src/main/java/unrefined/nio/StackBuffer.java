@@ -218,8 +218,8 @@ public abstract class StackBuffer implements Closeable {
         return buffer().getLong(index);
     }
 
-    public ByteBuffer asByteBuffer() {
-        return buffer();
+    public ByteBuffer toByteBuffer() {
+        return buffer().duplicate();
     }
 
     public boolean isDirect() {

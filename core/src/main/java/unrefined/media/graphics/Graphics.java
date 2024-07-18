@@ -56,14 +56,21 @@ public abstract class Graphics implements Disposable, Resettable {
         private boolean dither;
 
         private transient Font font;
+        private transient Brush textBackground;
+        private transient Brush textForeground;
         private float textSize;
         private int textDirection;
         private int textAlignment;
         private boolean subpixelText;
         private boolean underlineText;
         private boolean strikeThroughText;
+        private boolean kerningText;
+        private boolean variantLigaturesText;
+        private int superscriptText;
+        private float letterSpacing;
         private float textScaleX, textScaleY;
         private float textSkewX, textSkewY;
+
         private float shadowBlur, shadowOffsetX, shadowOffsetY;
         private int shadowColor;
 
@@ -75,7 +82,7 @@ public abstract class Graphics implements Disposable, Resettable {
                     Brush brush, int style,
                     float strokeWidth, int strokeJoin, int strokeCap, float strokeMiterLimit, float[] strokeDash, float strokeDashPhase,
                     boolean antiAlias, boolean imageSmoothing, boolean dither,
-                    Font font, float textSize, int textDirection, int textAlignment, boolean subpixelText, boolean underlineText, boolean strikeThroughText,
+                    Font font, Brush textBackground, Brush textForeground, float textSize, int textDirection, int textAlignment, boolean subpixelText, boolean underlineText, boolean strikeThroughText, boolean kerningText, boolean variantLigaturesText, int superscriptText, float letterSpacing,
                     float textScaleX, float textScaleY, float textSkewX, float textSkewY,
                     int shadowColor, float shadowBlur, float shadowOffsetX, float shadowOffsetY) {
             setClip(clip);
@@ -85,7 +92,7 @@ public abstract class Graphics implements Disposable, Resettable {
             setStyle(style);
             setStroke(strokeWidth, strokeJoin, strokeCap, strokeMiterLimit, strokeDash, strokeDashPhase);
             setAntiAlias(antiAlias, imageSmoothing, dither);
-            setTextAttributes(font, textSize, textDirection, textAlignment, subpixelText, underlineText, strikeThroughText);
+            setTextAttributes(font, textBackground, textForeground, textSize, textDirection, textAlignment, subpixelText, underlineText, strikeThroughText, kerningText, variantLigaturesText, superscriptText, letterSpacing);
             setTextTransform(textScaleX, textScaleY, textSkewX, textSkewY);
             setShadow(shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY);
         }
@@ -94,7 +101,7 @@ public abstract class Graphics implements Disposable, Resettable {
                     Brush brush, int style,
                     float strokeWidth, int strokeJoin, int strokeCap, float strokeMiterLimit, float[] strokeDash, int strokeDashOffset, int strokeDashLength, float strokeDashPhase,
                     boolean antiAlias, boolean imageSmoothing, boolean dither,
-                    Font font, float textSize, int textDirection, int textAlignment, boolean subpixelText, boolean underlineText, boolean strikeThroughText,
+                    Font font, Brush textBackground, Brush textForeground, float textSize, int textDirection, int textAlignment, boolean subpixelText, boolean underlineText, boolean strikeThroughText, boolean kerningText, boolean variantLigaturesText, int superscriptText, float letterSpacing,
                     float textScaleX, float textScaleY, float textSkewX, float textSkewY,
                     int shadowColor, float shadowBlur, float shadowOffsetX, float shadowOffsetY) {
             setClip(clip);
@@ -104,7 +111,7 @@ public abstract class Graphics implements Disposable, Resettable {
             setStyle(style);
             setStroke(strokeWidth, strokeJoin, strokeCap, strokeMiterLimit, strokeDash, strokeDashOffset, strokeDashLength, strokeDashPhase);
             setAntiAlias(antiAlias, imageSmoothing, dither);
-            setTextAttributes(font, textSize, textDirection, textAlignment, subpixelText, underlineText, strikeThroughText);
+            setTextAttributes(font, textBackground, textForeground, textSize, textDirection, textAlignment, subpixelText, underlineText, strikeThroughText, kerningText, variantLigaturesText, superscriptText, letterSpacing);
             setTextTransform(textScaleX, textScaleY, textSkewX, textSkewY);
             setShadow(shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY);
         }
@@ -114,7 +121,7 @@ public abstract class Graphics implements Disposable, Resettable {
                     info.getBrush(), info.getStyle(),
                     info.getStrokeWidth(), info.getStrokeJoin(), info.getStrokeCap(), info.getStrokeMiterLimit(), info.getStrokeDash(), info.getStrokeDashPhase(),
                     info.isAntiAlias(), info.isImageSmoothing(), info.isDither(),
-                    info.getFont(), info.getTextSize(), info.getTextDirection(), info.getTextAlignment(), info.isSubpixelText(), info.isUnderlineText(), info.isStrikeThroughText(),
+                    info.getFont(), info.getTextBackground(), info.getTextForeground(), info.getTextSize(), info.getTextDirection(), info.getTextAlignment(), info.isSubpixelText(), info.isUnderlineText(), info.isStrikeThroughText(), info.isKerningText(), info.isVariantLigaturesText(), info.getSuperscriptText(), info.getLetterSpacing(),
                     info.getTextScaleX(), info.getTextScaleY(), info.getTextSkewX(), info.getTextSkewY(),
                     info.getShadowColor(), info.getShadowBlur(), info.getShadowOffsetX(), info.getShadowOffsetY());
         }
@@ -243,6 +250,22 @@ public abstract class Graphics implements Disposable, Resettable {
             this.font = font;
         }
 
+        public Brush getTextBackground() {
+            return textBackground;
+        }
+
+        public void setTextBackground(Brush textBackground) {
+            this.textBackground = textBackground;
+        }
+
+        public Brush getTextForeground() {
+            return textForeground;
+        }
+
+        public void setTextForeground(Brush textForeground) {
+            this.textForeground = textForeground;
+        }
+
         public float getTextSize() {
             return textSize;
         }
@@ -289,6 +312,38 @@ public abstract class Graphics implements Disposable, Resettable {
 
         public void setStrikeThroughText(boolean strikeThroughText) {
             this.strikeThroughText = strikeThroughText;
+        }
+
+        public boolean isKerningText() {
+            return kerningText;
+        }
+
+        public void setKerningText(boolean kerningText) {
+            this.kerningText = kerningText;
+        }
+
+        public boolean isVariantLigaturesText() {
+            return variantLigaturesText;
+        }
+
+        public void setVariantLigaturesText(boolean variantLigaturesText) {
+            this.variantLigaturesText = variantLigaturesText;
+        }
+
+        public int getSuperscriptText() {
+            return superscriptText;
+        }
+
+        public void setSuperscriptText(int superscriptText) {
+            this.superscriptText = superscriptText;
+        }
+
+        public float getLetterSpacing() {
+            return letterSpacing;
+        }
+
+        public void setLetterSpacing(float letterSpacing) {
+            this.letterSpacing = letterSpacing;
         }
 
         public void setTextScaleX(float scaleX) {
@@ -375,14 +430,20 @@ public abstract class Graphics implements Disposable, Resettable {
             setDither(dither);
         }
 
-        public void setTextAttributes(Font font, float size, int direction, int alignment, boolean subpixel, boolean underline, boolean strikeThrough) {
+        public void setTextAttributes(Font font, Brush background, Brush foreground, float size, int direction, int alignment, boolean subpixel, boolean underline, boolean strikeThrough, boolean kerning, boolean variantLigatures, int superscript, float letterSpacing) {
             setFont(font);
+            setTextBackground(background);
+            setTextForeground(foreground);
             setTextSize(size);
             setTextDirection(direction);
             setTextAlignment(alignment);
             setSubpixelText(subpixel);
             setUnderlineText(underline);
             setStrikeThroughText(strikeThrough);
+            setKerningText(kerning);
+            setVariantLigaturesText(variantLigatures);
+            setSuperscriptText(superscript);
+            setLetterSpacing(letterSpacing);
         }
 
         public void setTextTransform(float scaleX, float scaleY, float skewX, float skewY) {
@@ -446,7 +507,7 @@ public abstract class Graphics implements Disposable, Resettable {
                     Brush brush, int style,
                     float strokeWidth, int strokeJoin, int strokeCap, float strokeMiterLimit, float[] strokeDash, float strokeDashPhase,
                     boolean antiAlias, boolean imageSmoothing, boolean dither,
-                    Font font, float textSize, int textDirection, int textAlignment, boolean subpixelText, boolean underlineText, boolean strikeThroughText,
+                    Font font, Brush textBackground, Brush textForeground, float textSize, int textDirection, int textAlignment, boolean subpixelText, boolean underlineText, boolean strikeThroughText, boolean kerningText, boolean variantLigaturesText, int superscriptText, float letterSpacing,
                     float textScaleX, float textScaleY, float textSkewX, float textSkewY,
                     int shadowColor, float shadowBlur, float shadowOffsetX, float shadowOffsetY) {
             setClip(clip);
@@ -456,7 +517,7 @@ public abstract class Graphics implements Disposable, Resettable {
             setStyle(style);
             setStroke(strokeWidth, strokeJoin, strokeCap, strokeMiterLimit, strokeDash, strokeDashPhase);
             setAntiAlias(antiAlias, imageSmoothing, dither);
-            setTextAttributes(font, textSize, textDirection, textAlignment, subpixelText, underlineText, strikeThroughText);
+            setTextAttributes(font, textBackground, textForeground, textSize, textDirection, textAlignment, subpixelText, underlineText, strikeThroughText, kerningText, variantLigaturesText, superscriptText, letterSpacing);
             setTextTransform(textScaleX, textScaleY, textSkewX, textSkewY);
             setShadow(shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY);
         }
@@ -465,7 +526,7 @@ public abstract class Graphics implements Disposable, Resettable {
                     Brush brush, int style,
                     float strokeWidth, int strokeJoin, int strokeCap, float strokeMiterLimit, float[] strokeDash, int strokeDashOffset, int strokeDashLength, float strokeDashPhase,
                     boolean antiAlias, boolean imageSmoothing, boolean dither,
-                    Font font, float textSize, int textDirection, int textAlignment, boolean subpixelText, boolean underlineText, boolean strikeThroughText,
+                    Font font, Brush textBackground, Brush textForeground, float textSize, int textDirection, int textAlignment, boolean subpixelText, boolean underlineText, boolean strikeThroughText, boolean kerningText, boolean variantLigaturesText, int superscriptText, float letterSpacing,
                     float textScaleX, float textScaleY, float textSkewX, float textSkewY,
                     int shadowColor, float shadowBlur, float shadowOffsetX, float shadowOffsetY) {
             setClip(clip);
@@ -475,7 +536,7 @@ public abstract class Graphics implements Disposable, Resettable {
             setStyle(style);
             setStroke(strokeWidth, strokeJoin, strokeCap, strokeMiterLimit, strokeDash, strokeDashOffset, strokeDashLength, strokeDashPhase);
             setAntiAlias(antiAlias, imageSmoothing, dither);
-            setTextAttributes(font, textSize, textDirection, textAlignment, subpixelText, underlineText, strikeThroughText);
+            setTextAttributes(font, textBackground, textForeground, textSize, textDirection, textAlignment, subpixelText, underlineText, strikeThroughText, kerningText, variantLigaturesText, superscriptText, letterSpacing);
             setTextTransform(textScaleX, textScaleY, textSkewX, textSkewY);
             setShadow(shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY);
         }
@@ -485,7 +546,7 @@ public abstract class Graphics implements Disposable, Resettable {
                     info.getBrush(), info.getStyle(),
                     info.getStrokeWidth(), info.getStrokeJoin(), info.getStrokeCap(), info.getStrokeMiterLimit(), info.getStrokeDash(), info.getStrokeDashPhase(),
                     info.isAntiAlias(), info.isImageSmoothing(), info.isDither(),
-                    info.getFont(), info.getTextSize(), info.getTextDirection(), info.getTextAlignment(), info.isSubpixelText(), info.isUnderlineText(), info.isStrikeThroughText(),
+                    info.getFont(), info.getTextBackground(), info.getTextForeground(), info.getTextSize(), info.getTextDirection(), info.getTextAlignment(), info.isSubpixelText(), info.isUnderlineText(), info.isStrikeThroughText(), info.isKerningText(), info.isVariantLigaturesText(), info.getSuperscriptText(), info.getLetterSpacing(),
                     info.getTextScaleX(), info.getTextScaleY(), info.getTextSkewX(), info.getTextSkewY(),
                     info.getShadowColor(), info.getShadowBlur(), info.getShadowOffsetX(), info.getShadowOffsetY());
         }
@@ -518,12 +579,18 @@ public abstract class Graphics implements Disposable, Resettable {
             boolean imageSmoothing = that.imageSmoothing;
             boolean dither = that.dither;
             Font font = that.font;
+            Brush textBackground = that.textBackground;
+            Brush textForeground = that.textForeground;
             float textSize = that.textSize;
             int textDirection = that.textDirection;
             int textAlignment = that.textAlignment;
             boolean subpixelText = that.subpixelText;
             boolean underlineText = that.underlineText;
             boolean strikeThroughText = that.strikeThroughText;
+            boolean kerningText = that.kerningText;
+            boolean variantLigaturesText = that.variantLigaturesText;
+            int superscriptText = that.superscriptText;
+            float letterSpacing = that.letterSpacing;
             float textScaleX = that.textScaleX;
             float textScaleY = that.textScaleY;
             float textSkewX = that.textSkewX;
@@ -537,7 +604,7 @@ public abstract class Graphics implements Disposable, Resettable {
                     brush, style,
                     strokeWidth, strokeJoin, strokeCap, strokeMiterLimit, strokeDash, strokeDashPhase,
                     antiAlias, imageSmoothing, dither,
-                    font, textSize, textDirection, textAlignment, subpixelText, underlineText, strikeThroughText,
+                    font, textBackground, textForeground, textSize, textDirection, textAlignment, subpixelText, underlineText, strikeThroughText, kerningText, variantLigaturesText, superscriptText, letterSpacing,
                     textScaleX, textScaleY, textSkewX, textSkewY,
                     shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY);
         }
@@ -567,7 +634,7 @@ public abstract class Graphics implements Disposable, Resettable {
                     null, Style.FILL,
                     16, Stroke.Join.MITER, Stroke.Cap.BUTT, 10, null, 0,
                     true, false, false,
-                    null, 12, Text.Direction.AUTO, Text.Alignment.START, true, false, false,
+                    null, null, null, 12, Text.Direction.AUTO, Text.Alignment.START, true, false, false, true, true, Text.Superscript.NONE, 0,
                     1, 1, 0, 0,
                     Color.TRANSPARENT, 0, 0, 0);
         }
@@ -578,7 +645,7 @@ public abstract class Graphics implements Disposable, Resettable {
                     getBrush() == null && getStyle() == Style.FILL &&
                     getStrokeWidth() == 16 && getStrokeJoin() == Stroke.Join.MITER && getStrokeCap() == Stroke.Cap.BUTT && getStrokeMiterLimit() == 10 && getStrokeDash() == null && getStrokeDashPhase() == 0 &&
                     isAntiAlias() && !isImageSmoothing() && !isDither() &&
-                    getFont() == null && getTextSize() == 12 && getTextDirection() == Text.Direction.AUTO && getTextAlignment() == Text.Alignment.START && isSubpixelText() && !isUnderlineText() && !isStrikeThroughText() &&
+                    getFont() == null && getTextBackground() == null && getTextForeground() == null && getTextSize() == 12 && getTextDirection() == Text.Direction.AUTO && getTextAlignment() == Text.Alignment.START && isSubpixelText() && !isUnderlineText() && !isStrikeThroughText() && isKerningText() && isVariantLigaturesText() && getSuperscriptText() == Text.Superscript.NONE && getLetterSpacing() == 0 &&
                     getTextScaleX() == 1 && getTextScaleY() == 1 && getTextSkewX() == 0 && getTextSkewY() == 0 &&
                     getShadowColor() == Color.TRANSPARENT && getShadowBlur() == 0 && getShadowOffsetX() == 0 && getShadowOffsetY() == 0;
         }
@@ -618,6 +685,12 @@ public abstract class Graphics implements Disposable, Resettable {
             if (Float.compare(shadowBlur, info.shadowBlur) != 0) return false;
             if (Float.compare(shadowOffsetX, info.shadowOffsetX) != 0) return false;
             if (Float.compare(shadowOffsetY, info.shadowOffsetY) != 0) return false;
+            if (!Objects.equals(textBackground, info.textBackground)) return false;
+            if (!Objects.equals(textForeground, info.textForeground)) return false;
+            if (kerningText != info.kerningText) return false;
+            if (variantLigaturesText != info.variantLigaturesText) return false;
+            if (superscriptText != info.superscriptText) return false;
+            if (Float.compare(letterSpacing, info.letterSpacing) != 0) return false;
             return Objects.equals(font, info.font);
         }
 
@@ -638,12 +711,18 @@ public abstract class Graphics implements Disposable, Resettable {
             result = 31 * result + (imageSmoothing ? 1 : 0);
             result = 31 * result + (dither ? 1 : 0);
             result = 31 * result + (font != null ? font.hashCode() : 0);
+            result = 31 * result + (textBackground != null ? textBackground.hashCode() : 0);
+            result = 31 * result + (textForeground != null ? textForeground.hashCode() : 0);
             result = 31 * result + (textSize != 0.0f ? Float.floatToIntBits(textSize) : 0);
             result = 31 * result + textDirection;
             result = 31 * result + textAlignment;
             result = 31 * result + (subpixelText ? 1 : 0);
             result = 31 * result + (underlineText ? 1 : 0);
             result = 31 * result + (strikeThroughText ? 1 : 0);
+            result = 31 * result + (kerningText ? 1 : 0);
+            result = 31 * result + (variantLigaturesText ? 1 : 0);
+            result = 31 * result + superscriptText;
+            result = 31 * result + (letterSpacing != 0.0f ? Float.floatToIntBits(letterSpacing) : 0);
             result = 31 * result + (textScaleX != 0.0f ? Float.floatToIntBits(textScaleX) : 0);
             result = 31 * result + (textScaleY != 0.0f ? Float.floatToIntBits(textScaleY) : 0);
             result = 31 * result + (textSkewX != 0.0f ? Float.floatToIntBits(textSkewX) : 0);
@@ -674,12 +753,18 @@ public abstract class Graphics implements Disposable, Resettable {
                     ", imageSmoothing=" + imageSmoothing +
                     ", dither=" + dither +
                     ", font=" + font +
+                    ", textBackground=" + textBackground +
+                    ", textForeground=" + textForeground +
                     ", textSize=" + textSize +
                     ", textDirection=" + Text.Direction.toString(textDirection) +
                     ", textAlignment=" + Text.Alignment.toString(textAlignment) +
                     ", subpixelText=" + subpixelText +
                     ", underlineText=" + underlineText +
                     ", strikeThroughText=" + strikeThroughText +
+                    ", kerningText=" + kerningText +
+                    ", variantLigaturesText=" + variantLigaturesText +
+                    ", superscriptText=" + Text.Superscript.toString(superscriptText) +
+                    ", letterSpacing=" + letterSpacing +
                     ", textScaleX=" + textScaleX +
                     ", textScaleY=" + textScaleY +
                     ", textSkewX=" + textSkewX +
@@ -748,18 +833,18 @@ public abstract class Graphics implements Disposable, Resettable {
         drawText(text, 0, text.length, transform);
     }
     public abstract void drawText(char[] text, int offset, int length, Transform transform);
-    public void drawTextOnPath(CharSequence text, Path path, float startOffset, int x, int y) {
+    public void drawTextOnPath(String text, Path path, float startOffset, int x, int y) {
         drawTextOnPath(text, 0, text.length(), path, startOffset, x, y);
     }
-    public abstract void drawTextOnPath(CharSequence text, int start, int end, Path path, float startOffset, int x, int y);
-    public void drawTextOnPath(char[] text, Path path, float startOffset, int x, int y) {
+    public abstract void drawTextOnPath(String text, int start, int end, Path path, float startOffset, float x, float y);
+    public void drawTextOnPath(char[] text, Path path, float startOffset, float x, float y) {
         drawTextOnPath(text, 0, text.length, path, startOffset, x, y);
     }
-    public abstract void drawTextOnPath(char[] text, int offset, int length, Path path, float startOffset, int x, int y);
-    public void drawTextOnPath(CharSequence text, Path path, float startOffset, Transform transform) {
+    public abstract void drawTextOnPath(char[] text, int offset, int length, Path path, float startOffset, float x, float y);
+    public void drawTextOnPath(String text, Path path, float startOffset, Transform transform) {
         drawTextOnPath(text, 0, text.length(), path, startOffset, transform);
     }
-    public abstract void drawTextOnPath(CharSequence text, int start, int end, Path path, float startOffset, Transform transform);
+    public abstract void drawTextOnPath(String text, int start, int end, Path path, float startOffset, Transform transform);
     public void drawTextOnPath(char[] text, Path path, float startOffset, Transform transform) {
         drawTextOnPath(text, 0, text.length, path, startOffset, transform);
     }
@@ -809,13 +894,22 @@ public abstract class Graphics implements Disposable, Resettable {
         measureText(text, 0, text.length, metrics);
     }
 
-    public abstract void hitText(CharSequence text, int start, int end, float xOffset, Text.HitInfo hitInfo);
-    public void hitText(CharSequence text, float xOffset, Text.HitInfo hitInfo) {
-        hitText(text, 0, text.length(), xOffset, hitInfo);
+    public abstract void hitText(CharSequence text, int start, int end, float xOffset, float yOffset, Text.HitInfo hitInfo);
+    public void hitText(CharSequence text, float xOffset, float yOffset, Text.HitInfo hitInfo) {
+        hitText(text, 0, text.length(), xOffset, yOffset, hitInfo);
     }
-    public abstract void hitText(char[] text, int offset, int length, float xOffset, Text.HitInfo hitInfo);
-    public void hitText(char[] text, float xOffset, Text.HitInfo hitInfo) {
-        hitText(text, 0, text.length, xOffset, hitInfo);
+    public abstract void hitText(char[] text, int offset, int length, float xOffset, float yOffset, Text.HitInfo hitInfo);
+    public void hitText(char[] text, float xOffset, float yOffset, Text.HitInfo hitInfo) {
+        hitText(text, 0, text.length, xOffset, yOffset, hitInfo);
+    }
+
+    public abstract Paragraph multilineText(CharSequence text, int start, int end);
+    public Paragraph multilineText(CharSequence text) {
+        return multilineText(text, 0, text.length());
+    }
+    public abstract Paragraph multilineText(char[] text, int offset, int length);
+    public Paragraph multilineText(char[] text) {
+        return multilineText(text, 0, text.length);
     }
 
     public abstract void getInfo(Info info);
@@ -853,6 +947,10 @@ public abstract class Graphics implements Disposable, Resettable {
     public abstract void setDither(boolean dither);
     public abstract Font getFont();
     public abstract void setFont(Font font);
+    public abstract Brush getTextBackground();
+    public abstract void setTextBackground(Brush textBackground);
+    public abstract Brush getTextForeground();
+    public abstract void setTextForeground(Brush textForeground);
     public abstract float getTextSize();
     public abstract void setTextSize(float size);
     public abstract int getTextDirection();
@@ -865,6 +963,14 @@ public abstract class Graphics implements Disposable, Resettable {
     public abstract void setUnderlineText(boolean underlineText);
     public abstract boolean isStrikeThroughText();
     public abstract void setStrikeThroughText(boolean strikeThroughText);
+    public abstract boolean isKerningText();
+    public abstract void setKerningText(boolean kerningText);
+    public abstract boolean isVariantLigaturesText();
+    public abstract void setVariantLigaturesText(boolean variantLigaturesText);
+    public abstract int getSuperscriptText();
+    public abstract void setSuperscriptText(int superscriptText);
+    public abstract float getLetterSpacing();
+    public abstract void setLetterSpacing(float letterSpacing);
     public abstract void setTextScaleX(float scaleX);
     public abstract void setTextScaleY(float scaleY);
     public void setTextScale(float scaleX, float scaleY) {
@@ -914,14 +1020,20 @@ public abstract class Graphics implements Disposable, Resettable {
         setDither(dither);
     }
 
-    public void setTextAttributes(Font font, float size, int direction, int alignment, boolean subpixel, boolean underline, boolean strikeThrough) {
+    public void setTextAttributes(Font font, Brush background, Brush foreground, float size, int direction, int alignment, boolean subpixel, boolean underline, boolean strikeThrough, boolean kerning, boolean variantLigatures, int superscript, float letterSpacing) {
         setFont(font);
+        setTextBackground(background);
+        setTextForeground(foreground);
         setTextSize(size);
         setTextDirection(direction);
         setTextAlignment(alignment);
         setSubpixelText(subpixel);
         setUnderlineText(underline);
         setStrikeThroughText(strikeThrough);
+        setKerningText(kerning);
+        setVariantLigaturesText(variantLigatures);
+        setSuperscriptText(superscript);
+        setLetterSpacing(letterSpacing);
     }
 
     public void setTextTransform(float scaleX, float scaleY, float skewX, float skewY) {
@@ -963,7 +1075,7 @@ public abstract class Graphics implements Disposable, Resettable {
                         Brush brush, int style,
                         float strokeWidth, int strokeJoin, int strokeCap, float strokeMiterLimit, float[] strokeDash, float strokeDashPhase,
                         boolean antiAlias, boolean imageSmoothing, boolean dither,
-                        Font font, float textSize, int textDirection, int textAlignment, boolean subpixelText, boolean underlineText, boolean strikeThroughText,
+                        Font font, Brush textBackground, Brush textForeground, float textSize, int textDirection, int textAlignment, boolean subpixelText, boolean underlineText, boolean strikeThroughText, boolean kerningText, boolean variantLigaturesText, int superscriptText, float letterSpacing,
                         float textScaleX, float textScaleY, float textSkewX, float textSkewY,
                         int shadowColor, float shadowBlur, float shadowOffsetX, float shadowOffsetY) {
         setClip(clip);
@@ -973,7 +1085,7 @@ public abstract class Graphics implements Disposable, Resettable {
         setStyle(style);
         setStroke(strokeWidth, strokeJoin, strokeCap, strokeMiterLimit, strokeDash, strokeDashPhase);
         setAntiAlias(antiAlias, imageSmoothing, dither);
-        setTextAttributes(font, textSize, textDirection, textAlignment, subpixelText, underlineText, strikeThroughText);
+        setTextAttributes(font, textBackground, textForeground, textSize, textDirection, textAlignment, subpixelText, underlineText, strikeThroughText, kerningText, variantLigaturesText, superscriptText, letterSpacing);
         setTextTransform(textScaleX, textScaleY, textSkewX, textSkewY);
         setShadow(shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY);
     }
@@ -982,7 +1094,7 @@ public abstract class Graphics implements Disposable, Resettable {
                         Brush brush, int style,
                         float strokeWidth, int strokeJoin, int strokeCap, float strokeMiterLimit, float[] strokeDash, int strokeDashOffset, int strokeDashLength, float strokeDashPhase,
                         boolean antiAlias, boolean imageSmoothing, boolean dither,
-                        Font font, float textSize, int textDirection, int textAlignment, boolean subpixelText, boolean underlineText, boolean strikeThroughText,
+                        Font font, Brush textBackground, Brush textForeground, float textSize, int textDirection, int textAlignment, boolean subpixelText, boolean underlineText, boolean strikeThroughText, boolean kerningText, boolean variantLigaturesText, int superscriptText, float letterSpacing,
                         float textScaleX, float textScaleY, float textSkewX, float textSkewY,
                         int shadowColor, float shadowBlur, float shadowOffsetX, float shadowOffsetY) {
         setClip(clip);
@@ -992,7 +1104,7 @@ public abstract class Graphics implements Disposable, Resettable {
         setStyle(style);
         setStroke(strokeWidth, strokeJoin, strokeCap, strokeMiterLimit, strokeDash, strokeDashOffset, strokeDashLength, strokeDashPhase);
         setAntiAlias(antiAlias, imageSmoothing, dither);
-        setTextAttributes(font, textSize, textDirection, textAlignment, subpixelText, underlineText, strikeThroughText);
+        setTextAttributes(font, textBackground, textForeground, textSize, textDirection, textAlignment, subpixelText, underlineText, strikeThroughText, kerningText, variantLigaturesText, superscriptText, letterSpacing);
         setTextTransform(textScaleX, textScaleY, textSkewX, textSkewY);
         setShadow(shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY);
     }
@@ -1002,7 +1114,7 @@ public abstract class Graphics implements Disposable, Resettable {
                 info.getBrush(), info.getStyle(),
                 info.getStrokeWidth(), info.getStrokeJoin(), info.getStrokeCap(), info.getStrokeMiterLimit(), info.getStrokeDash(), info.getStrokeDashPhase(),
                 info.isAntiAlias(), info.isImageSmoothing(), info.isDither(),
-                info.getFont(), info.getTextSize(), info.getTextDirection(), info.getTextAlignment(), info.isSubpixelText(), info.isUnderlineText(), info.isStrikeThroughText(),
+                info.getFont(), info.getTextBackground(), info.getTextForeground(), info.getTextSize(), info.getTextDirection(), info.getTextAlignment(), info.isSubpixelText(), info.isUnderlineText(), info.isStrikeThroughText(), info.isKerningText(), info.isVariantLigaturesText(), info.getSuperscriptText(), info.getLetterSpacing(),
                 info.getTextScaleX(), info.getTextScaleY(), info.getTextSkewX(), info.getTextSkewY(),
                 info.getShadowColor(), info.getShadowBlur(), info.getShadowOffsetX(), info.getShadowOffsetY());
     }
@@ -1046,7 +1158,7 @@ public abstract class Graphics implements Disposable, Resettable {
                 null, Style.FILL,
                 16, Stroke.Join.MITER, Stroke.Cap.BUTT, 10, null, 0,
                 true, false, false,
-                null, 12, Text.Direction.AUTO, Text.Alignment.START, true, false, false,
+                null, null, null, 12, Text.Direction.AUTO, Text.Alignment.START, true, false, false, true, true, Text.Superscript.NONE, 0,
                 1, 1, 0, 0,
                 Color.TRANSPARENT, 0, 0, 0);
     }
@@ -1057,9 +1169,17 @@ public abstract class Graphics implements Disposable, Resettable {
                 getBrush() == null && getStyle() == Style.FILL &&
                 getStrokeWidth() == 16 && getStrokeJoin() == Stroke.Join.MITER && getStrokeCap() == Stroke.Cap.BUTT && getStrokeMiterLimit() == 10 && getStrokeDash() == null && getStrokeDashPhase() == 0 &&
                 isAntiAlias() && !isImageSmoothing() && !isDither() &&
-                getFont() == null && getTextSize() == 12 && getTextDirection() == Text.Direction.AUTO && getTextAlignment() == Text.Alignment.START && isSubpixelText() && !isUnderlineText() && !isStrikeThroughText() &&
+                getFont() == null && getTextBackground() == null && getTextForeground() == null && getTextSize() == 12 && getTextDirection() == Text.Direction.AUTO && getTextAlignment() == Text.Alignment.START && isSubpixelText() && !isUnderlineText() && !isStrikeThroughText() && isKerningText() && isVariantLigaturesText() && getSuperscriptText() == Text.Superscript.NONE && getLetterSpacing() == 0 &&
                 getTextScaleX() == 1 && getTextScaleY() == 1 && getTextSkewX() == 0 && getTextSkewY() == 0 &&
                 getShadowColor() == Color.TRANSPARENT && getShadowBlur() == 0 && getShadowOffsetX() == 0 && getShadowOffsetY() == 0;
+    }
+
+    public abstract Graphics slice(int x, int y, int width, int height);
+    public abstract Graphics duplicate();
+    public abstract Graphics attachment();
+
+    public boolean hasAttachment() {
+        return attachment() != null;
     }
 
 }

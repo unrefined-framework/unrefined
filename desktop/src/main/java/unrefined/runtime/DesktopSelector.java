@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class DesktopSelector extends Selector {
 
@@ -149,8 +150,9 @@ public class DesktopSelector extends Selector {
     }
 
     @Override
-    public int select(long timeout) throws IOException {
-        return selector.select(timeout);
+    public int select(long timeout, TimeUnit timeUnit) throws IOException {
+        if (timeUnit == null) timeUnit = TimeUnit.MILLISECONDS;
+        return selector.select(timeUnit.toMillis(timeout));
     }
 
     @Override

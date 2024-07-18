@@ -2,7 +2,6 @@ package unrefined.nio.channels;
 
 import unrefined.net.InetAddress;
 import unrefined.net.NetworkInterface;
-import unrefined.net.SocketException;
 
 import java.io.IOException;
 

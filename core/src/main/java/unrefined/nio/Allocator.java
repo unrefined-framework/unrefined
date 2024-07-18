@@ -4,7 +4,7 @@ import unrefined.context.Environment;
 import unrefined.core.DirectPointer;
 import unrefined.core.HeapPointer;
 import unrefined.math.FastMath;
-import unrefined.util.FastArray;
+import unrefined.util.Arrays;
 import unrefined.util.foreign.Foreign;
 
 import java.io.IOException;
@@ -72,9 +72,10 @@ public abstract class Allocator {
         void put(long address, long value);
         void put(ByteBuffer buffer, long value);
         void put(ByteBuffer buffer, int index, long value);
+        void put(Object array, long offset, long value);
     }
 
-    private final NativeTypeAdapter NATIVE_TYPE_ADAPTER_64 = new  NativeTypeAdapter() {
+    private final NativeTypeAdapter NATIVE_TYPE_ADAPTER_64 = new NativeTypeAdapter() {
         @Override
         public long get(long address) {
             return getLong(address);
@@ -102,6 +103,10 @@ public abstract class Allocator {
         @Override
         public void put(ByteBuffer buffer, int index, long value) {
             buffer.putLong(index, value);
+        }
+        @Override
+        public void put(Object array, long offset, long value) {
+            putLong(array, offset, value);
         }
     };
 
@@ -134,11 +139,39 @@ public abstract class Allocator {
         public void put(ByteBuffer buffer, int index, long value) {
             buffer.putInt(index, (int) value);
         }
+        @Override
+        public void put(Object array, long offset, long value) {
+            putInt(array, offset, (int) value);
+        }
     };
 
     private final NativeTypeAdapter NATIVE_INT_ADAPTER = Foreign.getInstance().nativeIntSize() == 8 ? NATIVE_TYPE_ADAPTER_64 : NATIVE_TYPE_ADAPTER_32;
     private final NativeTypeAdapter NATIVE_LONG_ADAPTER = Foreign.getInstance().nativeLongSize() == 8 ? NATIVE_TYPE_ADAPTER_64 : NATIVE_TYPE_ADAPTER_32;
     private final NativeTypeAdapter ADDRESS_ADAPTER = Foreign.getInstance().addressSize() == 8 ? NATIVE_TYPE_ADAPTER_64 : NATIVE_TYPE_ADAPTER_32;
+
+    /**
+     * Reads a {@code boolean} from a native memory location.
+     *
+     * @param address The memory location to get the value from.
+     * @return A {@code boolean} containing the value.
+     */
+    public abstract boolean getBoolean(long address);
+
+    /**
+     * Reads a {@code boolean} from a {@link ByteBuffer}.
+     *
+     * @param buffer The {@code ByteBuffer} to get the value from.
+     * @return A {@code boolean} containing the value.
+     */
+    public abstract boolean getBoolean(ByteBuffer buffer);
+
+    /**
+     * Reads a {@code boolean} from a {@link ByteBuffer}.
+     *
+     * @param buffer The {@code ByteBuffer} to get the value from.
+     * @return A {@code boolean} containing the value.
+     */
+    public abstract boolean getBoolean(ByteBuffer buffer, int index);
 
     /**
      * Reads a {@code byte} from a native memory location.
@@ -233,6 +266,16 @@ public abstract class Allocator {
     }
 
     /**
+     * Reads an unsigned native {@code int} (32-bit or 64-bit) from a native memory location.
+     *
+     * @param address The memory location to get the value from.
+     * @return A {@link BigInteger} containing the value.
+     */
+    public BigInteger getUnsignedNativeInt(long address) {
+        return FastMath.unsign(NATIVE_INT_ADAPTER.get(address));
+    }
+
+    /**
      * Reads a native {@code int} (32-bit or 64-bit) from a {@link ByteBuffer}.
      *
      * @param buffer The {@code ByteBuffer} to get the value from.
@@ -240,6 +283,16 @@ public abstract class Allocator {
      */
     public long getNativeInt(ByteBuffer buffer) {
         return NATIVE_INT_ADAPTER.get(buffer);
+    }
+
+    /**
+     * Reads an unsigned native {@code int} (32-bit or 64-bit) from a {@link ByteBuffer}.
+     *
+     * @param buffer The {@code ByteBuffer} to get the value from.
+     * @return A {@link BigInteger} containing the value.
+     */
+    public BigInteger getUnsignedNativeInt(ByteBuffer buffer) {
+        return FastMath.unsign(NATIVE_INT_ADAPTER.get(buffer));
     }
 
     /**
@@ -254,6 +307,17 @@ public abstract class Allocator {
     }
 
     /**
+     * Reads an unsigned native {@code int} (32-bit or 64-bit) from a {@link ByteBuffer}.
+     *
+     * @param buffer The {@code ByteBuffer} to get the value from.
+     * @param index The index from which the {@code byte} will be read.
+     * @return A {@link BigInteger} containing the value.
+     */
+    public BigInteger getUnsignedNativeInt(ByteBuffer buffer, int index) {
+        return FastMath.unsign(NATIVE_INT_ADAPTER.get(buffer, index));
+    }
+
+    /**
      * Reads a native {@code long} (32-bit or 64-bit) from a native memory location.
      *
      * @param address The memory location to get the value from.
@@ -261,6 +325,16 @@ public abstract class Allocator {
      */
     public long getNativeLong(long address) {
         return NATIVE_LONG_ADAPTER.get(address);
+    }
+
+    /**
+     * Reads an unsigned native {@code long} (32-bit or 64-bit) from a native memory location.
+     *
+     * @param address The memory location to get the value from.
+     * @return A {@link BigInteger} containing the value.
+     */
+    public BigInteger getUnsignedNativeLong(long address) {
+        return FastMath.unsign(NATIVE_LONG_ADAPTER.get(address));
     }
 
     /**
@@ -274,6 +348,16 @@ public abstract class Allocator {
     }
 
     /**
+     * Reads an unsigned native {@code long} (32-bit or 64-bit) from a {@link ByteBuffer}.
+     *
+     * @param buffer The {@code ByteBuffer} to get the value from.
+     * @return A {@link BigInteger} containing the value.
+     */
+    public BigInteger getUnsignedNativeLong(ByteBuffer buffer) {
+        return FastMath.unsign(NATIVE_LONG_ADAPTER.get(buffer));
+    }
+
+    /**
      * Reads a native {@code long} (32-bit or 64-bit) from a {@link ByteBuffer}.
      *
      * @param buffer The {@code ByteBuffer} to get the value from.
@@ -282,6 +366,17 @@ public abstract class Allocator {
      */
     public long getNativeLong(ByteBuffer buffer, int index) {
         return NATIVE_LONG_ADAPTER.get(buffer, index);
+    }
+
+    /**
+     * Reads an unsigned native {@code long} (32-bit or 64-bit) from a {@link ByteBuffer}.
+     *
+     * @param buffer The {@code ByteBuffer} to get the value from.
+     * @param index The index from which the {@code byte} will be read.
+     * @return A {@link BigInteger} containing the value.
+     */
+    public BigInteger getUnsignedNativeLong(ByteBuffer buffer, int index) {
+        return FastMath.unsign(NATIVE_LONG_ADAPTER.get(buffer, index));
     }
 
     /**
@@ -330,6 +425,31 @@ public abstract class Allocator {
     public long getAddress(ByteBuffer buffer, int index) {
         return ADDRESS_ADAPTER.get(buffer, index);
     }
+
+    /**
+     * Writes a {@code boolean} to a native memory location.
+     *
+     * @param address The memory location to put the value.
+     * @param value The value to write to memory.
+     */
+    public abstract void putBoolean(long address, boolean value);
+
+    /**
+     * Writes a {@code boolean} to a {@link ByteBuffer}.
+     *
+     * @param buffer The {@code ByteBuffer} to put the value.
+     * @param value The value to write to memory.
+     */
+    public abstract void putBoolean(ByteBuffer buffer, boolean value);
+
+    /**
+     * Writes a {@code boolean} to a {@link ByteBuffer}.
+     *
+     * @param buffer The {@code ByteBuffer} to put the value.
+     * @param index The index from which the {@code boolean} will be written.
+     * @param value The value to write to memory.
+     */
+    public abstract void putBoolean(ByteBuffer buffer, int index, boolean value);
 
     /**
      * Writes a {@code byte} to a native memory location.
@@ -454,6 +574,16 @@ public abstract class Allocator {
     }
 
     /**
+     * Writes an unsigned native {@code int} (32-bit or 64-bit) to a native memory location.
+     *
+     * @param address The memory location to put the value.
+     * @param value The value to write to memory.
+     */
+    public void putUnsignedNativeInt(long address, BigInteger value) {
+        NATIVE_INT_ADAPTER.put(address, value.longValue());
+    }
+
+    /**
      * Writes a native {@code int} (32-bit or 64-bit) to a {@link ByteBuffer}.
      *
      * @param buffer The {@code ByteBuffer} to put the value.
@@ -461,6 +591,16 @@ public abstract class Allocator {
      */
     public void putNativeInt(ByteBuffer buffer, long value) {
         NATIVE_INT_ADAPTER.put(buffer, value);
+    }
+
+    /**
+     * Writes an unsigned native {@code int} (32-bit or 64-bit) to a {@link ByteBuffer}.
+     *
+     * @param buffer The {@code ByteBuffer} to put the value.
+     * @param value The value to write to memory.
+     */
+    public void putUnsignedNativeInt(ByteBuffer buffer, BigInteger value) {
+        NATIVE_INT_ADAPTER.put(buffer, value.longValue());
     }
 
     /**
@@ -475,6 +615,17 @@ public abstract class Allocator {
     }
 
     /**
+     * Writes an unsigned native {@code int} (32-bit or 64-bit) to a {@link ByteBuffer}.
+     *
+     * @param buffer The {@code ByteBuffer} to put the value.
+     * @param index The index from which the {@code byte} will be written.
+     * @param value The value to write to memory.
+     */
+    public void putUnsignedNativeInt(ByteBuffer buffer, int index, BigInteger value) {
+        NATIVE_INT_ADAPTER.put(buffer, index, value.longValue());
+    }
+
+    /**
      * Writes a native {@code long} (32-bit or 64-bit) to a native memory location.
      *
      * @param address The memory location to put the value.
@@ -482,6 +633,16 @@ public abstract class Allocator {
      */
     public void putNativeLong(long address, long value) {
         NATIVE_LONG_ADAPTER.put(address, value);
+    }
+
+    /**
+     * Writes an unsigned native {@code long} (32-bit or 64-bit) to a native memory location.
+     *
+     * @param address The memory location to put the value.
+     * @param value The value to write to memory.
+     */
+    public void putUnsignedNativeLong(long address, BigInteger value) {
+        NATIVE_LONG_ADAPTER.put(address, value.longValue());
     }
 
     /**
@@ -495,6 +656,16 @@ public abstract class Allocator {
     }
 
     /**
+     * Writes an unsigned native {@code long} (32-bit or 64-bit) to a {@link ByteBuffer}.
+     *
+     * @param buffer The {@code ByteBuffer} to put the value.
+     * @param value The value to write to memory.
+     */
+    public void putUnsignedNativeLong(ByteBuffer buffer, BigInteger value) {
+        NATIVE_LONG_ADAPTER.put(buffer, value.longValue());
+    }
+
+    /**
      * Writes a native {@code long} (32-bit or 64-bit) to a {@link ByteBuffer}.
      *
      * @param buffer The {@code ByteBuffer} to put the value.
@@ -503,6 +674,17 @@ public abstract class Allocator {
      */
     public void putNativeLong(ByteBuffer buffer, int index, long value) {
         NATIVE_LONG_ADAPTER.put(buffer, index, value);
+    }
+
+    /**
+     * Writes an unsigned native {@code long} (32-bit or 64-bit) to a {@link ByteBuffer}.
+     *
+     * @param buffer The {@code ByteBuffer} to put the value.
+     * @param index The index from which the {@code byte} will be written.
+     * @param value The value to write to memory.
+     */
+    public void putUnsignedNativeLong(ByteBuffer buffer, int index, BigInteger value) {
+        NATIVE_LONG_ADAPTER.put(buffer, index, value.longValue());
     }
 
     /**
@@ -674,6 +856,34 @@ public abstract class Allocator {
     }
 
     /**
+     * Writes a {@code boolean} array to native memory.
+     *
+     * @param address The native memory address to copy the array to.
+     * @param array The array to copy.
+     * @param offset The offset within the array to start copying from.
+     * @param length The number of array elements to copy.
+     */
+    public void putBooleanArray(long address, boolean[] array, int offset, int length) {
+        if (offset < 0) throw new ArrayIndexOutOfBoundsException(offset);
+        else if (length < 0) throw new ArrayIndexOutOfBoundsException(length);
+        int size = offset + length;
+        if (size < 0 || size > array.length) throw new ArrayIndexOutOfBoundsException(size);
+        for (int i = 0; i < length; i ++) {
+            putBoolean(address + i, array[offset + i]);
+        }
+    }
+
+    /**
+     * Writes a {@code boolean} array to native memory.
+     *
+     * @param address The native memory address to copy the array to.
+     * @param array The array to copy.
+     */
+    public void putBooleanArray(long address, boolean[] array) {
+        putBooleanArray(address, array, 0, array.length);
+    }
+
+    /**
      * Writes a {@code byte} array to native memory.
      *
      * @param address The native memory address to copy the array to.
@@ -699,6 +909,34 @@ public abstract class Allocator {
      */
     public void putByteArray(long address, byte[] array) {
         putByteArray(address, array, 0, array.length);
+    }
+
+    /**
+     * Reads a {@code boolean} array from native memory.
+     *
+     * @param address The native memory address to copy the array from.
+     * @param array The array to copy.
+     * @param offset The offset within the array to start copying to.
+     * @param length The number of array elements to copy.
+     */
+    public void getBooleanArray(long address, boolean[] array, int offset, int length) {
+        if (offset < 0) throw new ArrayIndexOutOfBoundsException(offset);
+        else if (length < 0) throw new ArrayIndexOutOfBoundsException(length);
+        int size = offset + length;
+        if (size < 0 || size > array.length) throw new ArrayIndexOutOfBoundsException(size);
+        for (int i = 0; i < length; i ++) {
+            array[offset + i] = getBoolean(address + i);
+        }
+    }
+
+    /**
+     * Reads a {@code boolean} array from native memory.
+     *
+     * @param address The native memory address to copy the array from.
+     * @param array The array to copy.
+     */
+    public void getBooleanArray(long address, boolean[] array) {
+        getBooleanArray(address, array, 0, array.length);
     }
 
     /**
@@ -1066,6 +1304,180 @@ public abstract class Allocator {
     }
 
     /**
+     * Writes an {@code address} array to native memory.
+     *
+     * @param address The native memory address to copy the array to.
+     * @param array The array to copy.
+     * @param offset The offset within the array to start copying from.
+     * @param length The number of array elements to copy.
+     */
+    public void putAddressArray(long address, long[] array, int offset, int length) {
+        if (offset < 0) throw new ArrayIndexOutOfBoundsException(offset);
+        else if (length < 0) throw new ArrayIndexOutOfBoundsException(length);
+        int size = offset + length;
+        if (size < 0 || size > array.length) throw new ArrayIndexOutOfBoundsException(size);
+        int addressSize = Foreign.getInstance().addressSize();
+        for (int i = 0; i < length; i ++) {
+            putAddress(address + (long) i * addressSize, array[offset + i]);
+        }
+    }
+
+    /**
+     * Writes an {@code address} array to native memory.
+     *
+     * @param address The native memory address to copy the array to.
+     * @param array The array to copy.
+     */
+    public void putAddressArray(long address, long[] array) {
+        putAddressArray(address, array, 0, array.length);
+    }
+
+    /**
+     * Reads an {@code address} array from native memory.
+     *
+     * @param address The native memory address to copy the array from.
+     * @param array The array to copy.
+     * @param offset The offset within the array to start copying to.
+     * @param length The number of array elements to copy.
+     */
+    public void getAddressArray(long address, long[] array, int offset, int length) {
+        if (offset < 0) throw new ArrayIndexOutOfBoundsException(offset);
+        else if (length < 0) throw new ArrayIndexOutOfBoundsException(length);
+        int size = offset + length;
+        if (size < 0 || size > array.length) throw new ArrayIndexOutOfBoundsException(size);
+        int addressSize = Foreign.getInstance().addressSize();
+        for (int i = 0; i < length; i ++) {
+            array[offset + i] = getAddress(address + (long) i * addressSize);
+        }
+    }
+
+    /**
+     * Reads an {@code address} array from native memory.
+     *
+     * @param address The native memory address to copy the array from.
+     * @param array The array to copy.
+     */
+    public void getAddressArray(long address, long[] array) {
+        getAddressArray(address, array, 0, array.length);
+    }
+
+    /**
+     * Writes a native {@code int} array to native memory.
+     *
+     * @param address The native memory address to copy the array to.
+     * @param array The array to copy.
+     * @param offset The offset within the array to start copying from.
+     * @param length The number of array elements to copy.
+     */
+    public void putNativeIntArray(long address, long[] array, int offset, int length) {
+        if (offset < 0) throw new ArrayIndexOutOfBoundsException(offset);
+        else if (length < 0) throw new ArrayIndexOutOfBoundsException(length);
+        int size = offset + length;
+        if (size < 0 || size > array.length) throw new ArrayIndexOutOfBoundsException(size);
+        int nativeIntSize = Foreign.getInstance().nativeIntSize();
+        for (int i = 0; i < length; i ++) {
+            putNativeInt(address + (long) i * nativeIntSize, array[offset + i]);
+        }
+    }
+
+    /**
+     * Writes a native {@code int} array to native memory.
+     *
+     * @param address The native memory address to copy the array to.
+     * @param array The array to copy.
+     */
+    public void putNativeIntArray(long address, long[] array) {
+        putNativeIntArray(address, array, 0, array.length);
+    }
+
+    /**
+     * Reads a native {@code int} array from native memory.
+     *
+     * @param address The native memory address to copy the array from.
+     * @param array The array to copy.
+     * @param offset The offset within the array to start copying to.
+     * @param length The number of array elements to copy.
+     */
+    public void getNativeIntArray(long address, long[] array, int offset, int length) {
+        if (offset < 0) throw new ArrayIndexOutOfBoundsException(offset);
+        else if (length < 0) throw new ArrayIndexOutOfBoundsException(length);
+        int size = offset + length;
+        if (size < 0 || size > array.length) throw new ArrayIndexOutOfBoundsException(size);
+        int nativeIntSize = Foreign.getInstance().nativeIntSize();
+        for (int i = 0; i < length; i ++) {
+            array[offset + i] = getNativeInt(address + (long) i * nativeIntSize);
+        }
+    }
+
+    /**
+     * Reads a native {@code int} array from native memory.
+     *
+     * @param address The native memory address to copy the array from.
+     * @param array The array to copy.
+     */
+    public void getNativeIntArray(long address, long[] array) {
+        getNativeIntArray(address, array, 0, array.length);
+    }
+
+    /**
+     * Writes a native {@code long} array to native memory.
+     *
+     * @param address The native memory address to copy the array to.
+     * @param array The array to copy.
+     * @param offset The offset within the array to start copying from.
+     * @param length The number of array elements to copy.
+     */
+    public void putNativeLongArray(long address, long[] array, int offset, int length) {
+        if (offset < 0) throw new ArrayIndexOutOfBoundsException(offset);
+        else if (length < 0) throw new ArrayIndexOutOfBoundsException(length);
+        int size = offset + length;
+        if (size < 0 || size > array.length) throw new ArrayIndexOutOfBoundsException(size);
+        int nativeLongSize = Foreign.getInstance().nativeLongSize();
+        for (int i = 0; i < length; i ++) {
+            putNativeLong(address + (long) i * nativeLongSize, array[offset + i]);
+        }
+    }
+
+    /**
+     * Writes a native {@code long} array to native memory.
+     *
+     * @param address The native memory address to copy the array to.
+     * @param array The array to copy.
+     */
+    public void putNativeLongArray(long address, long[] array) {
+        putNativeLongArray(address, array, 0, array.length);
+    }
+
+    /**
+     * Reads a native {@code long} array from native memory.
+     *
+     * @param address The native memory address to copy the array from.
+     * @param array The array to copy.
+     * @param offset The offset within the array to start copying to.
+     * @param length The number of array elements to copy.
+     */
+    public void getNativeLongArray(long address, long[] array, int offset, int length) {
+        if (offset < 0) throw new ArrayIndexOutOfBoundsException(offset);
+        else if (length < 0) throw new ArrayIndexOutOfBoundsException(length);
+        int size = offset + length;
+        if (size < 0 || size > array.length) throw new ArrayIndexOutOfBoundsException(size);
+        int nativeLongSize = Foreign.getInstance().nativeLongSize();
+        for (int i = 0; i < length; i ++) {
+            array[offset + i] = getNativeLong(address + (long) i * nativeLongSize);
+        }
+    }
+
+    /**
+     * Reads a native {@code long} array from native memory.
+     *
+     * @param address The native memory address to copy the array from.
+     * @param array The array to copy.
+     */
+    public void getNativeLongArray(long address, long[] array) {
+        getNativeLongArray(address, array, 0, array.length);
+    }
+
+    /**
      * Allocates native memory.
      *
      * @param size The number of bytes of memory to allocate.
@@ -1160,7 +1572,7 @@ public abstract class Allocator {
      * {@code byte} is stripped from the end.
      */
     public byte[] getZeroTerminatedByteArray(long address) {
-        return getZeroTerminatedByteArray(address, FastArray.ARRAY_LENGTH_MAX);
+        return getZeroTerminatedByteArray(address, Arrays.ARRAY_LENGTH_MAX);
     }
 
     /**
@@ -1185,7 +1597,7 @@ public abstract class Allocator {
      * {@code byte} is stripped from the end.
      */
     public byte[] getZeroTerminatedWideCharByteArray(long address) {
-        return getZeroTerminatedWideCharByteArray(address, FastArray.ARRAY_LENGTH_MAX);
+        return getZeroTerminatedWideCharByteArray(address, Arrays.ARRAY_LENGTH_MAX);
     }
 
     /**
@@ -1211,7 +1623,7 @@ public abstract class Allocator {
      * {@code byte} is stripped from the end.
      */
     public byte[] getZeroTerminatedByteArray(long address, Charset charset) {
-        return getZeroTerminatedByteArray(address, FastArray.ARRAY_LENGTH_MAX, charset);
+        return getZeroTerminatedByteArray(address, Arrays.ARRAY_LENGTH_MAX, charset);
     }
 
     /**
@@ -1227,7 +1639,7 @@ public abstract class Allocator {
     public byte[] getZeroTerminatedByteArray(long address, int maxLength, Charset charset) {
         if (charset == null) charset = Charset.defaultCharset();
         long stringLength = getZeroTerminatedStringLength(address, maxLength, charset) * "\0".getBytes(charset).length;
-        if (stringLength < 0 || stringLength > FastArray.ARRAY_LENGTH_MAX) stringLength = FastArray.ARRAY_LENGTH_MAX;
+        if (stringLength < 0 || stringLength > Arrays.ARRAY_LENGTH_MAX) stringLength = Arrays.ARRAY_LENGTH_MAX;
         byte[] array = new byte[(int) stringLength];
         getByteArray(address, array);
         return array;
@@ -1242,7 +1654,7 @@ public abstract class Allocator {
      * {@code byte} is stripped from the end.
      */
     public String getZeroTerminatedString(long address) {
-        return getZeroTerminatedString(address, FastArray.ARRAY_LENGTH_MAX);
+        return getZeroTerminatedString(address, Arrays.ARRAY_LENGTH_MAX);
     }
 
     /**
@@ -1267,7 +1679,7 @@ public abstract class Allocator {
      * {@code byte} is stripped from the end.
      */
     public String getZeroTerminatedWideCharString(long address) {
-        return getZeroTerminatedWideCharString(address, FastArray.ARRAY_LENGTH_MAX);
+        return getZeroTerminatedWideCharString(address, Arrays.ARRAY_LENGTH_MAX);
     }
 
     /**
@@ -1293,7 +1705,7 @@ public abstract class Allocator {
      * {@code byte} is stripped from the end.
      */
     public String getZeroTerminatedString(long address, Charset charset) {
-        return getZeroTerminatedString(address, FastArray.ARRAY_LENGTH_MAX, charset);
+        return getZeroTerminatedString(address, Arrays.ARRAY_LENGTH_MAX, charset);
     }
 
     /**
@@ -1563,7 +1975,7 @@ public abstract class Allocator {
 
     public ByteBuffer reallocateBytes(ByteBuffer buffer, int capacity) {
         if (buffer.isDirect()) return wrapBytes(getDirectBufferAddress(buffer.position(capacity)), capacity);
-        else return ByteBuffer.allocate(capacity).order(buffer.order()).put(buffer.clear()).clear();
+        else return Buffers.clear(ByteBuffer.allocate(capacity).order(buffer.order()).put(Buffers.clear(buffer)));
     }
 
     public MappedByteBuffer mapBytes(FileChannel channel, FileChannel.MapMode mode, long position, long size) throws IOException {
@@ -1592,7 +2004,7 @@ public abstract class Allocator {
 
     public CharBuffer reallocateChars(CharBuffer buffer, int capacity) {
         if (buffer.isDirect()) return wrapBytes(getDirectBufferAddress(buffer.position(capacity)), capacity << 1).asCharBuffer();
-        else return CharBuffer.allocate(capacity).put(buffer.clear()).clear();
+        else return Buffers.clear(CharBuffer.allocate(capacity).put(Buffers.clear(buffer)));
     }
 
     public ShortBuffer allocateShorts(int capacity) {
@@ -1609,7 +2021,7 @@ public abstract class Allocator {
 
     public ShortBuffer reallocateShorts(ShortBuffer buffer, int capacity) {
         if (buffer.isDirect()) return wrapBytes(getDirectBufferAddress(buffer.position(capacity)), capacity << 1).asShortBuffer();
-        else return ShortBuffer.allocate(capacity).put(buffer.clear()).clear();
+        else return Buffers.clear(ShortBuffer.allocate(capacity).put(Buffers.clear(buffer)));
     }
 
     public IntBuffer allocateInts(int capacity) {
@@ -1626,7 +2038,7 @@ public abstract class Allocator {
 
     public IntBuffer reallocateInts(IntBuffer buffer, int capacity) {
         if (buffer.isDirect()) return wrapBytes(getDirectBufferAddress(buffer.position(capacity)), capacity << 2).asIntBuffer();
-        else return IntBuffer.allocate(capacity).put(buffer.clear()).clear();
+        else return Buffers.clear(IntBuffer.allocate(capacity).put(Buffers.clear(buffer)));
     }
 
     public LongBuffer allocateLongs(int capacity) {
@@ -1643,7 +2055,7 @@ public abstract class Allocator {
 
     public LongBuffer reallocateLongs(LongBuffer buffer, int capacity) {
         if (buffer.isDirect()) return wrapBytes(getDirectBufferAddress(buffer.position(capacity)), capacity << 3).asLongBuffer();
-        else return LongBuffer.allocate(capacity).put(buffer.clear()).clear();
+        else return Buffers.clear(LongBuffer.allocate(capacity).put(Buffers.clear(buffer)));
     }
 
     public FloatBuffer allocateFloats(int capacity) {
@@ -1660,7 +2072,7 @@ public abstract class Allocator {
 
     public FloatBuffer reallocateFloats(FloatBuffer buffer, int capacity) {
         if (buffer.isDirect()) return wrapBytes(getDirectBufferAddress(buffer.position(capacity)), capacity << 2).asFloatBuffer();
-        else return FloatBuffer.allocate(capacity).put(buffer.clear()).clear();
+        else return Buffers.clear(FloatBuffer.allocate(capacity).put(Buffers.clear(buffer)));
     }
 
     public DoubleBuffer allocateDoubles(int capacity) {
@@ -1677,7 +2089,7 @@ public abstract class Allocator {
 
     public DoubleBuffer reallocateDoubles(DoubleBuffer buffer, int capacity) {
         if (buffer.isDirect()) return wrapBytes(getDirectBufferAddress(buffer.position(capacity)), capacity << 3).asDoubleBuffer();
-        else return DoubleBuffer.allocate(capacity).put(buffer.clear()).clear();
+        else return Buffers.clear(DoubleBuffer.allocate(capacity).put(Buffers.clear(buffer)));
     }
 
     public boolean isValid(Buffer buffer) {
@@ -1705,6 +2117,7 @@ public abstract class Allocator {
     }
 
     private static DirectPointer allocateDirectPointer(Allocator allocator, long size) throws IOException {
+        if (size == 0) return (DirectPointer) Pointer.NULL;
         long address = allocator.allocateMemory(size);
         if (address == 0) throw new IOException("Unable to allocate native memory, size: " + FastMath.unsign(size));
         else return new DirectPointer(address, size, true);
@@ -1728,6 +2141,12 @@ public abstract class Allocator {
      */
     public void freePointer(Pointer pointer) throws IOException {
         pointer.close();
+    }
+
+    public abstract void copyMemory(Object srcArray, long srcOffset, Object dstArray, long dstOffset, long bytes);
+    public abstract void setMemory(Object array, long offset, long bytes, byte value);
+    public void setMemory(Object array, long offset, long bytes, int value) {
+        setMemory(array, offset, bytes, (byte) value);
     }
 
     public abstract boolean getBoolean(Object array, long offset);
@@ -1778,6 +2197,24 @@ public abstract class Allocator {
             dstArray[dstOffset + i] = getDouble(srcArray, srcOffset + (long) i << 4);
         }
     }
+    public void getNativeIntArray(Object srcArray, long srcOffset, long[] dstArray, int dstOffset, int length) {
+        int nativeIntSize = Foreign.getInstance().nativeIntSize();
+        for (int i = 0; i < length; i ++) {
+            dstArray[dstOffset + i] = getNativeInt(srcArray, srcOffset + (long) i * nativeIntSize);
+        }
+    }
+    public void getNativeLongArray(Object srcArray, long srcOffset, long[] dstArray, int dstOffset, int length) {
+        int nativeLongSize = Foreign.getInstance().nativeLongSize();
+        for (int i = 0; i < length; i ++) {
+            dstArray[dstOffset + i] = getNativeLong(srcArray, srcOffset + (long) i * nativeLongSize);
+        }
+    }
+    public void getAddressArray(Object srcArray, long srcOffset, long[] dstArray, int dstOffset, int length) {
+        int addressSize = Foreign.getInstance().addressSize();
+        for (int i = 0; i < length; i ++) {
+            dstArray[dstOffset + i] = getAddress(srcArray, srcOffset + (long) i * addressSize);
+        }
+    }
     public long getNativeInt(Object array, long offset) {
         return NATIVE_INT_ADAPTER.get(array, offset);
     }
@@ -1798,6 +2235,118 @@ public abstract class Allocator {
     }
     public BigInteger getUnsignedLong(Object array, long offset) {
         return FastMath.unsign(getLong(array, offset));
+    }
+    public BigInteger getUnsignedNativeInt(Object array, long offset) {
+        return FastMath.unsign(NATIVE_INT_ADAPTER.get(array, offset));
+    }
+    public BigInteger getUnsignedNativeLong(Object array, long offset) {
+        return FastMath.unsign(NATIVE_LONG_ADAPTER.get(array, offset));
+    }
+
+    public abstract void putBoolean(Object array, long offset, boolean value);
+    public abstract void putByte(Object array, long offset, byte value);
+    public void putByte(Object array, long offset, short value) {
+        putByte(array, offset, (byte) value);
+    }
+    public void putByte(Object array, long offset, int value) {
+        putByte(array, offset, (byte) value);
+    }
+    public abstract void putChar(Object array, long offset, char value);
+    public abstract void putShort(Object array, long offset, short value);
+    public void putShort(Object array, long offset, int value) {
+        putShort(array, offset, (short) value);
+    }
+    public abstract void putInt(Object array, long offset, int value);
+    public abstract void putLong(Object array, long offset, long value);
+    public abstract void putFloat(Object array, long offset, float value);
+    public abstract void putDouble(Object array, long offset, double value);
+    public void putBooleanArray(Object dstArray, long dstOffset, boolean[] srcArray, int srcOffset, int length) {
+        for (int i = 0; i < length; i ++) {
+            putByte(dstArray, dstOffset + i, srcArray[srcOffset + i] ? 1 : 0);
+        }
+    }
+    public void putByteArray(Object dstArray, long dstOffset, byte[] srcArray, int srcOffset, int length) {
+        for (int i = 0; i < length; i ++) {
+            putByte(dstArray, dstOffset + i, srcArray[srcOffset + i]);
+        }
+    }
+    public void putCharArray(Object dstArray, long dstOffset, char[] srcArray, int srcOffset, int length) {
+        for (int i = 0; i < length; i ++) {
+            putChar(dstArray, dstOffset + (long) i << 1, srcArray[srcOffset + i]);
+        }
+    }
+    public void putShortArray(Object dstArray, long dstOffset, short[] srcArray, int srcOffset, int length) {
+        for (int i = 0; i < length; i ++) {
+            putShort(dstArray, dstOffset + (long) i << 1, srcArray[srcOffset + i]);
+        }
+    }
+    public void putIntArray(Object dstArray, long dstOffset, int[] srcArray, int srcOffset, int length) {
+        for (int i = 0; i < length; i ++) {
+            putInt(dstArray, dstOffset + (long) i << 2, srcArray[srcOffset + i]);
+        }
+    }
+    public void putLongArray(Object dstArray, long dstOffset, long[] srcArray, int srcOffset, int length) {
+        for (int i = 0; i < length; i ++) {
+            putLong(dstArray, dstOffset + (long) i << 3, srcArray[srcOffset + i]);
+        }
+    }
+    public void putFloatArray(Object dstArray, long dstOffset, float[] srcArray, int srcOffset, int length) {
+        for (int i = 0; i < length; i ++) {
+            putFloat(dstArray, dstOffset + (long) i << 2, srcArray[srcOffset + i]);
+        }
+    }
+    public void putDoubleArray(Object dstArray, long dstOffset, double[] srcArray, int srcOffset, int length) {
+        for (int i = 0; i < length; i ++) {
+            putDouble(dstArray, dstOffset + (long) i << 3, srcArray[srcOffset + i]);
+        }
+    }
+    public void putNativeIntArray(Object dstArray, long dstOffset, long[] srcArray, int srcOffset, int length) {
+        int nativeIntSize = Foreign.getInstance().nativeIntSize();
+        for (int i = 0; i < length; i ++) {
+            putNativeInt(dstArray, dstOffset + (long) i * nativeIntSize, srcArray[srcOffset + i]);
+        }
+    }
+    public void putNativeLongArray(Object dstArray, long dstOffset, long[] srcArray, int srcOffset, int length) {
+        int nativeLongSize = Foreign.getInstance().nativeLongSize();
+        for (int i = 0; i < length; i ++) {
+            putNativeLong(dstArray, dstOffset + (long) i * nativeLongSize, srcArray[srcOffset + i]);
+        }
+    }
+    public void putAddressArray(Object dstArray, long dstOffset, long[] srcArray, int srcOffset, int length) {
+        int addressSize = Foreign.getInstance().addressSize();
+        for (int i = 0; i < length; i ++) {
+            putAddress(dstArray, dstOffset + (long) i * addressSize, srcArray[srcOffset + i]);
+        }
+    }
+    public void putNativeInt(Object array, long offset, long value) {
+        NATIVE_INT_ADAPTER.put(array, offset, value);
+    }
+    public void putNativeLong(Object array, long offset, long value) {
+        NATIVE_LONG_ADAPTER.put(array, offset, value);
+    }
+    public void putAddress(Object array, long offset, long value) {
+        ADDRESS_ADAPTER.put(array, offset, value);
+    }
+    public void putUnsignedByte(Object array, long offset, short value) {
+        putByte(array, offset, (byte) value);
+    }
+    public void putUnsignedByte(Object array, long offset, int value) {
+        putByte(array, offset, (byte) value);
+    }
+    public void putUnsignedShort(Object array, long offset, int value) {
+        putShort(array, offset, (short) value);
+    }
+    public void putUnsignedInt(Object array, long offset, long value) {
+        putInt(array, offset, (int) value);
+    }
+    public void putUnsignedLong(Object array, long offset, BigInteger value) {
+        putLong(array, offset, value.longValue());
+    }
+    public void putUnsignedNativeInt(Object array, long offset, BigInteger value) {
+        NATIVE_INT_ADAPTER.put(array, offset, value.longValue());
+    }
+    public void putUnsignedNativeLong(Object array, long offset, BigInteger value) {
+        NATIVE_LONG_ADAPTER.put(array, offset, value.longValue());
     }
 
     public abstract int compareMemory(long srcAddress, long srcOffset, long dstAddress, long dstOffset, long length);

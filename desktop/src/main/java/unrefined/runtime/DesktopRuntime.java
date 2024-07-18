@@ -10,9 +10,9 @@ import unrefined.desktop.ShutdownHook;
 import unrefined.desktop.SizeOfSupport;
 import unrefined.desktop.StandardDirectories;
 import unrefined.desktop.VMInfo;
-import unrefined.internal.macos.MacPreferences;
-import unrefined.internal.posix.PosixPreferences;
-import unrefined.internal.windows.WindowsPreferences;
+import unrefined.desktop.macos.MacPreferences;
+import unrefined.desktop.posix.PosixPreferences;
+import unrefined.desktop.windows.WindowsPreferences;
 
 import java.io.File;
 import java.util.Locale;
@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static unrefined.desktop.UnsafeSupport.UNSAFE;
 
-public final class DesktopRuntime extends Runtime {
+public class DesktopRuntime extends Runtime {
 
     {
         ShutdownHook.register(() -> DesktopRuntime.this.onShutdown().emit());

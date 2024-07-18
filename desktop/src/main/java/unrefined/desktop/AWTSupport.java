@@ -1,10 +1,16 @@
 package unrefined.desktop;
 
-import unrefined.internal.X11.X11AWTSupport;
-import unrefined.internal.macos.MacAWTSupport;
-import unrefined.internal.windows.WindowsAWTSupport;
+import unrefined.desktop.X11.X11AWTSupport;
+import unrefined.desktop.macos.MacAWTSupport;
+import unrefined.desktop.windows.WindowsAWTSupport;
 import unrefined.media.graphics.Brush;
+import unrefined.media.graphics.Graphics;
 import unrefined.media.graphics.RectangleF;
+import unrefined.media.graphics.Text;
+import unrefined.runtime.DesktopBitmap;
+import unrefined.runtime.DesktopBrush;
+import unrefined.runtime.DesktopFont;
+import unrefined.runtime.DesktopGraphics;
 import unrefined.util.NotInstantiableError;
 import unrefined.util.UnexpectedError;
 
@@ -17,16 +23,30 @@ import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
 import java.awt.MultipleGradientPaint;
+import java.awt.Paint;
+import java.awt.Rectangle;
+import java.awt.Shape;
 import java.awt.Toolkit;
 import java.awt.Window;
+import java.awt.font.GraphicAttribute;
+import java.awt.font.ImageGraphicAttribute;
+import java.awt.font.TextAttribute;
+import java.awt.font.TextLayout;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Area;
+import java.awt.geom.GeneralPath;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.AttributedCharacterIterator;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.Lock;
 
 public final class AWTSupport {
@@ -123,6 +143,12 @@ public final class AWTSupport {
             case Brush.TileMode.REPEAT: return MultipleGradientPaint.CycleMethod.REPEAT;
             default: throw new IllegalArgumentException("Illegal tile mode: " + tileMode);
         }
+    }
+
+    public static Rectangle2D.Float floatRectangle(Rectangle2D rectangle2D) {
+        if (rectangle2D instanceof Rectangle2D.Float) return (Rectangle2D.Float) rectangle2D;
+        else return new Rectangle2D.Float((float) rectangle2D.getX(), (float) rectangle2D.getY(),
+                (float) rectangle2D.getWidth(), (float) rectangle2D.getHeight());
     }
 
     public static void floatRectangle(Rectangle2D rectangle2D, RectangleF rectangle) {
@@ -331,6 +357,186 @@ public final class AWTSupport {
         } finally {
             pushPopLock.unlock();
         }
+    }
+
+    public static Shape intersectByArea(Shape s1, Shape s2, boolean keep1, boolean keep2) {
+        Area a1, a2;
+
+        // First see if we can find an overwritable source shape
+        // to use as our destination area to avoid duplication.
+        if (!keep1 && (s1 instanceof Area)) {
+            a1 = (Area) s1;
+        } else if (!keep2 && (s2 instanceof Area)) {
+            a1 = (Area) s2;
+            s2 = s1;
+        } else {
+            a1 = new Area(s1);
+        }
+
+        if (s2 instanceof Area) {
+            a2 = (Area) s2;
+        } else {
+            a2 = new Area(s2);
+        }
+
+        a1.intersect(a2);
+        if (a1.isRectangular()) {
+            return a1.getBounds();
+        }
+
+        return a1;
+    }
+
+    public static Shape intersectShapes(Shape s1, Shape s2, boolean keep1, boolean keep2) {
+        if (s1 instanceof Rectangle && s2 instanceof Rectangle) {
+            return ((Rectangle) s1).intersection((Rectangle) s2);
+        }
+        if (s1 instanceof Rectangle2D) {
+            return intersectRectShape((Rectangle2D) s1, s2, keep1, keep2);
+        } else if (s2 instanceof Rectangle2D) {
+            return intersectRectShape((Rectangle2D) s2, s1, keep2, keep1);
+        }
+        return intersectByArea(s1, s2, keep1, keep2);
+    }
+
+    public static Shape intersectRectShape(Rectangle2D r, Shape s,
+                                           boolean keep1, boolean keep2) {
+        if (s instanceof Rectangle2D) {
+            Rectangle2D r2 = (Rectangle2D) s;
+            Rectangle2D outrect;
+            if (!keep1) {
+                outrect = r;
+            } else if (!keep2) {
+                outrect = r2;
+            } else {
+                outrect = new Rectangle2D.Float();
+            }
+            double x1 = Math.max(r.getX(), r2.getX());
+            double x2 = Math.min(r.getX()  + r.getWidth(),
+                    r2.getX() + r2.getWidth());
+            double y1 = Math.max(r.getY(), r2.getY());
+            double y2 = Math.min(r.getY()  + r.getHeight(),
+                    r2.getY() + r2.getHeight());
+
+            if (((x2 - x1) < 0) || ((y2 - y1) < 0))
+                // Width or height is negative. No intersection.
+                outrect.setFrameFromDiagonal(0, 0, 0, 0);
+            else
+                outrect.setFrameFromDiagonal(x1, y1, x2, y2);
+            return outrect;
+        }
+        if (r.contains(s.getBounds2D())) {
+            if (keep2) {
+                s = new GeneralPath(s);
+            }
+            return s;
+        }
+        return intersectByArea(r, s, keep1, keep2);
+    }
+
+    public static AttributedCharSequence toAttributedCharSequence(Text text, DesktopGraphics graphics) {
+        return toAttributedCharSequence(text, 0, text.length(), graphics);
+    }
+
+    public static AttributedCharSequence toAttributedCharSequence(Text text, int start, int end, DesktopGraphics graphics) {
+        return toAttributedCharSequence(text, start, end, graphics, null, null);
+    }
+
+    public static AttributedCharSequence toAttributedCharSequence(Text text, int start, int end, DesktopGraphics graphics, List<Object[]> backgroundList, List<Object[]> foregroundList) {
+
+        Graphics2D graphics2D = graphics.getGraphics2D();
+
+        if (!text.spanMarks().isEmpty()) {
+
+            Graphics.Info info = graphics.getInfo();
+
+            AttributedCharSequence sequence = new AttributedCharSequence(text.subSequence(start, end), graphics2D.getFont().getAttributes());
+            if (info.getStyle() == Graphics.Style.FILL || info.getTextBackground() != null)
+                sequence.addAttribute(TextAttribute.BACKGROUND, ((DesktopBrush) info.getTextBackground()).getPaint());
+
+            for (Text.SpanMark mark : text.spanMarks()) {
+                Float scaleX, scaleY, skewX, skewY;
+                scaleX = scaleY = skewX = skewY = null;
+                BufferedImage replacement = null;
+                int baseline = 0;
+                for (Map.Entry<Text.Attribute, Object> entry : mark.getAttributes().entrySet()) {
+                    Object value = entry.getValue();
+                    if (value == null) continue;
+                    Text.Attribute attribute = entry.getKey();
+                    switch (attribute) {
+                        case BRUSH:
+                            sequence.addAttribute(TextAttribute.FOREGROUND, ((DesktopBrush) value).getPaint(), mark.getStart(), mark.getEnd());
+                            break;
+                        case FONT:
+                            sequence.addAttribute(TextAttribute.FONT, ((DesktopFont) value).getFont(), mark.getStart(), mark.getEnd());
+                            break;
+                        case BACKGROUND:
+                            if (info.getStyle() == Graphics.Style.FILL) sequence.addAttribute(TextAttribute.BACKGROUND, ((DesktopBrush) value).getPaint(), mark.getStart(), mark.getEnd());
+                            else if (backgroundList != null) backgroundList.add(new Object[] { ((DesktopBrush) value).getPaint(), mark.getStart(), mark.getEnd() });
+                            break;
+                        case FOREGROUND:
+                            if (foregroundList != null) foregroundList.add(new Object[] { ((DesktopBrush) value).getPaint(), mark.getStart(), mark.getEnd() });
+                            break;
+                        case SIZE:
+                            sequence.addAttribute(TextAttribute.SIZE, value, mark.getStart(), mark.getEnd());
+                            break;
+                        case DIRECTION:
+                            sequence.addAttribute(TextAttribute.RUN_DIRECTION, TextHints.toRunDirection((Integer) value), mark.getStart(), mark.getEnd());
+                            break;
+                        case UNDERLINE:
+                            sequence.addAttribute(TextAttribute.UNDERLINE, (Boolean) value ? TextAttribute.UNDERLINE_ON : TextHints.UNDERLINE_OFF, mark.getStart(), mark.getEnd());
+                            break;
+                        case STRIKETHROUGH:
+                            sequence.addAttribute(TextAttribute.STRIKETHROUGH, (Boolean) value ? TextAttribute.STRIKETHROUGH_ON : TextHints.STRIKETHROUGH_OFF, mark.getStart(), mark.getEnd());
+                            break;
+                        case KERNING:
+                            sequence.addAttribute(TextAttribute.KERNING, (Boolean) value ? TextAttribute.KERNING_ON : TextHints.KERNING_OFF, mark.getStart(), mark.getEnd());
+                            break;
+                        case VARIANT_LIGATURES:
+                            sequence.addAttribute(TextAttribute.LIGATURES, (Boolean) value ? TextAttribute.LIGATURES_ON : TextHints.LIGATURES_OFF, mark.getStart(), mark.getEnd());
+                            break;
+                        case SUPERSCRIPT:
+                            sequence.addAttribute(TextAttribute.SUPERSCRIPT, value, mark.getStart(), mark.getEnd());
+                            break;
+                        case LETTER_SPACING:
+                            sequence.addAttribute(TextAttribute.TRACKING, value, mark.getStart(), mark.getEnd());
+                            break;
+                        case SCALE_X:
+                            scaleX = (Float) value;
+                            break;
+                        case SCALE_Y:
+                            scaleY = (Float) value;
+                            break;
+                        case SKEW_X:
+                            skewX = (Float) value;
+                            break;
+                        case SKEW_Y:
+                            skewY = (Float) value;
+                            break;
+                        case REPLACEMENT:
+                            replacement = ((DesktopBitmap) value).getBufferedImage();
+                            break;
+                        case REPLACEMENT_BASELINE:
+                            baseline = FontSupport.toFontBaseline((Integer) value);
+                            break;
+                    }
+                    if (skewX != null || skewY != null || scaleX != null || scaleY != null) {
+                        AffineTransform textTransform = AffineTransform.getShearInstance(skewX == null ? 0 : skewX, skewY == null ? 0 : skewY);
+                        textTransform.scale(scaleX == null ? 1 : scaleX, scaleY == null ? 1 : scaleY);
+                        sequence.addAttribute(TextAttribute.TRANSFORM, textTransform, mark.getStart(), mark.getEnd());
+                    }
+                    if (replacement != null) {
+                        if (baseline == -3) {
+                            baseline = GraphicAttribute.TOP_ALIGNMENT;
+                            sequence.addAttribute(TextAttribute.CHAR_REPLACEMENT, new ImageGraphicAttribute(replacement, baseline, 0, replacement.getHeight() * 0.5f), mark.getStart(), mark.getEnd());
+                        }
+                        else sequence.addAttribute(TextAttribute.CHAR_REPLACEMENT, new ImageGraphicAttribute(replacement, baseline), mark.getStart(), mark.getEnd());
+                    }
+                }
+            }
+            return sequence;
+        }
+        else return new AttributedCharSequence(text.subSequence(start, end), graphics2D.getFont().getAttributes());
     }
 
 }

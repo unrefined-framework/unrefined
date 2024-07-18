@@ -3,14 +3,14 @@ package org.example.desktop.io;
 import unrefined.Lifecycle;
 import unrefined.app.Log;
 import unrefined.io.BundleInput;
-import unrefined.io.BundleInputStream;
+import unrefined.io.BundleReader;
 import unrefined.io.BundleOutput;
-import unrefined.io.BundleOutputStream;
+import unrefined.io.BundleWriter;
 import unrefined.io.Bundleable;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 
 public class BundleIO {
 
@@ -55,20 +55,20 @@ public class BundleIO {
 
         log.info("Fruit", write.getName());
 
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        StringWriter out = new StringWriter();
 
-        try (BundleOutputStream stream = new BundleOutputStream(out)) {
-            stream.putBundleable("fruit", write);
+        try (BundleWriter writer = new BundleWriter(out)) {
+            writer.putBundleable("fruit", write);
         } catch (IOException ignored) {
         }
 
         Fruit read = new Fruit();
         log.info("Fruit", read.getName());
 
-        ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
+        StringReader in = new StringReader(out.toString());
 
-        try (BundleInputStream stream = new BundleInputStream(in)) {
-            stream.getBundleable("fruit", read);
+        try (BundleReader reader = new BundleReader(in)) {
+            reader.getBundleable("fruit", read);
             log.info("Fruit", read.getName());
         } catch (IOException ignored) {
         }

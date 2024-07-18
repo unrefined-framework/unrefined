@@ -17,6 +17,8 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.GraphicsEnvironment;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -24,9 +26,11 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
-public abstract class DesktopEmbeddedContext extends Context implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener {
+public abstract class DesktopEmbeddedContext extends Context implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener, FocusListener {
 
     private final Component component;
 
@@ -46,6 +50,7 @@ public abstract class DesktopEmbeddedContext extends Context implements KeyListe
         component.addMouseListener(this);
         component.addMouseMotionListener(this);
         component.addMouseWheelListener(this);
+        component.addFocusListener(this);
     }
 
     public Component getComponent() {
@@ -171,6 +176,14 @@ public abstract class DesktopEmbeddedContext extends Context implements KeyListe
         component.requestFocus();
     }
 
+    @Override
+    public void focusGained(FocusEvent e) {}
+
+    @Override
+    public void focusLost(FocusEvent e) {
+        pressedCode.clear();
+    }
+
     private volatile Cursor cursor = DesktopCursor.getDefaultCursor();
     @Override
     public void setCursor(Cursor cursor) {
@@ -185,30 +198,37 @@ public abstract class DesktopEmbeddedContext extends Context implements KeyListe
         return cursor;
     }
 
+    private final Set<String> pressedCode = new HashSet<>();
+    private volatile boolean repeat = false;
+
     @Override
     public void keyTyped(KeyEvent e) {
-        ContextListener listener = listener();
-        if (listener != null && listener.onKeyTyped(this, e.getKeyChar())) e.consume();
+        if (listener().onKeyTyped(this, e.getKeyChar(), repeat)) e.consume();
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        ContextListener listener = listener();
-        if (listener != null && listener.onKeyDown(this,
+        String code = KeyEventParser.parseCode(e);
+        repeat = pressedCode.contains(code);
+        pressedCode.add(code);
+        if (listener().onKeyDown(this,
                 KeyEventParser.parseKey(e),
                 KeyEventParser.parseCode(e),
                 e.getKeyLocation() - 1,
-                Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6))) e.consume();
+                Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6), repeat)) e.consume();
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-        ContextListener listener = listener();
-        if (listener != null && listener.onKeyUp(this,
-                KeyEventParser.parseKey(e),
-                KeyEventParser.parseCode(e),
-                e.getKeyLocation() - 1,
-                Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6))) e.consume();
+        String code = KeyEventParser.parseCode(e);
+        if (pressedCode.contains(code)) {
+            if (listener().onKeyUp(this,
+                    KeyEventParser.parseKey(e),
+                    KeyEventParser.parseCode(e),
+                    e.getKeyLocation() - 1,
+                    Input.KeyModifier.removeUnusedBits(e.getModifiersEx() >>> 6))) e.consume();
+        }
+        pressedCode.remove(code);
     }
 
     @Override

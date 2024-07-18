@@ -12,6 +12,7 @@ import unrefined.util.function.Assert;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.TexturePaint;
@@ -118,6 +119,7 @@ public class DropShadow {
         g2d.setColor(g.getColor());
         g2d.translate(2 * radius, 2 * radius);
         g2d.fill(area);
+        g2d.dispose();
 
         Rectangle2D rct = new Rectangle2D.Double(dx + r.getX() - 2 * radius,
                 dy + r.getY() - 2 * radius,
@@ -127,10 +129,16 @@ public class DropShadow {
 
         gb.filter(bi, bi);
 
-        g.setPaint(new TexturePaint(bi, rct));
+        Paint originalPaint = g.getPaint();
+        try {
+            g.setPaint(new TexturePaint(bi, rct));
 
-        Area rect = new Area(rct);
-        g.fill(rect);
+            Area rect = new Area(rct);
+            g.fill(rect);
+        }
+        finally {
+            g.setPaint(originalPaint);
+        }
     }
 
 }

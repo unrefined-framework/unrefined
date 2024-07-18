@@ -14,7 +14,7 @@ public class EventBusExample {
         EventBus bus = EventBus.defaultInstance();
 
         bus.register(new EventBusExample());
-        bus.post(new StringEvent(EventBusExample.class, "This is an message"));
+        bus.post(new StringEvent(EventBusExample.class, "This is a message"));
     }
 
     public static class StringEvent extends Event<Class<?>> {

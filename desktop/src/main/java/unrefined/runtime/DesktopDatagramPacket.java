@@ -4,7 +4,7 @@ import unrefined.desktop.NetSupport;
 import unrefined.net.DatagramPacket;
 import unrefined.net.InetAddress;
 import unrefined.net.InetSocketAddress;
-import unrefined.util.FastArray;
+import unrefined.util.Arrays;
 
 import java.util.Objects;
 
@@ -84,12 +84,12 @@ public class DesktopDatagramPacket extends DatagramPacket {
 
         if (getOffset() != that.getOffset()) return false;
         else if (getLength() != that.getLength()) return false;
-        else return FastArray.equals(getData(), getOffset(), getOffset() + getLength(), that.getData(), that.getOffset(), that.getOffset() + that.getLength());
+        else return Arrays.equals(getData(), getOffset(), getOffset() + getLength(), that.getData(), that.getOffset(), that.getOffset() + that.getLength());
     }
 
     @Override
     public int hashCode() {
-        return FastArray.hashCode(getData(), getOffset(), getLength());
+        return Arrays.hashCode(getData(), getOffset(), getLength());
     }
 
     @Override

@@ -10,11 +10,11 @@ import com.kenai.jffi.Library;
 import com.kenai.jffi.MemoryIO;
 import com.kenai.jffi.Platform;
 import com.kenai.jffi.Type;
-import unrefined.internal.windows.WindowsSupport;
+import unrefined.desktop.windows.WindowsSupport;
 import unrefined.nio.Pointer;
 import unrefined.runtime.DesktopSymbol;
 import unrefined.util.EmptyArray;
-import unrefined.util.FastArray;
+import unrefined.util.Arrays;
 import unrefined.util.NotInstantiableError;
 import unrefined.util.ProducerThreadLocal;
 import unrefined.util.concurrent.ConcurrentHashSet;
@@ -32,7 +32,6 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.Proxy;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -75,9 +74,20 @@ public final class ForeignSupport {
     public static final NativeTypeInvoker NATIVE_LONG_INVOKER = ABI.L == 8 ? NATIVE_TYPE_INVOKER_64 : NATIVE_TYPE_INVOKER_32;
     public static final NativeTypeInvoker NATIVE_INT_INVOKER = ABI.I == 8 ? NATIVE_TYPE_INVOKER_64 : NATIVE_TYPE_INVOKER_32;
 
+    public static final Library C;
+    public static final Library M;
+
     private static final Set<Library> CACHED = new ConcurrentHashSet<>();
     static {
         ForeignSupport.CACHED.add(com.kenai.jffi.Library.getDefault());
+        C = Library.getCachedInstance(
+                OSInfo.IS_WINDOWS ? mapLibraryName(OSInfo.IS_WINDOWS_CE ? "CoreDLL" : "msvcrt") :
+                        (OSInfo.IS_LINUX ? "libc.so.6" : mapLibraryName("c")),
+                Library.LAZY | Library.GLOBAL);
+        M = OSInfo.IS_WINDOWS ? C : Library.getCachedInstance(OSInfo.IS_LINUX ? "libm.so.6" : mapLibraryName("m"),
+                Library.LAZY | Library.GLOBAL);
+        ForeignSupport.CACHED.add(C);
+        ForeignSupport.CACHED.add(M);
     }
 
     private ForeignSupport() {
@@ -85,7 +95,7 @@ public final class ForeignSupport {
     }
     
     private static final Function wcslen =
-            new Function(Library.getDefault().getSymbolAddress("wcslen"),
+            new Function(C.getSymbolAddress("wcslen"),
                     CallContext.getCallContext(Type.POINTER, new Type[] { Type.POINTER }, CallingConvention.DEFAULT, false));
 
     public static long wcslen(long str) {
@@ -95,7 +105,7 @@ public final class ForeignSupport {
     }
 
     private static final Function memcmp =
-            new Function(Library.getDefault().getSymbolAddress("memcmp"),
+            new Function(C.getSymbolAddress("memcmp"),
                     CallContext.getCallContext(Type.SINT, new Type[] { Type.POINTER, Type.POINTER, Type.POINTER },
                             CallingConvention.DEFAULT, false));
 
@@ -108,7 +118,7 @@ public final class ForeignSupport {
     }
 
     private static final Function wmemchr =
-            new Function(Library.getDefault().getSymbolAddress("wmemchr"),
+            new Function(C.getSymbolAddress("wmemchr"),
                     CallContext.getCallContext(Type.POINTER,
                             new Type[] { Type.POINTER, OSInfo.IS_WINDOWS ? Type.UINT16 : Type.UINT32, Type.POINTER },
                             CallingConvention.DEFAULT, false));
@@ -646,7 +656,7 @@ public final class ForeignSupport {
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBuffer(context, args);
         }
         byte[] struct = INVOKER.invokeStruct(context, address, heapInvocationBuffer);
-        SymbolSupport.reverseIfNeeded(struct);
+        SymbolSupport.reverseIfNeeded(struct, Aggregate.descriptorOf(returnType));
         return Aggregate.newInstance(returnType, Pointer.wrap(struct));
     }
 
@@ -681,7 +691,7 @@ public final class ForeignSupport {
             heapInvocationBuffer = SymbolSupport.toHeapInvocationBuffer(context, args);
         }
         byte[] struct = INVOKER.invokeStruct(context, address, heapInvocationBuffer);
-        SymbolSupport.reverseIfNeeded(struct);
+        SymbolSupport.reverseIfNeeded(struct, returnType);
         return Aggregate.newProxyInstance(returnType, Pointer.wrap(struct));
     }
 
@@ -734,7 +744,7 @@ public final class ForeignSupport {
                 break;
             case Foreign.Loader.LINKER:
                 Library loaded = Library.getCachedInstance(name,
-                        Library.GLOBAL | Library.LAZY);
+                        Library.LAZY | Library.GLOBAL);
                 if (loaded == null) throw new IOException(Library.getLastError());
                 else CACHED.add(loaded);
                 break;
@@ -757,7 +767,7 @@ public final class ForeignSupport {
                 break;
             case Foreign.Loader.LINKER:
                 Library loaded = Library.getCachedInstance(path,
-                        Library.GLOBAL | Library.LAZY);
+                        Library.LAZY | Library.GLOBAL);
                 if (loaded == null) throw new IOException(Library.getLastError());
                 else CACHED.add(loaded);
                 break;
@@ -778,7 +788,7 @@ public final class ForeignSupport {
                 if (symbol != 0) return symbol;
             }
         }
-        throw new UnsatisfiedLinkError("Undefined symbol `" + name + "`");
+        throw new UnsatisfiedLinkError("undefined reference to `" + name + "`");
     }
 
     public static int nativeIntSize() {
@@ -828,30 +838,36 @@ public final class ForeignSupport {
                     CallContext.getCallContext(Type.UINT32,
                             new Type[] {Type.UINT32, Type.POINTER, Type.UINT32, Type.UINT32, Type.POINTER, Type.UINT32, Type.POINTER},
                             CallingConvention.DEFAULT, false));
+            Function LocalFree = new Function(WindowsSupport.Kernel32.getSymbolAddress("LocalFree"),
+                    CallContext.getCallContext(Type.POINTER, new Type[] {Type.POINTER}, CallingConvention.DEFAULT, false));
             final ThreadLocal<ByteBuffer> lpBufferThreadLocal = new ProducerThreadLocal<>(() -> ByteBuffer.allocateDirect(Type.POINTER.size()));
             ERROR_STRING_PRODUCER = errno -> {
                 long lpBuffer = MEMORY_IO.getDirectBufferAddress(lpBufferThreadLocal.get());
                 UNSAFE.putAddress(lpBuffer, 0);
-                HeapInvocationBuffer heapInvocationBuffer = new HeapInvocationBuffer(FormatMessageW);
-                heapInvocationBuffer.putInt(0x00001000 /* FORMAT_MESSAGE_FROM_SYSTEM */ | 0x00000100 /* FORMAT_MESSAGE_ALLOCATE_BUFFER */);
-                heapInvocationBuffer.putAddress(0);
-                heapInvocationBuffer.putInt(errno);
-                heapInvocationBuffer.putInt(0);
-                heapInvocationBuffer.putAddress(lpBuffer);
-                heapInvocationBuffer.putInt(0);
-                heapInvocationBuffer.putAddress(0);
+                HeapInvocationBuffer formatMessageBuffer = new HeapInvocationBuffer(FormatMessageW);
+                formatMessageBuffer.putInt(0x00001000 /* FORMAT_MESSAGE_FROM_SYSTEM */ | 0x00000100 /* FORMAT_MESSAGE_ALLOCATE_BUFFER */);
+                formatMessageBuffer.putAddress(0);
+                formatMessageBuffer.putInt(errno);
+                formatMessageBuffer.putInt(0);
+                formatMessageBuffer.putAddress(lpBuffer);
+                formatMessageBuffer.putInt(0);
+                formatMessageBuffer.putAddress(0);
                 try {
-                    if (INVOKER.invokeInt(FormatMessageW, heapInvocationBuffer) == 0) return null;
-                    else return getZeroTerminatedString(UNSAFE.getAddress(lpBuffer), FastArray.ARRAY_LENGTH_MAX, OSInfo.WIDE_CHARSET);
+                    if (INVOKER.invokeInt(FormatMessageW, formatMessageBuffer) == 0) return null;
+                    else return getZeroTerminatedString(UNSAFE.getAddress(lpBuffer), Arrays.ARRAY_LENGTH_MAX, OSInfo.WIDE_CHARSET);
                 }
                 finally {
                     long buffer = UNSAFE.getAddress(lpBuffer);
-                    if (buffer != 0) WindowsSupport.LocalFree(buffer);
+                    if (buffer != 0) {
+                        HeapInvocationBuffer localFreeBuffer = new HeapInvocationBuffer(LocalFree);
+                        localFreeBuffer.putAddress(buffer);
+                        INVOKER.invokeAddress(LocalFree, localFreeBuffer);
+                    }
                 }
             };
         }
         else {
-            Function function = new Function(Library.getDefault().getSymbolAddress("strerror"),
+            Function function = new Function(C.getSymbolAddress("strerror"),
                     CallContext.getCallContext(Type.POINTER, new Type[] {Type.SINT}, CallingConvention.DEFAULT, false));
             ERROR_STRING_PRODUCER = errno -> {
                 HeapInvocationBuffer heapInvocationBuffer = new HeapInvocationBuffer(function);
@@ -873,7 +889,7 @@ public final class ForeignSupport {
             byte[] buffer = new byte[size];
             while (true) {
                 MEMORY_IO.getByteArray(address, buffer, 0, size);
-                if (Arrays.equals(terminator, buffer)) return builder.toString();
+                if (java.util.Arrays.equals(terminator, buffer)) return builder.toString();
                 else builder.append(new String(buffer, charset));
                 address += size;
             }
@@ -881,7 +897,7 @@ public final class ForeignSupport {
     }
 
     public static String getZeroTerminatedString(long address, Charset charset) {
-        return getZeroTerminatedString(address, FastArray.ARRAY_LENGTH_MAX, charset);
+        return getZeroTerminatedString(address, Arrays.ARRAY_LENGTH_MAX, charset);
     }
 
 }

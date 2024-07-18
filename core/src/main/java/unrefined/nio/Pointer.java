@@ -1,6 +1,5 @@
 package unrefined.nio;
 
-import unrefined.math.FastMath;
 import unrefined.util.Duplicatable;
 import unrefined.util.foreign.Foreign;
 
@@ -9,6 +8,8 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A wrapper class which represents a block of memory.
@@ -18,7 +19,7 @@ import java.nio.charset.Charset;
  * memory (that is, a fixed address in the process address space,
  * directly accessible by native code), or backed by at least one
  * Java <code>byte</code> array.
- * See {@link #isDirect()}, {@link #hasArrays()} for more information.
+ * See {@link #isDirect()}, {@link #hasArray()} for more information.
  */
 public abstract class Pointer implements Comparable<Pointer>, Closeable, Duplicatable {
 
@@ -196,35 +197,45 @@ public abstract class Pointer implements Comparable<Pointer>, Closeable, Duplica
     public abstract boolean isBounded();
 
     /**
-     * Indicates whether this <code>Pointer</code> instance is backed by arrays.
+     * Indicates whether this <code>Pointer</code> instance is backed by array.
      *
      * @return true if, and only if, this memory object is backed by an array
      */
-    public abstract boolean hasArrays();
+    public abstract boolean hasArray();
 
     /**
-     * Returns the arrays that back this pointer.
+     * Returns the array that back this pointer.
      *
-     * @return The arrays that back this pointer.
+     * @return The array that back this pointer.
      * @throws UnsupportedOperationException if this pointer does not have a backing array.
      */
-    public abstract byte[][] arrays();
+    public abstract Object array();
+
+    public abstract ByteBuffer[] toByteBuffers();
 
     /**
-     * Returns the offset within this pointer's backing arrays of the first element.
+     * Returns the offset in bytes within this pointer's backing array of the first element.
      *
      * @throws UnsupportedOperationException if this pointer does not have a backing array
      * @return The offset of the first element on the backing array
      */
-    public abstract long arraysOffset();
+    public abstract long arrayOffset();
 
     /**
-     * Returns the length of this pointer's backing arrays that is used by this pointer.
+     * Returns the length in bytes of this pointer's backing array that is used by this pointer.
      *
      * @throws UnsupportedOperationException if this pointer does not have a backing array
      * @return The length of the backing array used
      */
-    public abstract long arraysLength();
+    public abstract long arrayLength();
+
+    /**
+     * Reads an {@code boolean} (8 bit) value at the given offset.
+     *
+     * @param offset The offset from the start of the memory this {@code Pointer} represents at which the value will be read.
+     * @return the {@code boolean} value at the offset.
+     */
+    public abstract boolean getBoolean(long offset);
 
     /**
      * Reads an {@code byte} (8 bit) value at the given offset.
@@ -307,12 +318,28 @@ public abstract class Pointer implements Comparable<Pointer>, Closeable, Duplica
     public abstract long getNativeInt(long offset);
 
     /**
+     * Reads an unsigned native {@code int} (32-bit or 64-bit) value at the given offset.
+     *
+     * @param offset The offset from the start of the memory this {@code Pointer} represents at which the value will be read.
+     * @return the native {@code int} value at the offset.
+     */
+    public abstract BigInteger getUnsignedNativeInt(long offset);
+
+    /**
      * Reads a native {@code long} (32-bit or 64-bit) value at the given offset.
      *
      * @param offset The offset from the start of the memory this {@code Pointer} represents at which the value will be read.
      * @return the native {@code long} value at the offset.
      */
     public abstract long getNativeLong(long offset);
+
+    /**
+     * Reads an unsigned native {@code long} (32-bit or 64-bit) value at the given offset.
+     *
+     * @param offset The offset from the start of the memory this {@code Pointer} represents at which the value will be read.
+     * @return the native {@code long} value at the offset.
+     */
+    public abstract BigInteger getUnsignedNativeLong(long offset);
 
     /**
      * Reads a native memory address value at the given offset.
@@ -339,6 +366,14 @@ public abstract class Pointer implements Comparable<Pointer>, Closeable, Duplica
      * @return the {@code double} value at the offset.
      */
     public abstract double getDouble(long offset);
+
+    /**
+     * Writes a {@code boolean} (8 bit) value at the given offset.
+     *
+     * @param offset The offset from the start of the memory this {@code Pointer} represents at which the value will be written.
+     * @param value the {@code boolean} value to be written.
+     */
+    public abstract void putBoolean(long offset, boolean value);
 
     /**
      * Writes a {@code byte} (8 bit) value at the given offset.
@@ -395,6 +430,14 @@ public abstract class Pointer implements Comparable<Pointer>, Closeable, Duplica
     public abstract void putUnsignedShort(long offset, int value);
 
     /**
+     * Writes a {@code char} (16 bit) value at the given offset.
+     *
+     * @param offset The offset from the start of the memory this {@code Pointer} represents at which the value will be written.
+     * @param value the {@code char} value to be written.
+     */
+    public abstract void putChar(long offset, char value);
+
+    /**
      * Writes an {@code int} (32 bit) value at the given offset.
      *
      * @param offset The offset from the start of the memory this {@code Pointer} represents at which the value will be written.
@@ -438,6 +481,17 @@ public abstract class Pointer implements Comparable<Pointer>, Closeable, Duplica
     public abstract void putNativeInt(long offset, long value);
 
     /**
+     * Writes an unsigned native {@code int} value at the given offset.
+     *
+     * <p>An unsigned native {@code int} can be either 32 or 64 bits in size, depending
+     * on the cpu architecture, and the C ABI in use.
+     *
+     * @param offset The offset from the start of the memory this {@code Pointer} represents at which the value will be written.
+     * @param value the unsigned native {@code int} value to be written.
+     */
+    public abstract void putUnsignedNativeInt(long offset, BigInteger value);
+
+    /**
      * Writes a native {@code long} value at the given offset.
      *
      * <p>A native {@code long} can be either 32 or 64 bits in size, depending
@@ -447,6 +501,17 @@ public abstract class Pointer implements Comparable<Pointer>, Closeable, Duplica
      * @param value the native {@code long} value to be written.
      */
     public abstract void putNativeLong(long offset, long value);
+
+    /**
+     * Writes an unsigned native {@code long} value at the given offset.
+     *
+     * <p>An unsigned native {@code long} can be either 32 or 64 bits in size, depending
+     * on the cpu architecture, and the C ABI in use.
+     *
+     * @param offset The offset from the start of the memory this {@code Pointer} represents at which the value will be written.
+     * @param value the unsigned native {@code long} value to be written.
+     */
+    public abstract void putUnsignedNativeLong(long offset, BigInteger value);
 
     /**
      * Writes a native memory address value at the given offset.
@@ -475,6 +540,30 @@ public abstract class Pointer implements Comparable<Pointer>, Closeable, Duplica
     public abstract void putDouble(long offset, double value);
 
     /**
+     * Bulk get method for multiple {@code boolean} values.
+     *
+     * <p>This method reads multiple {@code boolean} values from consecutive addresses,
+     * beginning at the given offset, and stores them in an array.
+     *
+     * @param offset the offset from the start of the memory this {@code Pointer} represents at which the first value will be read.
+     * @param array the array into which values are to be stored.
+     * @param index the start index in the {@code array} array to begin storing the values.
+     * @param length the number of values to be read.
+     */
+    public abstract void getBooleanArray(long offset, boolean[] array, int index, int length);
+
+    /**
+     * Bulk get method for multiple {@code boolean} values.
+     *
+     * <p>This method reads multiple {@code boolean} values from consecutive addresses,
+     * beginning at the given offset, and stores them in an array.
+     *
+     * @param offset the offset from the start of the memory this {@code Pointer} represents at which the first value will be read.
+     * @param array the array into which values are to be stored.
+     */
+    public abstract void getBooleanArray(long offset, boolean[] array);
+
+    /**
      * Bulk get method for multiple {@code byte} values.
      *
      * <p>This method reads multiple {@code byte} values from consecutive addresses,
@@ -497,6 +586,30 @@ public abstract class Pointer implements Comparable<Pointer>, Closeable, Duplica
      * @param array the array into which values are to be stored.
      */
     public abstract void getByteArray(long offset, byte[] array);
+    
+    /**
+     * Bulk put method for multiple {@code boolean} values.
+     *
+     * <p>This method writes multiple {@code boolean} values to consecutive addresses,
+     * beginning at the given offset, from an array.
+     *
+     * @param offset the offset from the start of the memory this {@code Pointer} represents at which the first value will be written.
+     * @param array the array to get values from.
+     * @param index the start index in the {@code array} array to begin reading values.
+     * @param length the number of values to be written.
+     */
+    public abstract void putBooleanArray(long offset, boolean[] array, int index, int length);
+
+    /**
+     * Bulk put method for multiple {@code boolean} values.
+     *
+     * <p>This method writes multiple {@code boolean} values to consecutive addresses,
+     * beginning at the given offset, from an array.
+     *
+     * @param offset the offset from the start of the memory this {@code Pointer} represents at which the first value will be written.
+     * @param array the array to get values from.
+     */
+    public abstract void putBooleanArray(long offset, boolean[] array);
 
     /**
      * Bulk put method for multiple {@code byte} values.
@@ -809,6 +922,150 @@ public abstract class Pointer implements Comparable<Pointer>, Closeable, Duplica
      * @param array the array to get values from.
      */
     public abstract void putDoubleArray(long offset, double[] array);
+
+    /**
+     * Bulk get method for multiple native {@code int} values.
+     *
+     * <p>This method reads multiple native {@code int} values from consecutive addresses,
+     * beginning at the given offset, and stores them in an array.
+     *
+     * @param offset The offset from the start of the memory this {@code Pointer} represents at which the first value will be read.
+     * @param array The array into which values are to be stored.
+     * @param index the start index in the {@code array} array to begin storing the values.
+     * @param length the number of values to be read.
+     */
+    public abstract void getNativeIntArray(long offset, long[] array, int index, int length);
+
+    /**
+     * Bulk get method for multiple native {@code int} values.
+     *
+     * <p>This method reads multiple native {@code int} values from consecutive addresses,
+     * beginning at the given offset, and stores them in an array.
+     *
+     * @param offset The offset from the start of the memory this {@code Pointer} represents at which the first value will be read.
+     * @param array The array into which values are to be stored.
+     */
+    public abstract void getNativeIntArray(long offset, long[] array);
+
+    /**
+     * Bulk put method for multiple native {@code int} values.
+     *
+     * <p>This method writes multiple native {@code int} values to consecutive addresses,
+     * beginning at the given offset, from an array.
+     *
+     * @param offset the offset from the start of the memory this {@code Pointer} represents at which the first value will be written.
+     * @param array the array to get values from.
+     * @param index the start index in the {@code array} array to begin reading values.
+     * @param length the number of values to be written.
+     */
+    public abstract void putNativeIntArray(long offset, long[] array, int index, int length);
+
+    /**
+     * Bulk put method for multiple native {@code int} values.
+     *
+     * <p>This method writes multiple native {@code int} values to consecutive addresses,
+     * beginning at the given offset, from an array.
+     *
+     * @param offset the offset from the start of the memory this {@code Pointer} represents at which the first value will be written.
+     * @param array the array to get values from.
+     */
+    public abstract void putNativeIntArray(long offset, long[] array);
+
+    /**
+     * Bulk get method for multiple native {@code long} values.
+     *
+     * <p>This method reads multiple {@code long} values from consecutive addresses,
+     * beginning at the given offset, and stores them in an array.
+     *
+     * @param offset The offset from the start of the memory this {@code Pointer} represents at which the first value will be read.
+     * @param array The array into which values are to be stored.
+     * @param index the start index in the {@code array} array to begin storing the values.
+     * @param length the number of values to be read.
+     */
+    public abstract void getNativeLongArray(long offset, long[] array, int index, int length);
+
+    /**
+     * Bulk get method for multiple native {@code long} values.
+     *
+     * <p>This method reads multiple {@code long} values from consecutive addresses,
+     * beginning at the given offset, and stores them in an array.
+     *
+     * @param offset The offset from the start of the memory this {@code Pointer} represents at which the first value will be read.
+     * @param array The array into which values are to be stored.
+     */
+    public abstract void getNativeLongArray(long offset, long[] array);
+
+    /**
+     * Bulk put method for multiple native {@code long} values.
+     *
+     * <p>This method writes multiple native {@code long} values to consecutive addresses,
+     * beginning at the given offset, from an array.
+     *
+     * @param offset the offset from the start of the memory this {@code Pointer} represents at which the first value will be written.
+     * @param array the array to get values from.
+     * @param index the start index in the {@code array} array to begin reading values.
+     * @param length the number of values to be written.
+     */
+    public abstract void putNativeLongArray(long offset, long[] array, int index, int length);
+
+    /**
+     * Bulk put method for multiple native {@code long} values.
+     *
+     * <p>This method writes multiple native {@code long} values to consecutive addresses,
+     * beginning at the given offset, from an array.
+     *
+     * @param offset the offset from the start of the memory this {@code Pointer} represents at which the first value will be written.
+     * @param array the array to get values from.
+     */
+    public abstract void putNativeLongArray(long offset, long[] array);
+
+    /**
+     * Bulk get method for multiple {@code address} values.
+     *
+     * <p>This method reads multiple {@code address} values from consecutive addresses,
+     * beginning at the given offset, and stores them in an array.
+     *
+     * @param offset The offset from the start of the memory this {@code Pointer} represents at which the first value will be read.
+     * @param array The array into which values are to be stored.
+     * @param index the start index in the {@code array} array to begin storing the values.
+     * @param length the number of values to be read.
+     */
+    public abstract void getAddressArray(long offset, long[] array, int index, int length);
+
+    /**
+     * Bulk get method for multiple {@code address} values.
+     *
+     * <p>This method reads multiple {@code address} values from consecutive addresses,
+     * beginning at the given offset, and stores them in an array.
+     *
+     * @param offset The offset from the start of the memory this {@code Pointer} represents at which the first value will be read.
+     * @param array The array into which values are to be stored.
+     */
+    public abstract void getAddressArray(long offset, long[] array);
+
+    /**
+     * Bulk put method for multiple {@code address} values.
+     *
+     * <p>This method writes multiple {@code address} values to consecutive addresses,
+     * beginning at the given offset, from an array.
+     *
+     * @param offset the offset from the start of the memory this {@code Pointer} represents at which the first value will be written.
+     * @param array the array to get values from.
+     * @param index the start index in the {@code array} array to begin reading values.
+     * @param length the number of values to be written.
+     */
+    public abstract void putAddressArray(long offset, long[] array, int index, int length);
+
+    /**
+     * Bulk put method for multiple {@code address} values.
+     *
+     * <p>This method writes multiple {@code address} values to consecutive addresses,
+     * beginning at the given offset, from an array.
+     *
+     * @param offset the offset from the start of the memory this {@code Pointer} represents at which the first value will be written.
+     * @param array the array to get values from.
+     */
+    public abstract void putAddressArray(long offset, long[] array);
 
     /**
      * Reads an unbounded {@code Pointer} value at the given offset.
@@ -1279,7 +1536,7 @@ public abstract class Pointer implements Comparable<Pointer>, Closeable, Duplica
                     for (long i = 0; i < length; i ++) {
                         byte oa = getByte(i);
                         byte ob = other.getByte(i);
-                        if (oa != ob) return FastMath.compareUnsigned(oa, ob);
+                        if (oa != ob) return unrefined.util.Objects.compareUnsigned(oa, ob);
                     }
                 }
                 else {
@@ -1287,18 +1544,18 @@ public abstract class Pointer implements Comparable<Pointer>, Closeable, Duplica
                     for (long i = 0; i < Long.MAX_VALUE; i ++) {
                         oa = getByte(i);
                         ob = other.getByte(i);
-                        if (oa != ob) return FastMath.compareUnsigned(oa, ob);
+                        if (oa != ob) return unrefined.util.Objects.compareUnsigned(oa, ob);
                     }
                     oa = getByte(Long.MAX_VALUE);
                     ob = other.getByte(Long.MAX_VALUE);
-                    if (oa != ob) return FastMath.compareUnsigned(oa, ob);
+                    if (oa != ob) return unrefined.util.Objects.compareUnsigned(oa, ob);
                     for (long i = Long.MIN_VALUE; i < length; i ++) {
                         oa = getByte(i);
                         ob = other.getByte(i);
-                        if (oa != ob) return FastMath.compareUnsigned(oa, ob);
+                        if (oa != ob) return unrefined.util.Objects.compareUnsigned(oa, ob);
                     }
                 }
-                return FastMath.compareUnsigned(size, otherSize);
+                return unrefined.util.Objects.compareUnsigned(size, otherSize);
             }
             else if (isBounded()) return compare(other, 0, size());
             else return compare(other, 0, other.size());
@@ -1313,7 +1570,7 @@ public abstract class Pointer implements Comparable<Pointer>, Closeable, Duplica
             for (long i = 0; i < length; i ++) {
                 byte oa = getByte(offset + i);
                 byte ob = other.getByte(offset + i);
-                if (oa != ob) return FastMath.compareUnsigned(oa, ob);
+                if (oa != ob) return unrefined.util.Objects.compareUnsigned(oa, ob);
             }
             return 0;
         }
@@ -1322,15 +1579,15 @@ public abstract class Pointer implements Comparable<Pointer>, Closeable, Duplica
             for (long i = 0; i < Long.MAX_VALUE; i ++) {
                 oa = getByte(offset + i);
                 ob = other.getByte(offset + i);
-                if (oa != ob) return FastMath.compareUnsigned(oa, ob);
+                if (oa != ob) return unrefined.util.Objects.compareUnsigned(oa, ob);
             }
             oa = getByte(offset + Long.MAX_VALUE);
             ob = other.getByte(offset + Long.MAX_VALUE);
-            if (oa != ob) return FastMath.compareUnsigned(oa, ob);
+            if (oa != ob) return unrefined.util.Objects.compareUnsigned(oa, ob);
             for (long i = Long.MIN_VALUE; i < length; i ++) {
                 oa = getByte(offset + i);
                 ob = other.getByte(offset + i);
-                if (oa != ob) return FastMath.compareUnsigned(oa, ob);
+                if (oa != ob) return unrefined.util.Objects.compareUnsigned(oa, ob);
             }
             return 0;
         }
@@ -1341,6 +1598,32 @@ public abstract class Pointer implements Comparable<Pointer>, Closeable, Duplica
         else if (isNullPointer() && other.isNullPointer()) return 0;
         else if (isDirect() && other.isDirect()) return Allocator.getInstance().compareMemory(address(), other.address(), length);
         else return compare(other, offset, length);
+    }
+
+    public abstract static class Handle implements Closeable {
+        private final AtomicReference<Pointer> memory = new AtomicReference<>();
+        protected Handle(Pointer memory) {
+            this.memory.set(Objects.requireNonNull(memory));
+        }
+        public void reload(Pointer memory) {
+            this.memory.set(Objects.requireNonNull(memory));
+        }
+        public Pointer payload() {
+            return memory.get();
+        }
+        public abstract void set(Pointer memory, long offset);
+        public abstract void get(Pointer memory, long offset);
+        @Override
+        public void close() throws IOException {
+            memory.get().close();
+        }
+        @Override
+        public String toString() {
+            return getClass().getName()
+                    + '{' +
+                    "payload=" + payload() +
+                    '}';
+        }
     }
 
 }

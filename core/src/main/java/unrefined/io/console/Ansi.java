@@ -26,7 +26,7 @@ public class Ansi implements Appendable {
     public static final String CODE_TEXT_SEPARATOR = " ";
     public static final String CODE_LIST_SEPARATOR = ",";
 
-    public static class Mode {
+    public final static class Mode {
         private Mode() {
             throw new NotInstantiableError(Mode.class);
         }
@@ -50,7 +50,7 @@ public class Ansi implements Appendable {
         }
     }
 
-    public static class Type {
+    public final static class Type {
         private Type() {
             throw new NotInstantiableError(Mode.class);
         }
@@ -79,9 +79,9 @@ public class Ansi implements Appendable {
     /**
      * <a href="https://en.wikipedia.org/wiki/ANSI_escape_code#Colors">ANSI 8 colors</a> for fluent API
      */
-    public static class Index {
-        private Index() {
-            throw new NotInstantiableError(Index.class);
+    public final static class Color8 {
+        private Color8() {
+            throw new NotInstantiableError(Color8.class);
         }
         public static final int BLACK   = 0;
         public static final int RED     = 1;
@@ -115,20 +115,20 @@ public class Ansi implements Appendable {
         }
     }
 
-    private static int fgIndex0(int index) {
-        return Index.checkValid(index) + 30;
+    private static int fgColor8Checked(int index) {
+        return Color8.checkValid(index) + 30;
     }
 
-    private static int bgIndex0(int index) {
-        return Index.checkValid(index) + 40;
+    private static int bgColor8Checked(int index) {
+        return Color8.checkValid(index) + 40;
     }
 
-    private static int fgBrightIndex0(int index) {
-        return Index.checkValid(index) + 90;
+    private static int fgBrightColor8Checked(int index) {
+        return Color8.checkValid(index) + 90;
     }
 
-    private static int bgBrightIndex0(int index) {
-        return Index.checkValid(index) + 100;
+    private static int bgBrightColor8Checked(int index) {
+        return Color8.checkValid(index) + 100;
     }
 
     /**
@@ -254,8 +254,8 @@ public class Ansi implements Appendable {
         this.builder = builder;
     }
 
-    public Ansi fgIndex(int color) {
-        attributeOptions.add(fgIndex0(color));
+    public Ansi fgColor8(int color) {
+        attributeOptions.add(fgColor8Checked(color));
         return this;
     }
 
@@ -280,43 +280,43 @@ public class Ansi implements Appendable {
     }
 
     public Ansi fgBlack() {
-        return this.fgIndex(Index.BLACK);
+        return this.fgColor8(Color8.BLACK);
     }
 
     public Ansi fgBlue() {
-        return this.fgIndex(Index.BLUE);
+        return this.fgColor8(Color8.BLUE);
     }
 
     public Ansi fgCyan() {
-        return this.fgIndex(Index.CYAN);
+        return this.fgColor8(Color8.CYAN);
     }
 
     public Ansi fgWhite() {
-        return this.fgIndex(Index.WHITE);
+        return this.fgColor8(Color8.WHITE);
     }
 
     public Ansi fgDefault() {
-        return this.fgIndex(Index.DEFAULT);
+        return this.fgColor8(Color8.DEFAULT);
     }
 
     public Ansi fgGreen() {
-        return this.fgIndex(Index.GREEN);
+        return this.fgColor8(Color8.GREEN);
     }
 
     public Ansi fgMagenta() {
-        return this.fgIndex(Index.MAGENTA);
+        return this.fgColor8(Color8.MAGENTA);
     }
 
     public Ansi fgRed() {
-        return this.fgIndex(Index.RED);
+        return this.fgColor8(Color8.RED);
     }
 
     public Ansi fgYellow() {
-        return this.fgIndex(Index.YELLOW);
+        return this.fgColor8(Color8.YELLOW);
     }
 
-    public Ansi bgIndex(int color) {
-        attributeOptions.add(bgIndex0(color));
+    public Ansi bgColor8(int color) {
+        attributeOptions.add(bgColor8Checked(color));
         return this;
     }
 
@@ -341,121 +341,121 @@ public class Ansi implements Appendable {
     }
 
     public Ansi bgBlack() {
-        return this.bgIndex(Index.BLACK);
+        return this.bgColor8(Color8.BLACK);
     }
 
     public Ansi bgBlue() {
-        return this.bgIndex(Index.BLUE);
+        return this.bgColor8(Color8.BLUE);
     }
 
     public Ansi bgCyan() {
-        return this.bgIndex(Index.CYAN);
+        return this.bgColor8(Color8.CYAN);
     }
 
     public Ansi bgWhite() {
-        return this.bgIndex(Index.WHITE);
+        return this.bgColor8(Color8.WHITE);
     }
 
     public Ansi bgDefault() {
-        return this.bgIndex(Index.DEFAULT);
+        return this.bgColor8(Color8.DEFAULT);
     }
 
     public Ansi bgGreen() {
-        return this.bgIndex(Index.GREEN);
+        return this.bgColor8(Color8.GREEN);
     }
 
     public Ansi bgMagenta() {
-        return this.bgIndex(Index.MAGENTA);
+        return this.bgColor8(Color8.MAGENTA);
     }
 
     public Ansi bgRed() {
-        return this.bgIndex(Index.RED);
+        return this.bgColor8(Color8.RED);
     }
 
     public Ansi bgYellow() {
-        return this.bgIndex(Index.YELLOW);
+        return this.bgColor8(Color8.YELLOW);
     }
 
-    public Ansi fgBrightIndex(int color) {
-        attributeOptions.add(fgBrightIndex0(color));
+    public Ansi fgBrightColor8(int color) {
+        attributeOptions.add(fgBrightColor8Checked(color));
         return this;
     }
 
     public Ansi fgBrightBlack() {
-        return this.fgBrightIndex(Index.BLACK);
+        return this.fgBrightColor8(Color8.BLACK);
     }
 
     public Ansi fgBrightBlue() {
-        return this.fgBrightIndex(Index.BLUE);
+        return this.fgBrightColor8(Color8.BLUE);
     }
 
     public Ansi fgBrightCyan() {
-        return this.fgBrightIndex(Index.CYAN);
+        return this.fgBrightColor8(Color8.CYAN);
     }
 
     public Ansi fgBrightWhite() {
-        return this.fgBrightIndex(Index.WHITE);
+        return this.fgBrightColor8(Color8.WHITE);
     }
 
     public Ansi fgBrightDefault() {
-        return this.fgBrightIndex(Index.DEFAULT);
+        return this.fgBrightColor8(Color8.DEFAULT);
     }
 
     public Ansi fgBrightGreen() {
-        return this.fgBrightIndex(Index.GREEN);
+        return this.fgBrightColor8(Color8.GREEN);
     }
 
     public Ansi fgBrightMagenta() {
-        return this.fgBrightIndex(Index.MAGENTA);
+        return this.fgBrightColor8(Color8.MAGENTA);
     }
 
     public Ansi fgBrightRed() {
-        return this.fgBrightIndex(Index.RED);
+        return this.fgBrightColor8(Color8.RED);
     }
 
     public Ansi fgBrightYellow() {
-        return this.fgBrightIndex(Index.YELLOW);
+        return this.fgBrightColor8(Color8.YELLOW);
     }
 
-    public Ansi bgBrightIndex(int color) {
-        attributeOptions.add(bgBrightIndex0(color));
+    public Ansi bgBrightColor8(int color) {
+        attributeOptions.add(bgBrightColor8Checked(color));
         return this;
     }
 
     public Ansi bgBrightBlack() {
-        return this.bgBrightIndex(Index.BLACK);
+        return this.bgBrightColor8(Color8.BLACK);
     }
 
     public Ansi bgBrightBlue() {
-        return this.bgBrightIndex(Index.BLUE);
+        return this.bgBrightColor8(Color8.BLUE);
     }
 
     public Ansi bgBrightCyan() {
-        return this.bgBrightIndex(Index.CYAN);
+        return this.bgBrightColor8(Color8.CYAN);
     }
 
     public Ansi bgBrightWhite() {
-        return this.bgBrightIndex(Index.WHITE);
+        return this.bgBrightColor8(Color8.WHITE);
     }
 
     public Ansi bgBrightDefault() {
-        return this.bgBrightIndex(Index.DEFAULT);
+        return this.bgBrightColor8(Color8.DEFAULT);
     }
 
     public Ansi bgBrightGreen() {
-        return this.bgBrightIndex(Index.GREEN);
+        return this.bgBrightColor8(Color8.GREEN);
     }
 
     public Ansi bgBrightMagenta() {
-        return this.bgBrightIndex(Index.MAGENTA);
+        return this.bgBrightColor8(Color8.MAGENTA);
     }
 
     public Ansi bgBrightRed() {
-        return this.bgBrightIndex(Index.RED);
+        return this.bgBrightColor8(Color8.RED);
     }
 
     public Ansi bgBrightYellow() {
-        return this.bgBrightIndex(Index.YELLOW);
+        return this.bgBrightColor8(Color8.YELLOW);
     }
 
     public Ansi attribute(int attribute) {
@@ -983,9 +983,9 @@ public class Ansi implements Appendable {
                 Code code = Code.valueOf(name.toUpperCase(Locale.ENGLISH));
                 if (code.isColor()) {
                     if (code.isBackground()) {
-                        ansi.bgIndex(code.getValue());
+                        ansi.bgColor8(code.getValue());
                     } else {
-                        ansi.fgIndex(code.getValue());
+                        ansi.fgColor8(code.getValue());
                     }
                 } else if (code.isAttribute()) {
                     ansi.attribute(code.getValue());
@@ -1005,37 +1005,37 @@ public class Ansi implements Appendable {
             //
 
             // Colors
-            BLACK(Index.BLACK, true),
-            RED(Index.RED, true),
-            GREEN(Index.GREEN, true),
-            YELLOW(Index.YELLOW, true),
-            BLUE(Index.BLUE, true),
-            MAGENTA(Index.MAGENTA, true),
-            CYAN(Index.CYAN, true),
-            WHITE(Index.WHITE, true),
-            DEFAULT(Index.DEFAULT, true),
+            BLACK(Color8.BLACK, true),
+            RED(Color8.RED, true),
+            GREEN(Color8.GREEN, true),
+            YELLOW(Color8.YELLOW, true),
+            BLUE(Color8.BLUE, true),
+            MAGENTA(Color8.MAGENTA, true),
+            CYAN(Color8.CYAN, true),
+            WHITE(Color8.WHITE, true),
+            DEFAULT(Color8.DEFAULT, true),
 
             // Foreground Colors
-            FG_BLACK(Index.BLACK, true, false),
-            FG_RED(Index.RED, true, false),
-            FG_GREEN(Index.GREEN, true, false),
-            FG_YELLOW(Index.YELLOW, true, false),
-            FG_BLUE(Index.BLUE, true, false),
-            FG_MAGENTA(Index.MAGENTA, true, false),
-            FG_CYAN(Index.CYAN, true, false),
-            FG_WHITE(Index.WHITE, true, false),
-            FG_DEFAULT(Index.DEFAULT, true, false),
+            FG_BLACK(Color8.BLACK, true, false),
+            FG_RED(Color8.RED, true, false),
+            FG_GREEN(Color8.GREEN, true, false),
+            FG_YELLOW(Color8.YELLOW, true, false),
+            FG_BLUE(Color8.BLUE, true, false),
+            FG_MAGENTA(Color8.MAGENTA, true, false),
+            FG_CYAN(Color8.CYAN, true, false),
+            FG_WHITE(Color8.WHITE, true, false),
+            FG_DEFAULT(Color8.DEFAULT, true, false),
 
             // Background Colors
-            BG_BLACK(Index.BLACK, true, true),
-            BG_RED(Index.RED, true, true),
-            BG_GREEN(Index.GREEN, true, true),
-            BG_YELLOW(Index.YELLOW, true, true),
-            BG_BLUE(Index.BLUE, true, true),
-            BG_MAGENTA(Index.MAGENTA, true, true),
-            BG_CYAN(Index.CYAN, true, true),
-            BG_WHITE(Index.WHITE, true, true),
-            BG_DEFAULT(Index.DEFAULT, true, true),
+            BG_BLACK(Color8.BLACK, true, true),
+            BG_RED(Color8.RED, true, true),
+            BG_GREEN(Color8.GREEN, true, true),
+            BG_YELLOW(Color8.YELLOW, true, true),
+            BG_BLUE(Color8.BLUE, true, true),
+            BG_MAGENTA(Color8.MAGENTA, true, true),
+            BG_CYAN(Color8.CYAN, true, true),
+            BG_WHITE(Color8.WHITE, true, true),
+            BG_DEFAULT(Color8.DEFAULT, true, true),
 
             // Attributes
             RESET(Attribute.RESET),
@@ -1100,13 +1100,16 @@ public class Ansi implements Appendable {
      * This is a simplified version of the 
      *   <a href="https://github.com/jline/jline3/blob/a24636dc5de83baa6b65049e8215fb372433b3b1/terminal/src/main/java/org/jline/utils/Colors.java">JLine's one</a>.
      */
-    static class Colors {
+    public final static class Color256 {
+
+        private Color256() {
+            throw new NotInstantiableError(Color256.class);
+        }
     
         /**
          * Default 256 colors palette
          */
-        // spotless:off
-        public static final int[] DEFAULT_COLORS_256 = {
+        private static final int[] DEFAULT_COLORS_256 = {
                 // 16 ansi
                 0x000000, 0x800000, 0x008000, 0x808000, 0x000080, 0x800080, 0x008080, 0xc0c0c0,
                 0x808080, 0xff0000, 0x00ff00, 0xffff00, 0x0000ff, 0xff00ff, 0x00ffff, 0xffffff,
@@ -1159,18 +1162,17 @@ public class Ansi implements Appendable {
                 0x585858, 0x626262, 0x6c6c6c, 0x767676, 0x808080, 0x8a8a8a, 0x949494, 0x9e9e9e,
                 0xa8a8a8, 0xb2b2b2, 0xbcbcbc, 0xc6c6c6, 0xd0d0d0, 0xdadada, 0xe4e4e4, 0xeeeeee,
         };
-        // spotless:on
     
-        public static int roundColor(int col, int max) {
+        public static int pick(int col, int max) {
             if (col >= max) {
                 int c = DEFAULT_COLORS_256[col];
                 col = roundColor(c, DEFAULT_COLORS_256, max);
             }
             return col;
         }
-    
-        public static int roundRgbColor(int r, int g, int b, int max) {
-            return roundColor((r << 16) + (g << 8) + b, DEFAULT_COLORS_256, max);
+        
+        public static int round(int color, int max) {
+            return roundColor(color, DEFAULT_COLORS_256, max);
         }
     
         private static int roundColor(int color, int[] colors, int max) {

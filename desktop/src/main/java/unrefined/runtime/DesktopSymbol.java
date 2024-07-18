@@ -132,13 +132,13 @@ public class DesktopSymbol extends Symbol {
                     else if (Aggregate.class.isAssignableFrom((Class<?>) parameterType)) {
                         byte[] struct = new byte[(int) Aggregate.sizeOfType((Class<? extends Aggregate>) parameterType)];
                         MEMORY_IO.getByteArray(buffer.getStruct(index), struct, 0, struct.length);
-                        args[i] = Aggregate.newInstance((Class<? extends Aggregate>) parameterType, Pointer.wrap(SymbolSupport.reverseIfNeeded(struct)));
+                        args[i] = Aggregate.newInstance((Class<? extends Aggregate>) parameterType, Pointer.wrap(SymbolSupport.reverseIfNeeded(struct, Aggregate.descriptorOf((Class<? extends Aggregate>) parameterType))));
                     }
                 }
                 else if (parameterType instanceof Aggregate.Descriptor) {
                     byte[] struct = new byte[(int) ((Aggregate.Descriptor) parameterType).size()];
                     MEMORY_IO.getByteArray(buffer.getStruct(index), struct, 0, struct.length);
-                    args[i] = Aggregate.newProxyInstance((Aggregate.Descriptor) parameterType, Pointer.wrap(SymbolSupport.reverseIfNeeded(struct)));
+                    args[i] = Aggregate.newProxyInstance((Aggregate.Descriptor) parameterType, Pointer.wrap(SymbolSupport.reverseIfNeeded(struct, (Aggregate.Descriptor) parameterType)));
                 }
                 index ++;
             }
@@ -201,13 +201,13 @@ public class DesktopSymbol extends Symbol {
                     else if (Aggregate.class.isAssignableFrom((Class<?>) parameterType)) {
                         byte[] struct = new byte[(int) Aggregate.sizeOfType((Class<? extends Aggregate>) parameterType)];
                         MEMORY_IO.getByteArray(buffer.getStruct(index), struct, 0, struct.length);
-                        args[i] = Aggregate.newInstance((Class<? extends Aggregate>) parameterType, Pointer.wrap(SymbolSupport.reverseIfNeeded(struct)));
+                        args[i] = Aggregate.newInstance((Class<? extends Aggregate>) parameterType, Pointer.wrap(SymbolSupport.reverseIfNeeded(struct, Aggregate.descriptorOf((Class<? extends Aggregate>) parameterType))));
                     }
                 }
                 else if (parameterType instanceof Aggregate.Descriptor) {
                     byte[] struct = new byte[(int) ((Aggregate.Descriptor) parameterType).size()];
                     MEMORY_IO.getByteArray(buffer.getStruct(index), struct, 0, struct.length);
-                    args[i] = Aggregate.newProxyInstance((Aggregate.Descriptor) parameterType, Pointer.wrap(SymbolSupport.reverseIfNeeded(struct)));
+                    args[i] = Aggregate.newProxyInstance((Aggregate.Descriptor) parameterType, Pointer.wrap(SymbolSupport.reverseIfNeeded(struct, (Aggregate.Descriptor) parameterType)));
                 }
                 index ++;
             }
@@ -559,10 +559,12 @@ public class DesktopSymbol extends Symbol {
                     (options & Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
                     (options & Option.SAVE_ERRNO) != 0);
             return Aggregate.newInstance((Class<? extends Aggregate>) returnType, Pointer.wrap(SymbolSupport.reverseIfNeeded(
-                    INVOKER.invokeStruct(context, address, SymbolSupport.toHeapInvocationBufferVariadic(context, parameterTypes, args)))));
+                    INVOKER.invokeStruct(context, address, SymbolSupport.toHeapInvocationBufferVariadic(context, parameterTypes, args)),
+                    Aggregate.descriptorOf((Class<? extends Aggregate>) returnType))));
         }
         else return Aggregate.newInstance((Class<? extends Aggregate>) returnType, Pointer.wrap(SymbolSupport.reverseIfNeeded(
-                INVOKER.invokeStruct(function, SymbolSupport.toHeapInvocationBuffer(function.getCallContext(), parameterTypes, args)))));
+                INVOKER.invokeStruct(function, SymbolSupport.toHeapInvocationBuffer(function.getCallContext(), parameterTypes, args)),
+                Aggregate.descriptorOf((Class<? extends Aggregate>) returnType))));
     }
 
     @Override
@@ -588,10 +590,12 @@ public class DesktopSymbol extends Symbol {
                     (options & Option.ALT_CALL) != 0 ? CallingConvention.STDCALL : CallingConvention.DEFAULT,
                     (options & Option.SAVE_ERRNO) != 0);
             return Aggregate.newProxyInstance((Aggregate.Descriptor) returnType, Pointer.wrap(SymbolSupport.reverseIfNeeded(
-                    INVOKER.invokeStruct(context, address, SymbolSupport.toHeapInvocationBufferVariadic(context, parameterTypes, args)))));
+                    INVOKER.invokeStruct(context, address, SymbolSupport.toHeapInvocationBufferVariadic(context, parameterTypes, args)),
+                    (Aggregate.Descriptor) returnType)));
         }
         else return Aggregate.newProxyInstance((Aggregate.Descriptor) returnType, Pointer.wrap(SymbolSupport.reverseIfNeeded(
-                INVOKER.invokeStruct(function, SymbolSupport.toHeapInvocationBuffer(function.getCallContext(), parameterTypes, args)))));
+                INVOKER.invokeStruct(function, SymbolSupport.toHeapInvocationBuffer(function.getCallContext(), parameterTypes, args)),
+                (Aggregate.Descriptor) returnType)));
     }
 
     @Override

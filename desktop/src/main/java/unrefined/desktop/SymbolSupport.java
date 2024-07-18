@@ -6,6 +6,7 @@ import com.kenai.jffi.HeapInvocationBuffer;
 import com.kenai.jffi.Library;
 import com.kenai.jffi.Type;
 import unrefined.nio.Pointer;
+import unrefined.util.Arrays;
 import unrefined.util.NotInstantiableError;
 import unrefined.util.Strings;
 import unrefined.util.UnexpectedError;
@@ -15,7 +16,6 @@ import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.ByteOrder;
-import java.util.Arrays;
 import java.util.Objects;
 
 public class SymbolSupport {
@@ -116,35 +116,35 @@ public class SymbolSupport {
             Type[] types = new Type[Array.getLength(array)];
             clazz = clazz.getComponentType();
             if (clazz == boolean.class) {
-                Arrays.fill(types, Type.UINT8);
+                java.util.Arrays.fill(types, Type.UINT8);
                 return types;
             }
             else if (clazz == byte.class) {
-                Arrays.fill(types, Type.SINT8);
+                java.util.Arrays.fill(types, Type.SINT8);
                 return types;
             }
             else if (clazz == char.class) {
-                Arrays.fill(types, Type.UINT16);
+                java.util.Arrays.fill(types, Type.UINT16);
                 return types;
             }
             else if (clazz == short.class) {
-                Arrays.fill(types, Type.SINT16);
+                java.util.Arrays.fill(types, Type.SINT16);
                 return types;
             }
             else if (clazz == int.class) {
-                Arrays.fill(types, Type.SINT32);
+                java.util.Arrays.fill(types, Type.SINT32);
                 return types;
             }
             else if (clazz == long.class) {
-                Arrays.fill(types, Type.SINT64);
+                java.util.Arrays.fill(types, Type.SINT64);
                 return types;
             }
             else if (clazz == float.class) {
-                Arrays.fill(types, Type.FLOAT);
+                java.util.Arrays.fill(types, Type.FLOAT);
                 return types;
             }
             else if (clazz == double.class) {
-                Arrays.fill(types, Type.DOUBLE);
+                java.util.Arrays.fill(types, Type.DOUBLE);
                 return types;
             }
             else if (clazz == Object.class) {
@@ -174,22 +174,22 @@ public class SymbolSupport {
             else if (marker == float.class) heapInvocationBuffer.putFloat(((Number) arg).floatValue());
             else if (marker == double.class) heapInvocationBuffer.putDouble(((Number) arg).doubleValue());
             else if (Aggregate.class.isAssignableFrom((Class<?>) marker)) {
-                Pointer memory = ((Aggregate) arg).memory();
+                Pointer memory = ((Aggregate) arg).payload();
                 if (memory.isDirect()) heapInvocationBuffer.putStruct(memory.address());
                 else {
                     byte[] struct = new byte[(int) Aggregate.sizeOfType((Class<? extends Aggregate>) marker)];
                     memory.getByteArray(0, struct);
-                    heapInvocationBuffer.putStruct(reverseIfNeeded(struct), 0);
+                    heapInvocationBuffer.putStruct(reverseIfNeeded(struct, Aggregate.descriptorOf((Class<? extends Aggregate>) marker)), 0);
                 }
             }
         }
         else if (marker instanceof Aggregate.Descriptor) {
-            Pointer memory = ((Aggregate) arg).memory();
+            Pointer memory = ((Aggregate) arg).payload();
             if (memory.isDirect()) heapInvocationBuffer.putStruct(memory.address());
             else {
                 byte[] struct = new byte[(int) ((Aggregate.Descriptor) marker).size()];
                 memory.getByteArray(0, struct);
-                heapInvocationBuffer.putStruct(reverseIfNeeded(struct), 0);
+                heapInvocationBuffer.putStruct(reverseIfNeeded(struct, (Aggregate.Descriptor) marker), 0);
             }
         }
         else throw new IllegalArgumentException("Illegal argument type: " + marker);
@@ -198,31 +198,22 @@ public class SymbolSupport {
     private static final boolean LITTLE_ENDIAN = ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN);
 
     private static void pushArgument(HeapInvocationBuffer heapInvocationBuffer, Aggregate arg) {
-        Pointer pointer = arg.memory();
+        Pointer pointer = arg.payload();
         if (pointer.isDirect()) heapInvocationBuffer.putStruct(pointer.address());
         else {
             byte[] struct = new byte[(int) arg.getDescriptor().size()];
             pointer.getByteArray(0, struct);
-            heapInvocationBuffer.putStruct(reverseIfNeeded(struct), 0);
+            heapInvocationBuffer.putStruct(reverseIfNeeded(struct, arg.getDescriptor()), 0);
         }
     }
 
-    public static byte[] reverseIfNeeded(byte[] array) {
-        if (LITTLE_ENDIAN) reverse0(array);
+    public static byte[] reverseIfNeeded(byte[] array, Aggregate.Descriptor descriptor) {
+        if (LITTLE_ENDIAN) {
+            for (Aggregate.Member member : descriptor.getMembers()) {
+                Arrays.reverse(array, (int) member.getOffset(), (int) member.getOffset() + (int) member.size());
+            }
+        }
         return array;
-    }
-
-    private static void reverse0(byte[] array) {
-        int i = 0;
-        int j = array.length - 1;
-        byte tmp;
-        while (j > i) {
-            tmp = array[j];
-            array[j] = array[i];
-            array[i] = tmp;
-            j--;
-            i++;
-        }
     }
 
     public static void pushArgument(HeapInvocationBuffer heapInvocationBuffer, Object arg) {
@@ -299,7 +290,7 @@ public class SymbolSupport {
 
     public static Type[] expandVariadicFFITypes(Type[] nonVariadicTypes, Object varargs) {
         Type[] variadicTypes = getFFITypesFromArray(varargs);
-        Type[] types = Arrays.copyOf(nonVariadicTypes, nonVariadicTypes.length + variadicTypes.length);
+        Type[] types = java.util.Arrays.copyOf(nonVariadicTypes, nonVariadicTypes.length + variadicTypes.length);
         System.arraycopy(variadicTypes, 0, types, nonVariadicTypes.length, variadicTypes.length);
         return types;
     }
@@ -398,8 +389,8 @@ public class SymbolSupport {
 
     private static byte[] toByteArray(Aggregate aggregate) {
         byte[] array = new byte[(int) aggregate.getDescriptor().size()];
-        aggregate.memory().getByteArray(0, array);
-        return reverseIfNeeded(array);
+        aggregate.payload().getByteArray(0, array);
+        return reverseIfNeeded(array, aggregate.getDescriptor());
     }
 
     public static void push(Closure.Buffer buffer, Object result, Object returnType) {

@@ -16,9 +16,9 @@ public interface ContextListener {
     void onPaint(Context context, Graphics graphics, boolean snapshot);
     void onSnapshot(Context context, Bitmap snapshot);
 
-    boolean onKeyDown(Context context, String key, String code, int location, int modifiers);
+    boolean onKeyDown(Context context, String key, String code, int location, int modifiers, boolean repeat);
     boolean onKeyUp(Context context, String key, String code, int location, int modifiers);
-    boolean onKeyTyped(Context context, char key);
+    boolean onKeyTyped(Context context, char key, boolean repeat);
 
     boolean onPointerClick(Context context, float xOffset, float yOffset, int modifiers, int id, int button);
     boolean onPointerDown(Context context, float xOffset, float yOffset, int modifiers, int id, int button);

@@ -16,7 +16,7 @@ public class ForeignFunction {
 
         // Type mapping:
         // Java void -> void
-        // Java boolean -> uint8_t
+        // Java boolean -> bool
         // Java byte -> int8_t
         // Java char -> uint16_t
         // Java short -> int16_t
@@ -38,7 +38,7 @@ public class ForeignFunction {
     }
 
     public static void helloFFI() {
-        Log.defaultInstance().info("Unrefined FFI", "C call Java from C from Java");
+        Log.defaultInstance().info("Unrefined FFI", "C call Java from C from Java back to C back to Java");
     }
 
 }

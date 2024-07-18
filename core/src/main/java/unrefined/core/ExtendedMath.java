@@ -2,6 +2,8 @@ package unrefined.core;
 
 import unrefined.math.FastMath;
 import unrefined.util.NotInstantiableError;
+import unrefined.util.Objects;
+import unrefined.util.Randoms;
 
 import java.math.BigInteger;
 import java.util.Random;
@@ -10,6 +12,90 @@ public final class ExtendedMath {
 
     private ExtendedMath() {
         throw new NotInstantiableError(ExtendedMath.class);
+    }
+    
+    public static byte unsignedMax(byte a, byte b) {
+        return Objects.compareUnsigned(a, b) > 0 ? a : b;
+    }
+    
+    public static short unsignedMax(short a, short b) {
+        return Objects.compareUnsigned(a, b) > 0 ? a : b;
+    }
+
+    public static int unsignedMax(int a, int b) {
+        return Integer.compareUnsigned(a, b) > 0 ? a : b;
+    }
+
+    public static long unsignedMax(long a, long b) {
+        return Long.compareUnsigned(a, b) > 0 ? a : b;
+    }
+
+    public static byte unsignedMax(byte a, byte b, byte c) {
+        return unsignedMax(unsignedMax(a, b), c);
+    }
+
+    public static short unsignedMax(short a, short b, short c) {
+        return unsignedMax(unsignedMax(a, b), c);
+    }
+
+    public static int unsignedMax(int a, int b, int c) {
+        return unsignedMax(unsignedMax(a, b), c);
+    }
+
+    public static long unsignedMax(long a, long b, long c) {
+        return unsignedMax(unsignedMax(a, b), c);
+    }
+
+    public static byte unsignedMin(byte a, byte b) {
+        return Objects.compareUnsigned(a, b) < 0 ? a : b;
+    }
+
+    public static short unsignedMin(short a, short b) {
+        return Objects.compareUnsigned(a, b) < 0 ? a : b;
+    }
+
+    public static int unsignedMin(int a, int b) {
+        return Integer.compareUnsigned(a, b) < 0 ? a : b;
+    }
+
+    public static long unsignedMin(long a, long b) {
+        return Long.compareUnsigned(a, b) < 0 ? a : b;
+    }
+
+    public static byte unsignedMin(byte a, byte b, byte c) {
+        return unsignedMin(unsignedMin(a, b), c);
+    }
+
+    public static short unsignedMin(short a, short b, short c) {
+        return unsignedMin(unsignedMin(a, b), c);
+    }
+
+    public static int unsignedMin(int a, int b, int c) {
+        return unsignedMin(unsignedMin(a, b), c);
+    }
+
+    public static long unsignedMin(long a, long b, long c) {
+        return unsignedMin(unsignedMin(a, b), c);
+    }
+
+    public static byte sign(short x) throws ArithmeticException {
+        if (x > Objects.UBYTE_MAX_UNSIGNED) throw new ArithmeticException("integer overflow");
+        else return (byte) x;
+    }
+
+    public static short sign(int x) throws ArithmeticException {
+        if (x > Objects.USHORT_MAX_UNSIGNED) throw new ArithmeticException("integer overflow");
+        else return (short) x;
+    }
+
+    public static int sign(long x) throws ArithmeticException {
+        if (x > Objects.UINT_MAX_UNSIGNED) throw new ArithmeticException("integer overflow");
+        else return (int) x;
+    }
+
+    public static long sign(BigInteger x) throws ArithmeticException {
+        if (x.compareTo(Objects.ULONG_MAX_UNSIGNED) > 0) throw new ArithmeticException("integer overflow");
+        else return x.longValue();
     }
 
     public static long multiplyFull(int x, int y) {
@@ -233,51 +319,51 @@ public final class ExtendedMath {
     }
 
     public static float randomFloat(float bound) {
-        return RandomHolder.GENERATOR.nextFloat(bound);
+        return Randoms.nextFloat(RandomHolder.GENERATOR, bound);
     }
 
     public static float randomFloat(float min, float max) {
-        return RandomHolder.GENERATOR.nextFloat(min, max);
+        return Randoms.nextFloat(RandomHolder.GENERATOR, min, max);
     }
 
     public static float randomFloat() {
-        return RandomHolder.GENERATOR.nextFloat();
+        return Randoms.nextFloat(RandomHolder.GENERATOR);
     }
 
     public static double randomDouble(double bound) {
-        return RandomHolder.GENERATOR.nextDouble(bound);
+        return Randoms.nextDouble(RandomHolder.GENERATOR, bound);
     }
 
     public static double randomDouble(double min, double max) {
-        return RandomHolder.GENERATOR.nextDouble(min, max);
+        return Randoms.nextDouble(RandomHolder.GENERATOR, min, max);
     }
 
     public static double randomDouble() {
-        return RandomHolder.GENERATOR.nextDouble();
+        return Randoms.nextDouble(RandomHolder.GENERATOR);
     }
 
     public static int randomInt(int bound) {
-        return RandomHolder.GENERATOR.nextInt(bound);
+        return Randoms.nextInt(RandomHolder.GENERATOR, bound);
     }
 
     public static int randomInt(int min, int max) {
-        return RandomHolder.GENERATOR.nextInt(min, max);
+        return Randoms.nextInt(RandomHolder.GENERATOR, min, max);
     }
 
     public static int randomInt() {
-        return RandomHolder.GENERATOR.nextInt();
+        return Randoms.nextInt(RandomHolder.GENERATOR);
     }
 
     public static long randomLong(long bound) {
-        return RandomHolder.GENERATOR.nextLong(bound);
+        return Randoms.nextLong(RandomHolder.GENERATOR, bound);
     }
 
     public static long randomLong(long min, long max) {
-        return RandomHolder.GENERATOR.nextLong(min, max);
+        return Randoms.nextLong(RandomHolder.GENERATOR, min, max);
     }
 
     public static long randomLong() {
-        return RandomHolder.GENERATOR.nextLong();
+        return Randoms.nextLong(RandomHolder.GENERATOR);
     }
 
     public static int signum(int value) {
@@ -762,6 +848,38 @@ public final class ExtendedMath {
             if (x >= 0) return BigInteger.valueOf(x);
             else return BigInteger.valueOf(x).and(UNSIGNED_LONG_MASK);
         }
+    }
+
+    public static int divideUnsigned(int dividend, int divisor) {
+        return Integer.divideUnsigned(dividend, divisor);
+    }
+
+    public static int remainderUnsigned(int dividend, int divisor) {
+        return Integer.remainderUnsigned(dividend, divisor);
+    }
+
+    public static long divideUnsigned(long dividend, long divisor) {
+        return Long.divideUnsigned(dividend, divisor);
+    }
+
+    public static long remainderUnsigned(long dividend, long divisor) {
+        return Long.remainderUnsigned(dividend, divisor);
+    }
+
+    public static int add(int a, int b) {
+        return Integer.sum(a, b);
+    }
+
+    public static long add(long a, long b) {
+        return Long.sum(a, b);
+    }
+
+    public static float add(float a, float b) {
+        return Float.sum(a, b);
+    }
+
+    public static double add(double a, double b) {
+        return Double.sum(a, b);
     }
 
 }

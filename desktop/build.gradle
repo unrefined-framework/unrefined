@@ -26,7 +26,7 @@ jar {
  */
 
 task testJar(type: Jar) {
-    dependsOn ':base:jar'
+    dependsOn ':core:jar'
 
     //manifest { from jar.manifest }
 

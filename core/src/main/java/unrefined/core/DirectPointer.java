@@ -7,6 +7,7 @@ import unrefined.nio.UnboundedPointerException;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 /**
@@ -19,9 +20,9 @@ public class DirectPointer extends Pointer {
     private final long address;
     private final long size;
     private final boolean bounded;
+    private final boolean hasMemory;
 
     private final DirectPointer attachment;
-    private final boolean hasMemory;
 
     public DirectPointer(long address, long size, boolean hasMemory) {
         this.attachment = null;
@@ -77,23 +78,33 @@ public class DirectPointer extends Pointer {
     }
 
     @Override
-    public boolean hasArrays() {
+    public boolean hasArray() {
         return false;
     }
 
     @Override
-    public byte[][] arrays() {
+    public Object array() {
         return null;
     }
 
     @Override
-    public long arraysOffset() {
+    public ByteBuffer[] toByteBuffers() {
+        return new ByteBuffer[0];
+    }
+
+    @Override
+    public long arrayOffset() {
         return -1;
     }
 
     @Override
-    public long arraysLength() {
+    public long arrayLength() {
         return -1;
+    }
+
+    @Override
+    public boolean getBoolean(long offset) {
+        return Allocator.getInstance().getBoolean(address + offset);
     }
 
     @Override
@@ -147,8 +158,18 @@ public class DirectPointer extends Pointer {
     }
 
     @Override
+    public BigInteger getUnsignedNativeInt(long offset) {
+        return Allocator.getInstance().getUnsignedNativeInt(address + offset);
+    }
+
+    @Override
     public long getNativeLong(long offset) {
         return Allocator.getInstance().getNativeLong(address + offset);
+    }
+
+    @Override
+    public BigInteger getUnsignedNativeLong(long offset) {
+        return Allocator.getInstance().getUnsignedNativeLong(address + offset);
     }
 
     @Override
@@ -164,6 +185,11 @@ public class DirectPointer extends Pointer {
     @Override
     public double getDouble(long offset) {
         return Allocator.getInstance().getDouble(address + offset);
+    }
+
+    @Override
+    public void putBoolean(long offset, boolean value) {
+        Allocator.getInstance().putBoolean(address + offset, value);
     }
 
     @Override
@@ -202,6 +228,11 @@ public class DirectPointer extends Pointer {
     }
 
     @Override
+    public void putChar(long offset, char value) {
+        Allocator.getInstance().putChar(address + offset, value);
+    }
+
+    @Override
     public void putInt(long offset, int value) {
         Allocator.getInstance().putInt(address + offset, value);
     }
@@ -237,13 +268,33 @@ public class DirectPointer extends Pointer {
     }
 
     @Override
+    public void putUnsignedNativeInt(long offset, BigInteger value) {
+        Allocator.getInstance().putUnsignedNativeInt(address + offset, value);
+    }
+
+    @Override
     public void putNativeLong(long offset, long value) {
         Allocator.getInstance().putNativeLong(address + offset, value);
     }
 
     @Override
+    public void putUnsignedNativeLong(long offset, BigInteger value) {
+        Allocator.getInstance().putUnsignedNativeLong(address + offset, value);
+    }
+
+    @Override
     public void putAddress(long offset, long value) {
         Allocator.getInstance().putAddress(address + offset, value);
+    }
+
+    @Override
+    public void getBooleanArray(long offset, boolean[] array, int index, int length) {
+        Allocator.getInstance().putBooleanArray(address + offset, array, index, length);
+    }
+
+    @Override
+    public void getBooleanArray(long offset, boolean[] array) {
+        Allocator.getInstance().getBooleanArray(address + offset, array);
     }
 
     @Override
@@ -254,6 +305,16 @@ public class DirectPointer extends Pointer {
     @Override
     public void getByteArray(long offset, byte[] array) {
         Allocator.getInstance().getByteArray(address + offset, array);
+    }
+
+    @Override
+    public void putBooleanArray(long offset, boolean[] array, int index, int length) {
+        Allocator.getInstance().putBooleanArray(address + offset, array, index, length);
+    }
+
+    @Override
+    public void putBooleanArray(long offset, boolean[] array) {
+        Allocator.getInstance().putBooleanArray(address + offset, array);
     }
 
     @Override
@@ -384,6 +445,66 @@ public class DirectPointer extends Pointer {
     @Override
     public void putDoubleArray(long offset, double[] array) {
         Allocator.getInstance().putDoubleArray(address + offset, array);
+    }
+
+    @Override
+    public void getNativeIntArray(long offset, long[] array, int index, int length) {
+        Allocator.getInstance().getNativeIntArray(address + offset, array, index, length);
+    }
+
+    @Override
+    public void getNativeIntArray(long offset, long[] array) {
+        Allocator.getInstance().getNativeIntArray(address + offset, array);
+    }
+
+    @Override
+    public void putNativeIntArray(long offset, long[] array, int index, int length) {
+        Allocator.getInstance().putNativeIntArray(offset, array, index, length);
+    }
+
+    @Override
+    public void putNativeIntArray(long offset, long[] array) {
+        Allocator.getInstance().putNativeIntArray(offset, array);
+    }
+
+    @Override
+    public void getNativeLongArray(long offset, long[] array, int index, int length) {
+        Allocator.getInstance().getNativeLongArray(address + offset, array, index, length);
+    }
+
+    @Override
+    public void getNativeLongArray(long offset, long[] array) {
+        Allocator.getInstance().getNativeLongArray(address + offset, array);
+    }
+
+    @Override
+    public void putNativeLongArray(long offset, long[] array, int index, int length) {
+        Allocator.getInstance().putNativeLongArray(address + offset, array, index, length);
+    }
+
+    @Override
+    public void putNativeLongArray(long offset, long[] array) {
+        Allocator.getInstance().putNativeLongArray(address + offset, array);
+    }
+
+    @Override
+    public void getAddressArray(long offset, long[] array, int index, int length) {
+        Allocator.getInstance().getAddressArray(address + offset, array, index, length);
+    }
+
+    @Override
+    public void getAddressArray(long offset, long[] array) {
+        Allocator.getInstance().getAddressArray(address + offset, array);
+    }
+
+    @Override
+    public void putAddressArray(long offset, long[] array, int index, int length) {
+        Allocator.getInstance().putAddressArray(address + offset, array, index, length);
+    }
+
+    @Override
+    public void putAddressArray(long offset, long[] array) {
+        Allocator.getInstance().putAddressArray(address + offset, array);
     }
 
     @Override

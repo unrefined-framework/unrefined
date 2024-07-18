@@ -87,7 +87,7 @@ public final class ArraySet<E> implements Collection<E>, Set<E> {
 
     private int binarySearch(int[] hashes, int hash) {
         try {
-            return FastArray.binarySearchUnchecked(hashes, 0, size, hash);
+            return Arrays.binarySearchUnchecked(hashes, 0, size, hash);
         } catch (ArrayIndexOutOfBoundsException e) {
             throw new ConcurrentModificationException();
         }

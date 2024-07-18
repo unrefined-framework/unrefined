@@ -2,7 +2,7 @@ package unrefined.desktop;
 
 import com.kenai.jffi.Type;
 import unrefined.math.FastMath;
-import unrefined.util.FastArray;
+import unrefined.util.Arrays;
 import unrefined.util.NotInstantiableError;
 import unrefined.util.foreign.Aggregate;
 
@@ -19,7 +19,7 @@ public final class AggregateSupport {
 
     private static int checkSizeValid(long size) {
         if (size < 0) throw new UnsupportedOperationException("Aggregate size too large: " + FastMath.unsign(size));
-        else if (size > FastArray.ARRAY_LENGTH_MAX) throw new UnsupportedOperationException("Aggregate size too large: " + size);
+        else if (size > Arrays.ARRAY_LENGTH_MAX) throw new UnsupportedOperationException("Aggregate size too large: " + size);
         else return (int) size;
     }
 

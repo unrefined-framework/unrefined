@@ -2,12 +2,14 @@ package unrefined.runtime;
 
 import unrefined.desktop.AWTSupport;
 import unrefined.desktop.AttributedCharSequence;
-import unrefined.desktop.CharArrayIterator;
+import unrefined.media.graphics.Paragraph;
+import unrefined.text.CharArrayCharacterIterator;
 import unrefined.desktop.CleanerSupport;
 import unrefined.desktop.DropShadow;
 import unrefined.desktop.FontSupport;
 import unrefined.desktop.TextHints;
 import unrefined.desktop.TextPathLayout;
+import unrefined.desktop.TransformedGraphics2D;
 import unrefined.media.graphics.Bitmap;
 import unrefined.media.graphics.Brush;
 import unrefined.media.graphics.Composite;
@@ -20,6 +22,7 @@ import unrefined.media.graphics.Transform;
 import unrefined.util.AlreadyDisposedException;
 import unrefined.util.CharSequences;
 import unrefined.util.PhantomString;
+import unrefined.util.concurrent.ConcurrentHashSet;
 
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
@@ -27,9 +30,12 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.Paint;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.font.GlyphVector;
+import java.awt.font.GraphicAttribute;
+import java.awt.font.ImageGraphicAttribute;
 import java.awt.font.LineMetrics;
 import java.awt.font.TextAttribute;
 import java.awt.font.TextHitInfo;
@@ -44,11 +50,13 @@ import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.text.AttributedCharacterIterator;
-import java.text.AttributedString;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DesktopGraphics extends Graphics {
@@ -109,6 +117,21 @@ public class DesktopGraphics extends Graphics {
         this(image.createGraphics(), image.getWidth(), image.getHeight());
     }
 
+    private final Set<DesktopGraphics> subgraphics = new ConcurrentHashSet<>();
+    private volatile DesktopGraphics attachment;
+
+    protected DesktopGraphics(DesktopGraphics attachment, int x, int y, int width, int height) {
+        this(new TransformedGraphics2D((Graphics2D) Objects.requireNonNull(attachment).graphics2D.create(), x, y, width, height), width, height);
+        this.attachment = attachment;
+        attachment.subgraphics.add(this);
+    }
+
+    protected DesktopGraphics(DesktopGraphics attachment) {
+        this((Graphics2D) Objects.requireNonNull(attachment).graphics2D.create(), attachment.width, attachment.height);
+        this.attachment = attachment;
+        attachment.subgraphics.add(this);
+    }
+
     public Graphics2D getGraphics2D() {
         if (isDisposed()) throw new AlreadyDisposedException();
         return graphics2D;
@@ -162,23 +185,31 @@ public class DesktopGraphics extends Graphics {
         switch (info.getStyle()) {
             case Style.STROKE:
                 if (info.getShadowColor() != unrefined.media.graphics.Color.TRANSPARENT) {
-                    Graphics2D shadow = (Graphics2D) graphics2D.create();
-                    shadow.setColor(shadowColor);
-                    if (info.getShadowBlur() == 0)
-                        shadow.draw(AffineTransform.getTranslateInstance(info.getShadowOffsetX(), info.getShadowOffsetY()).createTransformedShape(shape));
-                    else new DropShadow(getShadowOffsetX(), getShadowOffsetY(), getShadowBlur(), 0).draw(shape, shadow);
-                    shadow.dispose();
+                    Paint originalPaint = graphics2D.getPaint();
+                    graphics2D.setColor(shadowColor);
+                    try {
+                        if (info.getShadowBlur() == 0)
+                            graphics2D.draw(AffineTransform.getTranslateInstance(info.getShadowOffsetX(), info.getShadowOffsetY()).createTransformedShape(shape));
+                        else new DropShadow(getShadowOffsetX(), getShadowOffsetY(), getShadowBlur(), 0).draw(shape, graphics2D);
+                    }
+                    finally {
+                        graphics2D.setPaint(originalPaint);
+                    }
                 }
                 graphics2D.draw(shape);
                 break;
             case Style.FILL:
                 if (info.getShadowColor() != unrefined.media.graphics.Color.TRANSPARENT) {
-                    Graphics2D shadow = (Graphics2D) graphics2D.create();
-                    shadow.setColor(shadowColor);
-                    if (getShadowBlur() == 0)
-                        shadow.fill(AffineTransform.getTranslateInstance(getShadowOffsetX(), getShadowOffsetY()).createTransformedShape(shape));
-                    else new DropShadow(getShadowOffsetX(), getShadowOffsetY(), getShadowBlur(), 0).fill(shape, shadow);
-                    shadow.dispose();
+                    Paint originalPaint = graphics2D.getPaint();
+                    graphics2D.setColor(shadowColor);
+                    try {
+                        if (getShadowBlur() == 0)
+                            graphics2D.fill(AffineTransform.getTranslateInstance(getShadowOffsetX(), getShadowOffsetY()).createTransformedShape(shape));
+                        else new DropShadow(getShadowOffsetX(), getShadowOffsetY(), getShadowBlur(), 0).fill(shape, graphics2D);
+                    }
+                    finally {
+                        graphics2D.setPaint(originalPaint);
+                    }
                 }
                 graphics2D.fill(shape);
                 break;
@@ -288,124 +319,174 @@ public class DesktopGraphics extends Graphics {
 
     @Override
     public void drawText(CharSequence text, int start, int end, float x, float y) {
-        if (isDisposed()) throw new AlreadyDisposedException();
-        int textAlignment = getTextAlignment();
-        TextLayout textLayout;
-        if (text instanceof String) {
-            String string = (String) text;
-            if (start == 0 && end == string.length() && graphics2D.getFont().hasLayoutAttributes() && getStyle() == Style.FILL &&
-                    textAlignment == Text.Alignment.START && info.getShadowColor() == unrefined.media.graphics.Color.TRANSPARENT) {
-                graphics2D.drawString(string, x, y);
-                return;
-            }
-            else textLayout = new TextLayout(
-                    new AttributedString(string.substring(start, end), graphics2D.getFont().getAttributes()).getIterator(),
-                    graphics2D.getFontRenderContext());
-        }
-        else textLayout = new TextLayout(
-                    new AttributedCharSequence(text.subSequence(start, end), graphics2D.getFont().getAttributes()).getIterator(),
-                    graphics2D.getFontRenderContext());
-        float advance = textLayout.getAdvance();
-        switch (textAlignment) {
-            case Text.Alignment.END: x -= advance; break;
-            case Text.Alignment.MIDDLE: x -= advance / 2; break;
-        }
-        if (info.getShadowColor() == unrefined.media.graphics.Color.TRANSPARENT) {
-            if (getStyle() == Style.STROKE) graphics2D.draw(textLayout.getOutline(AffineTransform.getTranslateInstance(x, y)));
-            else textLayout.draw(graphics2D, x, y);
-        }
-        else {
-            if (getStyle() == Style.STROKE) {
-                Shape outline = textLayout.getOutline(AffineTransform.getTranslateInstance(x, y));
-                Graphics2D shadow = (Graphics2D) graphics2D.create();
-                shadow.setColor(shadowColor);
-                if (getShadowBlur() == 0) shadow.draw(AffineTransform.getTranslateInstance(getShadowOffsetX(), getShadowOffsetY()).createTransformedShape(outline));
-                else new DropShadow(getShadowOffsetX(), getShadowOffsetY(), getShadowBlur(), 0)
-                        .draw(outline, shadow);
-                graphics2D.draw(outline);
-            }
-            else {
-                Shape outline = textLayout.getOutline(AffineTransform.getTranslateInstance(x, y));
-                Graphics2D shadow = (Graphics2D) graphics2D.create();
-                shadow.setColor(shadowColor);
-                if (getShadowBlur() == 0) shadow.fill(AffineTransform.getTranslateInstance(getShadowOffsetX(), getShadowOffsetY()).createTransformedShape(outline));
-                else new DropShadow(getShadowOffsetX(), getShadowOffsetY(), getShadowBlur(), 0)
-                        .fill(outline, shadow);
-                graphics2D.fill(outline);
-            }
-        }
+        drawText(text, start, end, AffineTransform.getTranslateInstance(x, y));
     }
 
     @Override
     public void drawText(CharSequence text, int start, int end, Transform transform) {
-        if (isDisposed()) throw new AlreadyDisposedException();
-        TextLayout textLayout = new TextLayout(
-                new AttributedCharSequence(text.subSequence(start, end), graphics2D.getFont().getAttributes()).getIterator(),
-                graphics2D.getFontRenderContext());
-        int textAlignment = getTextAlignment();
-        if (getShadowColor() == unrefined.media.graphics.Color.TRANSPARENT) {
-            if (getStyle() == Style.STROKE && textAlignment == Text.Alignment.START)
-                graphics2D.draw(textLayout.getOutline(((DesktopTransform) transform).getAffineTransform()));
+        drawText(text, start, end, transform == null ? null : ((DesktopTransform) transform).getAffineTransform());
+    }
+
+    public void drawText(AttributedCharSequence sequence, TextLayout textLayout, AffineTransform transform, List<Object[]> backgroundList, List<Object[]> foregroundList) {
+        AffineTransform originalTransform = graphics2D.getTransform();
+        graphics2D.transform(transform);
+        try {
+            float baseX = 0;
+            int textAlignment = info.getTextAlignment();
+            switch (textAlignment) {
+                case Text.Alignment.END: baseX -= textLayout.getAdvance(); break;
+                case Text.Alignment.MIDDLE: baseX -= textLayout.getAdvance() * 0.5f; break;
+            }
+            boolean drawBackground = info.getTextBackground() != null || !backgroundList.isEmpty() && info.getStyle() != Style.FILL;
+            boolean drawForeground = info.getTextForeground() != null || !foregroundList.isEmpty();
+            if (!drawBackground && !drawForeground) {
+                drawTextWithShadow(textLayout, baseX);
+            }
             else {
-                AffineTransform affineTransform = graphics2D.getTransform();
-                graphics2D.transform(((DesktopTransform) transform).getAffineTransform());
-                try {
-                    float x = 0;
-                    float advance = textLayout.getAdvance();
-                    switch (textAlignment) {
-                        case Text.Alignment.END: x -= advance; break;
-                        case Text.Alignment.MIDDLE: x -= advance / 2; break;
+                Paint originalPaint = graphics2D.getPaint();
+                if (drawBackground) {
+                    graphics2D.setColor(AWTSupport.TRANSPARENT);
+                    AttributedCharSequence backgroundSequence = sequence.clone();
+                    if (info.getTextBackground() != null) backgroundSequence.addAttribute(TextAttribute.BACKGROUND, ((DesktopBrush) info.getTextBackground()).getPaint());
+                    try {
+                        for (Object[] backgroundEntry : backgroundList) {
+                            backgroundSequence.addAttribute(TextAttribute.BACKGROUND, backgroundEntry[0], (Integer) backgroundEntry[1], (Integer) backgroundEntry[2]);
+                        }
+                        TextLayout backgroundTextLayout = new TextLayout(backgroundSequence.getIterator(), graphics2D.getFontRenderContext());
+                        backgroundTextLayout.draw(graphics2D, baseX, 0);
                     }
-                    if (getStyle() == Style.STROKE) graphics2D.draw(textLayout.getOutline(AffineTransform.getTranslateInstance(x, 0)));
-                    else textLayout.draw(graphics2D, x, 0);
+                    finally {
+                        graphics2D.setPaint(originalPaint);
+                    }
                 }
-                finally {
-                    graphics2D.setTransform(affineTransform);
+                drawTextWithShadow(textLayout, baseX);
+                if (drawForeground) {
+                    graphics2D.setColor(AWTSupport.TRANSPARENT);
+                    AttributedCharSequence foregroundSequence = sequence.clone();
+                    if (info.getTextForeground() != null) foregroundSequence.addAttribute(TextAttribute.BACKGROUND, ((DesktopBrush) info.getTextForeground()).getPaint());
+                    try {
+                        for (Object[] foregroundEntry : foregroundList) {
+                            foregroundSequence.addAttribute(TextAttribute.BACKGROUND, foregroundEntry[0], (Integer) foregroundEntry[1], (Integer) foregroundEntry[2]);
+                        }
+                        TextLayout foregroundTextLayout = new TextLayout(foregroundSequence.getIterator(), graphics2D.getFontRenderContext());
+                        foregroundTextLayout.draw(graphics2D, baseX, 0);
+                    }
+                    finally {
+                        graphics2D.setPaint(originalPaint);
+                    }
                 }
             }
         }
-        else {
-            if (getStyle() == Style.STROKE && textAlignment == Text.Alignment.START) {
-                Shape outline = textLayout.getOutline(((DesktopTransform) transform).getAffineTransform());
-                Graphics2D shadow = (Graphics2D) graphics2D.create();
-                shadow.setColor(shadowColor);
-                if (getShadowBlur() == 0) shadow.draw(AffineTransform.getTranslateInstance(getShadowOffsetX(), getShadowOffsetY()).createTransformedShape(outline));
-                else new DropShadow(getShadowOffsetX(), getShadowOffsetY(), getShadowBlur(), 0)
-                        .draw(outline, shadow);
-                graphics2D.draw(outline);
+        finally {
+            graphics2D.setTransform(originalTransform);
+        }
+    }
+
+    public void drawText(TextLayout textLayout, AffineTransform transform) {
+        AffineTransform originalTransform = graphics2D.getTransform();
+        graphics2D.transform(transform);
+        try {
+            float baseX = 0;
+            switch (info.getTextAlignment()) {
+                case Text.Alignment.END: baseX -= textLayout.getAdvance(); break;
+                case Text.Alignment.MIDDLE: baseX -= textLayout.getAdvance() / 2; break;
             }
-            else {
-                AffineTransform affineTransform = graphics2D.getTransform();
-                graphics2D.transform(((DesktopTransform) transform).getAffineTransform());
+            if (info.getTextBackground() != null) {
+                Paint originalPaint = graphics2D.getPaint();
                 try {
-                    float x = 0;
-                    float advance = textLayout.getAdvance();
-                    switch (textAlignment) {
-                        case Text.Alignment.END: x -= advance; break;
-                        case Text.Alignment.MIDDLE: x -= advance / 2; break;
+                    try {
+                        graphics2D.setPaint(((DesktopBrush) info.getTextBackground()).getPaint());
                     }
-                    Shape outline = textLayout.getOutline(AffineTransform.getTranslateInstance(x, 0));
-                    if (getStyle() == Style.STROKE) {
-                        Graphics2D shadow = (Graphics2D) graphics2D.create();
-                        shadow.setColor(shadowColor);
-                        if (getShadowBlur() == 0) shadow.draw(AffineTransform.getTranslateInstance(getShadowOffsetX(), getShadowOffsetY()).createTransformedShape(outline));
-                        else new DropShadow(getShadowOffsetX(), getShadowOffsetY(), getShadowBlur(), 0)
-                                .draw(outline, shadow);
-                        graphics2D.draw(outline);
-                    }
-                    else {
-                        Graphics2D shadow = (Graphics2D) graphics2D.create();
-                        shadow.setColor(shadowColor);
-                        if (getShadowBlur() == 0) shadow.fill(AffineTransform.getTranslateInstance(getShadowOffsetX(), getShadowOffsetY()).createTransformedShape(outline));
-                        else new DropShadow(getShadowOffsetX(), getShadowOffsetY(), getShadowBlur(), 0)
-                                .fill(outline, shadow);
-                        graphics2D.fill(outline);
+                    finally {
+                        graphics2D.fill(new Rectangle2D.Float(baseX, - textLayout.getAscent(), textLayout.getAdvance(),
+                                textLayout.getAscent() + textLayout.getDescent()));
                     }
                 }
                 finally {
-                    graphics2D.setTransform(affineTransform);
+                    graphics2D.setPaint(originalPaint);
                 }
             }
+            drawTextWithShadow(textLayout, baseX);
+            if (info.getTextForeground() != null) {
+                Paint originalPaint = graphics2D.getPaint();
+                try {
+                    try {
+                        graphics2D.setPaint(((DesktopBrush) info.getTextForeground()).getPaint());
+                    }
+                    finally {
+                        graphics2D.fill(new Rectangle2D.Float(baseX, - textLayout.getAscent(), textLayout.getAdvance(),
+                                textLayout.getAscent() + textLayout.getDescent()));
+                    }
+                }
+                finally {
+                    graphics2D.setPaint(originalPaint);
+                }
+            }
+        }
+        finally {
+            graphics2D.setTransform(originalTransform);
+        }
+    }
+
+    public void drawText(CharSequence text, int start, int end, AffineTransform transform) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        if (transform == null) transform = new AffineTransform();
+
+        if (text instanceof Text && !((Text) text).spanMarks().isEmpty()) {
+
+            List<Object[]> backgroundList = new ArrayList<>();
+            List<Object[]> foregroundList = new ArrayList<>();
+
+            AttributedCharSequence sequence = AWTSupport.toAttributedCharSequence((Text) text, start, end, this, backgroundList, foregroundList);
+
+            AttributedCharacterIterator iterator = sequence.getIterator();
+            TextLayout textLayout = new TextLayout(iterator, graphics2D.getFontRenderContext());
+            drawText(sequence, textLayout, transform, backgroundList, foregroundList);
+        }
+        else {
+
+            TextLayout textLayout = new TextLayout(
+                    new AttributedCharSequence(text.subSequence(start, end), graphics2D.getFont().getAttributes()).getIterator(),
+                    graphics2D.getFontRenderContext());
+            drawText(textLayout, transform);
+
+        }
+    }
+
+    private void drawTextWithShadow(TextLayout textLayout, float baseX) {
+        if (info.getShadowColor() == unrefined.media.graphics.Color.TRANSPARENT) {
+            if (info.getStyle() == Style.STROKE) graphics2D.draw(textLayout.getOutline(AffineTransform.getTranslateInstance(baseX, 0)));
+            else textLayout.draw(graphics2D, baseX, 0);
+        }
+        else {
+            Shape outline = textLayout.getOutline(AffineTransform.getTranslateInstance(baseX, 0));
+            if (getStyle() == Style.STROKE) {
+                Paint originalPaint = graphics2D.getPaint();
+                graphics2D.setColor(shadowColor);
+                try {
+                    if (getShadowBlur() == 0) graphics2D.draw(AffineTransform.getTranslateInstance(getShadowOffsetX(), getShadowOffsetY()).createTransformedShape(outline));
+                    else new DropShadow(getShadowOffsetX(), getShadowOffsetY(), getShadowBlur(), 0)
+                            .draw(outline, graphics2D);
+                }
+                finally {
+                    graphics2D.setPaint(originalPaint);
+                }
+                graphics2D.draw(outline);
+            }
+            else {
+                Paint originalPaint = graphics2D.getPaint();
+                graphics2D.setColor(shadowColor);
+                try {
+                    if (getShadowBlur() == 0) graphics2D.fill(AffineTransform.getTranslateInstance(getShadowOffsetX(), getShadowOffsetY()).createTransformedShape(outline));
+                    else new DropShadow(getShadowOffsetX(), getShadowOffsetY(), getShadowBlur(), 0)
+                            .fill(outline, graphics2D);
+                }
+                finally {
+                    graphics2D.setPaint(originalPaint);
+                }
+                graphics2D.fill(outline);
+            }
+
         }
     }
 
@@ -420,44 +501,38 @@ public class DesktopGraphics extends Graphics {
     }
 
     @Override
-    public void drawTextOnPath(CharSequence text, int start, int end, Path path, float startOffset, int x, int y) {
+    public void drawTextOnPath(String text, int start, int end, Path path, float startOffset, float x, float y) {
         drawTextOnPath(CharSequences.toCharArray(text, start, end), path, startOffset, x, y);
     }
 
     @Override
-    public void drawTextOnPath(char[] text, int offset, int length, Path path, float startOffset, int x, int y) {
-        if (isDisposed()) throw new AlreadyDisposedException();
-        int direction = info.getTextDirection();
-        final GlyphVector glyphVector;
-        if (direction == Text.Direction.AUTO) glyphVector = graphics2D.getFont()
-                .createGlyphVector(graphics2D.getFontRenderContext(), new CharArrayIterator(text, offset, length));
-        else glyphVector = graphics2D.getFont()
-                .layoutGlyphVector(graphics2D.getFontRenderContext(), text, offset, offset + length,
-                        FontSupport.toFontFlag(info.getTextDirection()));
-        Shape textOnPath = TextPathLayout.layoutGlyphVector(glyphVector, ((DesktopPath) path).getPath2D(),
-                info.getTextAlignment(), startOffset, (float) glyphVector.getVisualBounds().getWidth(), TextPathLayout.ADJUST_SPACING);
-        drawShape(AffineTransform.getTranslateInstance(x, y).createTransformedShape(textOnPath));
+    public void drawTextOnPath(char[] text, int offset, int length, Path path, float startOffset, float x, float y) {
+        drawTextOnPath(text, offset, length, path, startOffset, AffineTransform.getTranslateInstance(x, y));
     }
 
     @Override
-    public void drawTextOnPath(CharSequence text, int start, int end, Path path, float startOffset, Transform transform) {
+    public void drawTextOnPath(String text, int start, int end, Path path, float startOffset, Transform transform) {
         drawTextOnPath(CharSequences.toCharArray(text, start, end), path, startOffset, transform);
     }
 
     @Override
     public void drawTextOnPath(char[] text, int offset, int length, Path path, float startOffset, Transform transform) {
+        drawTextOnPath(text, offset, length, path, startOffset, transform == null ? null : ((DesktopTransform) transform).getAffineTransform());
+    }
+
+    public void drawTextOnPath(char[] text, int offset, int length, Path path, float startOffset, AffineTransform transform) {
         if (isDisposed()) throw new AlreadyDisposedException();
         int direction = info.getTextDirection();
         final GlyphVector glyphVector;
         if (direction == Text.Direction.AUTO) glyphVector = graphics2D.getFont()
-                .createGlyphVector(graphics2D.getFontRenderContext(), new CharArrayIterator(text, offset, length));
+                .createGlyphVector(graphics2D.getFontRenderContext(), new CharArrayCharacterIterator(text, offset, length));
         else glyphVector = graphics2D.getFont()
                 .layoutGlyphVector(graphics2D.getFontRenderContext(), text, offset, offset + length,
-                        FontSupport.toFontFlag(info.getTextDirection()));
+                        FontSupport.toFontLayout(info.getTextDirection()));
         Shape textOnPath = TextPathLayout.layoutGlyphVector(glyphVector, ((DesktopPath) path).getPath2D(),
                 info.getTextAlignment(), startOffset, (float) glyphVector.getVisualBounds().getWidth(), TextPathLayout.ADJUST_SPACING);
         if (transform == null) drawShape(textOnPath);
-        else drawShape(((DesktopTransform) transform).getAffineTransform().createTransformedShape(textOnPath));
+        else drawShape(transform.createTransformedShape(textOnPath));
     }
 
     @Override
@@ -472,6 +547,9 @@ public class DesktopGraphics extends Graphics {
         else if (text instanceof PhantomString) {
             PhantomString string = (PhantomString) text;
             bounds2D = fontMetrics.getStringBounds(string.array(), start, end, graphics2D);
+        }
+        else if (text instanceof Text) {
+            bounds2D = fontMetrics.getStringBounds(AWTSupport.toAttributedCharSequence((Text) text, this).getIterator(), start, end, graphics2D);
         }
         else {
             AttributedCharacterIterator iterator = new AttributedCharSequence(text).getIterator();
@@ -504,6 +582,11 @@ public class DesktopGraphics extends Graphics {
             lineMetrics = fontMetrics.getLineMetrics(string.array(), start, end, graphics2D);
             bounds2D = fontMetrics.getStringBounds(string.array(), start, end, graphics2D);
         }
+        else if (text instanceof Text) {
+            AttributedCharacterIterator iterator = AWTSupport.toAttributedCharSequence((Text) text, this).getIterator();
+            lineMetrics = fontMetrics.getLineMetrics(iterator, start, end, graphics2D);
+            bounds2D = fontMetrics.getStringBounds(iterator, start, end, graphics2D);
+        }
         else {
             AttributedCharacterIterator iterator = new AttributedCharSequence(text).getIterator();
             lineMetrics = fontMetrics.getLineMetrics(iterator, start, end, graphics2D);
@@ -528,11 +611,14 @@ public class DesktopGraphics extends Graphics {
             PhantomString string = (PhantomString) text;
             lineMetrics = fontMetrics.getLineMetrics(string.array(), start, end, graphics2D);
         }
+        else if (text instanceof Text) {
+            lineMetrics = fontMetrics.getLineMetrics(AWTSupport.toAttributedCharSequence((Text) text, this).getIterator(), start, end, graphics2D);
+        }
         else {
             AttributedCharacterIterator iterator = new AttributedCharSequence(text).getIterator();
             lineMetrics = fontMetrics.getLineMetrics(iterator, start, end, graphics2D);
         }
-        metrics.setMetrics(lineMetrics.getBaselineOffsets()[lineMetrics.getBaselineIndex()],
+        if (metrics != null) metrics.setMetrics(lineMetrics.getBaselineOffsets()[lineMetrics.getBaselineIndex()],
                 lineMetrics.getAscent(), lineMetrics.getDescent(), lineMetrics.getLeading(),
                 fontMetrics.getMaxAscent(), fontMetrics.getMaxDescent(), fontMetrics.getMaxAdvance());
     }
@@ -549,6 +635,9 @@ public class DesktopGraphics extends Graphics {
         else if (text instanceof PhantomString) {
             PhantomString string = (PhantomString) text;
             bounds2D = fontMetrics.getStringBounds(string.array(), start, end, graphics2D);
+        }
+        else if (text instanceof Text) {
+            bounds2D = fontMetrics.getStringBounds(AWTSupport.toAttributedCharSequence((Text) text, this).getIterator(), start, end, graphics2D);
         }
         else {
             AttributedCharacterIterator iterator = new AttributedCharSequence(text).getIterator();
@@ -574,7 +663,7 @@ public class DesktopGraphics extends Graphics {
         if (isDisposed()) throw new AlreadyDisposedException();
         FontMetrics fontMetrics = graphics2D.getFontMetrics();
         LineMetrics lineMetrics = fontMetrics.getLineMetrics(text, offset, length, graphics2D);
-        metrics.setMetrics(lineMetrics.getBaselineOffsets()[lineMetrics.getBaselineIndex()],
+        if (metrics != null) metrics.setMetrics(lineMetrics.getBaselineOffsets()[lineMetrics.getBaselineIndex()],
                 lineMetrics.getAscent(), lineMetrics.getDescent(), lineMetrics.getLeading(),
                 fontMetrics.getMaxAscent(), fontMetrics.getMaxDescent(), fontMetrics.getMaxAdvance());
     }
@@ -584,16 +673,16 @@ public class DesktopGraphics extends Graphics {
         if (isDisposed()) throw new AlreadyDisposedException();
         FontMetrics fontMetrics = graphics2D.getFontMetrics();
         Rectangle2D bounds2D = fontMetrics.getStringBounds(text, offset, length, graphics2D);
-        AWTSupport.floatRectangle(bounds2D, bounds);
+        if (bounds != null) AWTSupport.floatRectangle(bounds2D, bounds);
     }
 
     @Override
-    public void hitText(CharSequence text, int start, int end, float xOffset, Text.HitInfo hitInfo) {
+    public void hitText(CharSequence text, int start, int end, float xOffset, float yOffset, Text.HitInfo hitInfo) {
         if (isDisposed()) throw new AlreadyDisposedException();
         TextLayout textLayout = new TextLayout(
                 new AttributedCharSequence(text.subSequence(start, end), graphics2D.getFont().getAttributes()).getIterator(),
                 graphics2D.getFontRenderContext());
-        TextHitInfo textHitInfo = textLayout.hitTestChar(xOffset, 0);
+        TextHitInfo textHitInfo = textLayout.hitTestChar(xOffset, yOffset);
         int insertionIndex = textHitInfo.getInsertionIndex();
         Rectangle2D bounds = textLayout.getBounds();
         boolean outBounds = xOffset < bounds.getX() || xOffset >= bounds.getWidth();
@@ -603,14 +692,28 @@ public class DesktopGraphics extends Graphics {
     }
 
     @Override
-    public void hitText(char[] text, int offset, int length, float xOffset, Text.HitInfo hitInfo) {
-        hitText(new PhantomString(text, offset, length), xOffset, hitInfo);
+    public void hitText(char[] text, int offset, int length, float xOffset, float yOffset, Text.HitInfo hitInfo) {
+        hitText(new PhantomString(text, offset, length), xOffset, yOffset, hitInfo);
+    }
+
+    @Override
+    public Paragraph multilineText(CharSequence text, int start, int end) {
+        return new DesktopParagraph(this, text, start, end);
+    }
+
+    @Override
+    public Paragraph multilineText(char[] text, int offset, int length) {
+        return new DesktopParagraph(this, text, offset, length);
     }
 
     @Override
     public void getInfo(Info info) {
         if (isDisposed()) throw new AlreadyDisposedException();
         this.info.to(info);
+    }
+
+    public Info getInfo() {
+        return info;
     }
 
     @Override
@@ -815,6 +918,21 @@ public class DesktopGraphics extends Graphics {
     }
 
     @Override
+    public Graphics slice(int x, int y, int width, int height) {
+        return new DesktopGraphics(this, x, y, width, height);
+    }
+
+    @Override
+    public Graphics duplicate() {
+        return new DesktopGraphics(this);
+    }
+
+    @Override
+    public Graphics attachment() {
+        return attachment;
+    }
+
+    @Override
     public boolean isAntiAlias() {
         if (isDisposed()) throw new AlreadyDisposedException();
         return info.isAntiAlias();
@@ -870,6 +988,30 @@ public class DesktopGraphics extends Graphics {
     }
 
     @Override
+    public Brush getTextBackground() {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        return info.getTextBackground();
+    }
+
+    @Override
+    public void setTextBackground(Brush textBackground) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        info.setTextBackground(textBackground);
+    }
+
+    @Override
+    public Brush getTextForeground() {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        return info.getTextForeground();
+    }
+
+    @Override
+    public void setTextForeground(Brush textForeground) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        info.setTextForeground(textForeground);
+    }
+
+    @Override
     public float getTextSize() {
         if (isDisposed()) throw new AlreadyDisposedException();
         return info.getTextSize();
@@ -879,6 +1021,7 @@ public class DesktopGraphics extends Graphics {
     public void setTextSize(float size) {
         if (isDisposed()) throw new AlreadyDisposedException();
         info.setTextSize(size);
+        if (info.getSuperscriptText() != Text.Superscript.NONE) size *= 1.5f;
         graphics2D.setFont(graphics2D.getFont().deriveFont(size));
     }
 
@@ -892,9 +1035,7 @@ public class DesktopGraphics extends Graphics {
     public void setTextDirection(int direction) {
         if (isDisposed()) throw new AlreadyDisposedException();
         info.setTextDirection(direction);
-        Map<TextAttribute, Object> attributes = new HashMap<>(1);
-        attributes.put(TextAttribute.RUN_DIRECTION, TextHints.toRunDirection(direction));
-        graphics2D.setFont(graphics2D.getFont().deriveFont(attributes));
+        graphics2D.setFont(graphics2D.getFont().deriveFont(Collections.singletonMap(TextAttribute.RUN_DIRECTION, TextHints.toRunDirection(direction))));
     }
 
     @Override
@@ -947,6 +1088,63 @@ public class DesktopGraphics extends Graphics {
         if (isDisposed()) throw new AlreadyDisposedException();
         info.setStrikeThroughText(strikeThroughText);
         graphics2D.setFont(graphics2D.getFont().deriveFont(Collections.singletonMap(TextAttribute.STRIKETHROUGH, TextHints.STRIKETHROUGH_OFF)));
+    }
+
+    @Override
+    public boolean isKerningText() {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        return info.isKerningText();
+    }
+
+    @Override
+    public void setKerningText(boolean kerningText) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        info.setKerningText(kerningText);
+        graphics2D.setFont(graphics2D.getFont().deriveFont(Collections.singletonMap(TextAttribute.KERNING, TextAttribute.KERNING_ON)));
+    }
+
+    @Override
+    public boolean isVariantLigaturesText() {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        return info.isVariantLigaturesText();
+    }
+
+    @Override
+    public void setVariantLigaturesText(boolean variantLigaturesText) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        info.setVariantLigaturesText(variantLigaturesText);
+        graphics2D.setFont(graphics2D.getFont().deriveFont(Collections.singletonMap(TextAttribute.LIGATURES, TextAttribute.LIGATURES_ON)));
+    }
+
+    @Override
+    public int getSuperscriptText() {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        return info.getSuperscriptText();
+    }
+
+    @Override
+    public void setSuperscriptText(int superscriptText) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        info.setSuperscriptText(superscriptText);
+        float textSize = info.getTextSize();
+        if (superscriptText != Text.Superscript.NONE) textSize *= 1.5f;
+        Map<TextAttribute, Object> attributes = new HashMap<>(1);
+        attributes.put(TextAttribute.SIZE, textSize);
+        attributes.put(TextAttribute.SUPERSCRIPT, superscriptText);
+        graphics2D.setFont(graphics2D.getFont().deriveFont(attributes));
+    }
+
+    @Override
+    public float getLetterSpacing() {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        return info.getLetterSpacing();
+    }
+
+    @Override
+    public void setLetterSpacing(float letterSpacing) {
+        if (isDisposed()) throw new AlreadyDisposedException();
+        info.setLetterSpacing(letterSpacing);
+        graphics2D.setFont(graphics2D.getFont().deriveFont(Collections.singletonMap(TextAttribute.TRACKING, letterSpacing)));
     }
 
     @Override
@@ -1030,6 +1228,13 @@ public class DesktopGraphics extends Graphics {
     @Override
     public void dispose() {
         if (disposed.compareAndSet(false, true)) {
+            synchronized (subgraphics) {
+                for (DesktopGraphics graphics : subgraphics) {
+                    graphics.dispose();
+                }
+            }
+            subgraphics.clear();
+            if (attachment != null) attachment.subgraphics.remove(this);
             graphics2D.dispose();
             graphics2D = null;
             background.dispose();

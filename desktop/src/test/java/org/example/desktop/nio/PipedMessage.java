@@ -2,11 +2,13 @@ package org.example.desktop.nio;
 
 import unrefined.Lifecycle;
 import unrefined.app.Log;
+import unrefined.nio.Buffers;
 import unrefined.nio.channels.Pipe;
 import unrefined.util.RunnableCallable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
 public class PipedMessage {
@@ -20,9 +22,9 @@ public class PipedMessage {
             Pipe.SinkChannel sink = pipe.sink(); // Gets the sink channel
 
             ByteBuffer buffer = ByteBuffer.allocate(512);
-            buffer.clear();
+            Buffers.clear(buffer);
             buffer.put("Hello World".getBytes());
-            buffer.flip();
+            Buffers.flip(buffer);
 
             // Write the data into the sink channel
             while (buffer.hasRemaining()) {
@@ -39,12 +41,12 @@ public class PipedMessage {
 
             // Retrieve the he data and write to the log
             while (source.read(buffer1) > 0) {
-                buffer1.flip();
+                ((Buffer) buffer1).flip();
 
                 while (buffer1.hasRemaining()) {
                     stream.write(buffer1.get());
                 }
-                buffer1.clear();
+                ((Buffer) buffer1).clear();
             }
             source.close();
             Log.defaultInstance().info("Unrefined NIO", "Message from pipe: " + stream);

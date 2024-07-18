@@ -104,15 +104,13 @@ public class AndroidLog extends Log {
         return android.util.Log.println(priority, tag, message);
     }
 
-    private volatile int priority;
     @Override
     public void setPriority(int priority) {
-        this.priority = priority;
     }
 
     @Override
     public int getPriority() {
-        return priority;
+        return Priority.VERBOSE;
     }
 
 }

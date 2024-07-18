@@ -2,7 +2,9 @@ package unrefined.util;
 
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+import java.util.Iterator;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 public final class CharSequences {
 
@@ -54,7 +56,7 @@ public final class CharSequences {
     }
 
     public static CharSequence toCharSequence(char[] chars, int offset, int length) {
-        return new CollectableString(FastArray.copyOfRange(chars, offset, offset + length));
+        return new CollectableString(Arrays.copyOfRange(chars, offset, offset + length));
     }
     
     public static boolean isEmpty(CharSequence text) {
@@ -124,6 +126,60 @@ public final class CharSequences {
             }
             return true;
         }
+    }
+
+    public static int hashCode(CharSequence sequence) {
+        if (sequence == null) return 0;
+
+        int result = 1;
+        for (int i = 0; i < sequence.length(); i ++) {
+            result = 31 * result + sequence.charAt(i);
+        }
+
+        return result;
+    }
+
+    public static int hashCode(CharSequence sequence, int offset, int length) {
+        if (sequence == null) return 0;
+
+        int result = 1;
+        for (int i = 0; i < length; i ++) {
+            result = 31 * result + sequence.charAt(offset + i);
+        }
+
+        return result;
+    }
+
+    public static String toString(CharSequence sequence, int offset, int length) {
+        if (sequence == null) return null;
+        else {
+            StringBuilder builder = new StringBuilder(length);
+            for (int i = 0; i < length; i ++) {
+                builder.append(sequence.charAt(offset + i));
+            }
+            return builder.toString();
+        }
+    }
+
+    public static Iterable<Character> iterate(CharSequence sequence) {
+        return () -> new Iterator<Character>() {
+            private int index = 0;
+            @Override
+            public boolean hasNext() {
+                return index < sequence.length();
+            }
+            @Override
+            public Character next() {
+                char ch = sequence.charAt(index);
+                index ++;
+                return ch;
+            }
+        };
+    }
+
+    private static final Pattern NUMBER_PATTERN = Pattern.compile("-?\\d+(\\.\\d+)?");
+    public static boolean isNumber(CharSequence text) {
+        return text != null && NUMBER_PATTERN.matcher(text).matches();
     }
 
 }
