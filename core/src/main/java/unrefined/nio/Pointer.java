@@ -23,6 +23,36 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public abstract class Pointer implements Comparable<Pointer>, Closeable, Duplicatable {
 
+    protected interface TypeAdapter {
+        long get(Pointer pointer, long offset);
+        void put(Pointer pointer, long offset, long value);
+    }
+
+    private static final TypeAdapter TYPE_ADAPTER_64 = new TypeAdapter() {
+        @Override
+        public long get(Pointer pointer, long offset) {
+            return pointer.getLong(offset);
+        }
+        @Override
+        public void put(Pointer pointer, long offset, long value) {
+            pointer.putLong(offset, value);
+        }
+    };
+    private static final TypeAdapter TYPE_ADAPTER_32 = new TypeAdapter() {
+        @Override
+        public long get(Pointer pointer, long offset) {
+            return (long) pointer.getInt(offset) & 0xFFFFFFFFL;
+        }
+        @Override
+        public void put(Pointer pointer, long offset, long value) {
+            pointer.putInt(offset, (int) value);
+        }
+    };
+
+    protected static final TypeAdapter NATIVE_INT_ADAPTER = Foreign.getInstance().nativeIntSize() == 8 ? TYPE_ADAPTER_64 : TYPE_ADAPTER_32;
+    protected static final TypeAdapter NATIVE_LONG_ADAPTER = Foreign.getInstance().nativeLongSize() == 8 ? TYPE_ADAPTER_64 : TYPE_ADAPTER_32;
+    protected static final TypeAdapter ADDRESS_ADAPTER = Foreign.getInstance().addressSize() == 8 ? TYPE_ADAPTER_64 : TYPE_ADAPTER_32;
+
     public static final Pointer NULL = Pointer.wrap(0);
 
     /**

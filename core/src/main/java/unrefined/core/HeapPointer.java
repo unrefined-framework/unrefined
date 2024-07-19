@@ -14,37 +14,6 @@ import static unrefined.nio.Allocator.SIZE_MAX;
 
 public class HeapPointer extends Pointer {
 
-    private interface NativeTypeAdapter {
-        long get(Pointer pointer, long offset);
-        void put(Pointer pointer, long offset, long value);
-    }
-
-    private static final NativeTypeAdapter NATIVE_TYPE_ADAPTER_64 = new NativeTypeAdapter() {
-        @Override
-        public long get(Pointer pointer, long offset) {
-            return pointer.getLong(offset);
-        }
-        @Override
-        public void put(Pointer pointer, long offset, long value) {
-            pointer.putLong(offset, value);
-        }
-    };
-
-    private static final NativeTypeAdapter NATIVE_TYPE_ADAPTER_32 = new NativeTypeAdapter() {
-        @Override
-        public long get(Pointer pointer, long offset) {
-            return (long) pointer.getInt(offset) & 0xFFFFFFFFL;
-        }
-        @Override
-        public void put(Pointer pointer, long offset, long value) {
-            pointer.putInt(offset, (int) value);
-        }
-    };
-
-    private static final NativeTypeAdapter NATIVE_INT_ADAPTER = Foreign.getInstance().nativeIntSize() == 8 ? NATIVE_TYPE_ADAPTER_64 : NATIVE_TYPE_ADAPTER_32;
-    private static final NativeTypeAdapter NATIVE_LONG_ADAPTER = Foreign.getInstance().nativeLongSize() == 8 ? NATIVE_TYPE_ADAPTER_64 : NATIVE_TYPE_ADAPTER_32;
-    private static final NativeTypeAdapter ADDRESS_ADAPTER = Foreign.getInstance().addressSize() == 8 ? NATIVE_TYPE_ADAPTER_64 : NATIVE_TYPE_ADAPTER_32;
-
     private volatile byte[][] array;
     private volatile ByteBuffer[] buffers;
     private final long size;

@@ -64,7 +64,7 @@ public abstract class Allocator {
     public static final BigInteger SIZE_MAX_UNSIGNED         = Foreign.getInstance().addressSize() == 8 ? UINT64_MAX_UNSIGNED :
             BigInteger.valueOf(UINT32_MAX_UNSIGNED);
 
-    private interface NativeTypeAdapter {
+    protected interface TypeAdapter {
         long get(long address);
         long get(ByteBuffer buffer);
         long get(ByteBuffer buffer, int index);
@@ -75,7 +75,7 @@ public abstract class Allocator {
         void put(Object array, long offset, long value);
     }
 
-    private final NativeTypeAdapter NATIVE_TYPE_ADAPTER_64 = new NativeTypeAdapter() {
+    protected final TypeAdapter TYPE_ADAPTER_64 = new TypeAdapter() {
         @Override
         public long get(long address) {
             return getLong(address);
@@ -110,7 +110,7 @@ public abstract class Allocator {
         }
     };
 
-    private final NativeTypeAdapter NATIVE_TYPE_ADAPTER_32 = new NativeTypeAdapter() {
+    protected final TypeAdapter TYPE_ADAPTER_32 = new TypeAdapter() {
         @Override
         public long get(long address) {
             return (long) getInt(address) & 0xFFFFFFFFL;
@@ -145,9 +145,9 @@ public abstract class Allocator {
         }
     };
 
-    private final NativeTypeAdapter NATIVE_INT_ADAPTER = Foreign.getInstance().nativeIntSize() == 8 ? NATIVE_TYPE_ADAPTER_64 : NATIVE_TYPE_ADAPTER_32;
-    private final NativeTypeAdapter NATIVE_LONG_ADAPTER = Foreign.getInstance().nativeLongSize() == 8 ? NATIVE_TYPE_ADAPTER_64 : NATIVE_TYPE_ADAPTER_32;
-    private final NativeTypeAdapter ADDRESS_ADAPTER = Foreign.getInstance().addressSize() == 8 ? NATIVE_TYPE_ADAPTER_64 : NATIVE_TYPE_ADAPTER_32;
+    protected final TypeAdapter NATIVE_INT_ADAPTER = Foreign.getInstance().nativeIntSize() == 8 ? TYPE_ADAPTER_64 : TYPE_ADAPTER_32;
+    protected final TypeAdapter NATIVE_LONG_ADAPTER = Foreign.getInstance().nativeLongSize() == 8 ? TYPE_ADAPTER_64 : TYPE_ADAPTER_32;
+    protected final TypeAdapter ADDRESS_ADAPTER = Foreign.getInstance().addressSize() == 8 ? TYPE_ADAPTER_64 : TYPE_ADAPTER_32;
 
     /**
      * Reads a {@code boolean} from a native memory location.

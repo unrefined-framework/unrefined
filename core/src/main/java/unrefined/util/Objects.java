@@ -1,6 +1,5 @@
 package unrefined.util;
 
-import unrefined.context.Environment;
 import unrefined.math.FastMath;
 import unrefined.util.concurrent.Producer;
 import unrefined.util.function.BiFunctor;
@@ -923,6 +922,279 @@ public final class Objects {
             throw new IllegalArgumentException(builder.toString());
         }
         return object;
+    }
+
+    public static byte getByte(boolean value, int offset) {
+        switch (offset) {
+            case 0: return 0;
+            case 1:
+            case 2:
+            case 3: return (byte) (value ? 1 : 0);
+            default: throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
+        }
+    }
+
+    public static short getShort(boolean value, int offset) {
+        return getShort(value ? 1 : 0, offset);
+    }
+
+    public static char getChar(boolean value, int offset) {
+        return getChar(value ? 1 : 0, offset);
+    }
+
+    public static byte getByte(short value, int offset) {
+        switch (offset) {
+            case 0: return (byte) (value >> 8);
+            case 1: return (byte) value;
+            default: throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
+        }
+    }
+
+    public static byte getByte(int value, int offset) {
+        switch (offset) {
+            case 0: return (byte) (value >> 24);
+            case 1: return (byte) (value >> 16);
+            case 2: return (byte) (value >> 8);
+            case 3: return (byte) value;
+            default: throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
+        }
+    }
+
+    public static short getShort(int value, int offset) {
+        switch (offset) {
+            case 0: return (short) (value >> 16);
+            case 1: return (short) (value >> 8);
+            case 2: return (short) value;
+            default: throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
+        }
+    }
+
+    public static byte getByte(long value, int offset) {
+        switch (offset) {
+            case 0: return (byte) (value >> 56);
+            case 1: return (byte) (value >> 48);
+            case 2: return (byte) (value >> 40);
+            case 3: return (byte) (value >> 32);
+            case 4: return (byte) (value >> 24);
+            case 5: return (byte) (value >> 16);
+            case 6: return (byte) (value >> 8);
+            case 7: return (byte) value;
+            default: throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
+        }
+    }
+
+    public static short getShort(long value, int offset) {
+        switch (offset) {
+            case 0: return (short) (value >> 48);
+            case 1: return (short) (value >> 40);
+            case 2: return (short) (value >> 32);
+            case 3: return (short) (value >> 24);
+            case 4: return (short) (value >> 16);
+            case 5: return (short) (value >> 8);
+            case 6: return (short) value;
+            default: throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
+        }
+    }
+
+    public static int getInt(long value, int offset) {
+        switch (offset) {
+            case 0: return (int) (value >> 32);
+            case 1: return (int) (value >> 24);
+            case 2: return (int) (value >> 16);
+            case 3: return (int) (value >> 8);
+            case 4: return (int) value;
+            default: throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
+        }
+    }
+
+    public static byte getByte(float value, int offset) {
+        return getByte(Float.floatToRawIntBits(value), offset);
+    }
+
+    public static short getShort(float value, int offset) {
+        return getShort(Float.floatToRawIntBits(value), offset);
+    }
+
+    public static byte getByte(double value, int offset) {
+        return getByte(Double.doubleToRawLongBits(value), offset);
+    }
+
+    public static short getShort(double value, int offset) {
+        return getShort(Double.doubleToRawLongBits(value), offset);
+    }
+
+    public static int getInt(double value, int offset) {
+        return getInt(Double.doubleToRawLongBits(value), offset);
+    }
+
+    public static float getFloat(long value, int offset) {
+        return Float.intBitsToFloat(getInt(value, offset));
+    }
+
+    public static float getFloat(double value, int offset) {
+        return Float.intBitsToFloat(getInt(value, offset));
+    }
+
+    public static char getChar(int value, int offset) {
+        return (char) getShort(value, offset);
+    }
+
+    public static char getChar(long value, int offset) {
+        return (char) getShort(value, offset);
+    }
+
+    public static char getChar(float value, int offset) {
+        return (char) getShort(value, offset);
+    }
+
+    public static char getChar(double value, int offset) {
+        return (char) getShort(value, offset);
+    }
+
+    public static boolean getBoolean(long value, int offset) {
+        return getInt(value, offset) != 0;
+    }
+
+    public static boolean getBoolean(double value, int offset) {
+        return getInt(value, offset) != 0;
+    }
+
+    public static boolean putByte(boolean target, int offset, byte value) {
+        switch (offset) {
+            case 0: return target;
+            case 1: return value != 0;
+            default: throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
+        }
+    }
+
+    public static boolean putShort(boolean target, int offset, short value) {
+        switch (offset) {
+            case 0:
+            case 1: return target;
+            case 2: return (byte) value != 0;
+            default: throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
+        }
+    }
+
+    public static short putByte(short target, int offset, byte value) {
+        switch (offset) {
+            case 0: return (short) ((target & 0x00FF) | (value << 8));
+            case 1: return (short) ((target & 0xFF00) | value);
+            default: throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
+        }
+    }
+
+    public static int putByte(int target, int offset, byte value) {
+        switch (offset) {
+            case 0: return (target & 0x00FFFFFF) | (value << 24);
+            case 1: return (target & 0xFF00FFFF) | (value << 16);
+            case 2: return (target & 0xFFFF00FF) | (value << 8);
+            case 3: return (target & 0xFFFFFF00) | value;
+            default: throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
+        }
+    }
+
+    public static int putShort(int target, int offset, short value) {
+        switch (offset) {
+            case 0: return (target & 0x0000FFFF) | (value << 16);
+            case 1: return (target & 0xFF0000FF) | (value << 8);
+            case 2: return (target & 0xFFFF0000) | value;
+            default: throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
+        }
+    }
+
+    public static long putByte(long target, int offset, byte value) {
+        switch (offset) {
+            case 0: return (target & 0x00FFFFFFFFFFFFFFL) | ((long) value << 56);
+            case 1: return (target & 0xFF00FFFFFFFFFFFFL) | ((long) value << 48);
+            case 2: return (target & 0xFFFF00FFFFFFFFFFL) | ((long) value << 40);
+            case 3: return (target & 0xFFFFFF00FFFFFFFFL) | ((long) value << 32);
+            case 4: return (target & 0xFFFFFFFF00FFFFFFL) | ((long) value << 24);
+            case 5: return (target & 0xFFFFFFFFFF00FFFFL) | ((long) value << 16);
+            case 6: return (target & 0xFFFFFFFFFFFF00FFL) | ((long) value << 8);
+            case 7: return (target & 0xFFFFFFFFFFFFFF00L) | value;
+            default: throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
+        }
+    }
+
+    public static long putShort(long target, int offset, short value) {
+        switch (offset) {
+            case 0: return (target & 0x0000FFFFFFFFFFFFL) | ((long) value << 48);
+            case 1: return (target & 0xFF0000FFFFFFFFFFL) | ((long) value << 40);
+            case 2: return (target & 0xFFFF0000FFFFFFFFL) | ((long) value << 32);
+            case 3: return (target & 0xFFFFFF0000FFFFFFL) | ((long) value << 24);
+            case 4: return (target & 0xFFFFFFFF0000FFFFL) | ((long) value << 16);
+            case 5: return (target & 0xFFFFFFFFFF0000FFL) | ((long) value << 8);
+            case 6: return (target & 0xFFFFFFFFFFFF0000L) | value;
+            default: throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
+        }
+    }
+
+    public static long putInt(long target, int offset, int value) {
+        switch (offset) {
+            case 0: return (target & 0x00000000FFFFFFFFL) | ((long) value << 32);
+            case 1: return (target & 0xFF00000000FFFFFFL) | ((long) value << 24);
+            case 2: return (target & 0xFFFF00000000FFFFL) | ((long) value << 16);
+            case 3: return (target & 0xFFFFFF00000000FFL) | ((long) value << 8);
+            case 4: return (target & 0xFFFFFFFF00000000L) | value;
+            default: throw new IndexOutOfBoundsException("Index out of range: " + FastMath.unsign(offset));
+        }
+    }
+
+    public static long putFloat(long target, int offset, float value) {
+        return putInt(target, offset, Float.floatToRawIntBits(value));
+    }
+
+    public static float putByte(float target, int offset, byte value) {
+        return Float.intBitsToFloat(putByte(Float.floatToRawIntBits(target), offset, value));
+    }
+
+    public static float putShort(float target, int offset, short value) {
+        return Float.intBitsToFloat(putShort(Float.floatToRawIntBits(target), offset, value));
+    }
+
+    public static double putByte(double target, int offset, byte value) {
+        return Double.longBitsToDouble(putByte(Double.doubleToRawLongBits(target), offset, value));
+    }
+
+    public static double putShort(double target, int offset, short value) {
+        return Double.longBitsToDouble(putShort(Double.doubleToRawLongBits(target), offset, value));
+    }
+
+    public static double putInt(double target, int offset, int value) {
+        return Double.longBitsToDouble(putInt(Double.doubleToRawLongBits(target), offset, value));
+    }
+
+    public static double putFloat(double target, int offset, float value) {
+        return Double.longBitsToDouble(putFloat(Double.doubleToRawLongBits(target), offset, value));
+    }
+
+    public static char putByte(char target, int offset, byte value) {
+        return (char) putByte((short) target, offset, value);
+    }
+
+    public static int putChar(int target, int offset, char value) {
+        return putShort(target, offset, (short) value);
+    }
+
+    public static long putChar(long target, int offset, char value) {
+        return putShort(target, offset, (short) value);
+    }
+
+    public static float putChar(float target, int offset, char value) {
+        return putShort(target, offset, (short) value);
+    }
+
+    public static double putChar(double target, int offset, char value) {
+        return putShort(target, offset, (short) value);
+    }
+
+    public static long putBoolean(long target, int offset, boolean value) {
+        return putInt(target, offset, value ? 1 : 0);
+    }
+
+    public static double putBoolean(double target, int offset, boolean value) {
+        return putInt(target, offset, value ? 1 : 0);
     }
 
 }
