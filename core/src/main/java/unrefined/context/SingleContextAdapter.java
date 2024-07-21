@@ -9,8 +9,16 @@ public abstract class SingleContextAdapter extends ContainerAdapter {
     private Context context;
     private Insets insets;
 
+    private final String type;
     private final ContextListener contextListener;
+
+    public SingleContextAdapter(String type, ContextListener contextListener) {
+        this.type = type;
+        this.contextListener = Objects.requireNonNull(contextListener);
+    }
+
     public SingleContextAdapter(ContextListener contextListener) {
+        this.type = null;
         this.contextListener = Objects.requireNonNull(contextListener);
     }
 
@@ -20,7 +28,7 @@ public abstract class SingleContextAdapter extends ContainerAdapter {
 
     @Override
     public void onCreate(Container container) {
-        context = container.createContext(contextListener);
+        context = container.createContext(type, contextListener);
         insets = new Insets();
 
         container.addContext(context);

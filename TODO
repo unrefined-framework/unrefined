@@ -34,7 +34,8 @@ Bidi API
 String/CharSequence Utilities
 Time/Date Utilities [Calendar-like LocalDate API]
 Future/Executors API
-More NIO Pointers[ByteArrayPointer, ReflectPointer...]
+More NIO Pointers [ByteArrayPointer...]
+Computing [OpenCL, RenderScript]
 --------------------------------
 
 --------------------------------

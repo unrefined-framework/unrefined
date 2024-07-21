@@ -99,7 +99,6 @@ public class Lifecycle {
             flags = Integer.parseInt(System.getProperty("unrefined.runtime.flags", Integer.toString(ALL)));
 
             if ((flags & GRAPHICS) != 0) {
-                Environment.properties.put("unrefined.desktop.graphics.buffered", "true");
                 AWTSupport.patch();
 
                 Environment.global.put("unrefined.runtime.drawing", new DesktopDrawing());

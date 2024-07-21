@@ -7,6 +7,7 @@ import unrefined.media.graphics.Color;
 import unrefined.media.graphics.Graphics;
 import unrefined.media.graphics.RectangleF;
 import unrefined.media.graphics.Text;
+import unrefined.media.opengl.GL;
 
 /**
  * This is the 'canvas', all drawing logic are here.
@@ -49,5 +50,8 @@ public class HelloWorldContextAdapter extends ContextAdapter {
             graphics.restore();
         }
     }
+
+    @Override
+    public void onPaint(Context context, GL gl, boolean snapshot) {}
 
 }

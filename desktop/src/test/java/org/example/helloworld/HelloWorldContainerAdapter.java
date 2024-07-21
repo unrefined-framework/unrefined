@@ -6,9 +6,6 @@ import unrefined.context.ContainerAdapter;
 import unrefined.context.Context;
 import unrefined.media.graphics.Color;
 import unrefined.media.graphics.Insets;
-import unrefined.util.SharedTimer;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * This is the 'container' of canvases, on desktop is the application's root window.
@@ -22,7 +19,6 @@ public class HelloWorldContainerAdapter extends ContainerAdapter {
 
     private Insets insets;
     private Context context;
-    private SharedTimer timer;
 
     @Override
     public void onCreate(Container container) {
@@ -32,24 +28,6 @@ public class HelloWorldContainerAdapter extends ContainerAdapter {
         context.setBackgroundColor(Color.WHITE);
         context.setSize(WIDTH, HEIGHT);
         container.addContext(context);
-
-        timer = SharedTimer.newBuilder()
-                .repeat(true)
-                .period(1000_000_000 / 60L)
-                .timeUnit(TimeUnit.NANOSECONDS)
-                .delay(0)
-                .onPerform(signal -> signal.connect(event -> container.requestPaint()))
-                .start();
-    }
-
-    @Override
-    public void onPause(Container container) {
-        timer.stop();
-    }
-
-    @Override
-    public void onResume(Container container) {
-        timer.start();
     }
 
     @Override

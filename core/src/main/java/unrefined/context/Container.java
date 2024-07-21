@@ -249,10 +249,6 @@ public abstract class Container implements Runnable {
 
     public abstract void requestPaint();
     public abstract void requestSnapshot();
-    public void requestPaint(boolean snapshot) {
-        if (snapshot) requestSnapshot();
-        else requestPaint();
-    }
 
     public abstract void setClientX(int x);
     public abstract void setClientY(int y);
@@ -323,7 +319,11 @@ public abstract class Container implements Runnable {
     }
     public abstract int getInputMethodHeight();
 
-    public abstract Context createContext(ContextListener contextListener);
+    public abstract Context createContext(String type, ContextListener contextListener);
+    public Context createContext(ContextListener contextListener) {
+        return createContext(null, contextListener);
+    }
+    public abstract boolean isContextSupported(String type);
 
     public abstract int getScreenWidth();
     public abstract int getScreenHeight();

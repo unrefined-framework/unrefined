@@ -1,7 +1,6 @@
 package unrefined.context;
 
 import unrefined.media.graphics.Bitmap;
-import unrefined.media.graphics.Graphics;
 
 public abstract class ContextAdapter implements ContextListener {
 
@@ -42,11 +41,6 @@ public abstract class ContextAdapter implements ContextListener {
 
     @Override
     public void onMove(Context context, int xOnParent, int yOnParent) {
-
-    }
-
-    @Override
-    public void onPaint(Context context, Graphics graphics, boolean snapshot) {
 
     }
 

@@ -14,6 +14,7 @@ import unrefined.runtime.DesktopGraphics;
 import unrefined.util.NotInstantiableError;
 import unrefined.util.UnexpectedError;
 
+import java.awt.BufferCapabilities;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dialog;
@@ -23,7 +24,6 @@ import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
 import java.awt.MultipleGradientPaint;
-import java.awt.Paint;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.Toolkit;
@@ -31,22 +31,20 @@ import java.awt.Window;
 import java.awt.font.GraphicAttribute;
 import java.awt.font.ImageGraphicAttribute;
 import java.awt.font.TextAttribute;
-import java.awt.font.TextLayout;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.text.AttributedCharacterIterator;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 
 public final class AWTSupport {
@@ -537,6 +535,33 @@ public final class AWTSupport {
             return sequence;
         }
         else return new AttributedCharSequence(text.subSequence(start, end), graphics2D.getFont().getAttributes());
+    }
+
+    private static final Constructor<?> extendedBufferCapabilitiesConstructor;
+    private static final Field vsyncOnField;
+
+    static {
+        Constructor<?> constructor;
+        Field field;
+        try {
+            Class<?> capabilitiesClass = Class.forName("sun.java2d.pipe.hw.ExtendedBufferCapabilities");
+            Class<?> vsyncTypeClass = Class.forName("sun.java2d.pipe.hw.ExtendedBufferCapabilities$VSyncType");
+            constructor = capabilitiesClass.getConstructor(BufferCapabilities.class, vsyncTypeClass);
+            field = vsyncTypeClass.getDeclaredField("VSYNC_ON");
+        } catch (ClassNotFoundException | NoSuchFieldException | NoSuchMethodException e) {
+            constructor = null;
+            field = null;
+        }
+        extendedBufferCapabilitiesConstructor = constructor;
+        vsyncOnField = field;
+    }
+
+    public static BufferCapabilities createVSyncBufferCapabilities(BufferCapabilities capabilities) {
+        try {
+            return (BufferCapabilities) ReflectionSupport.newInstance(extendedBufferCapabilitiesConstructor, Objects.requireNonNull(capabilities), ReflectionSupport.getObjectField(null, vsyncOnField));
+        } catch (InstantiationException | InvocationTargetException e) {
+            throw new UnexpectedError(e);
+        }
     }
 
 }

@@ -10,6 +10,7 @@ import unrefined.media.graphics.Color;
 import unrefined.media.graphics.Drawing;
 import unrefined.media.graphics.Graphics;
 import unrefined.media.graphics.Insets;
+import unrefined.media.opengl.GL;
 import unrefined.runtime.DesktopContainer;
 import unrefined.util.signal.Dispatcher;
 
@@ -46,6 +47,8 @@ public class DrawOnCanvas {
                         graphics.setBrush(black);         // Use the "plain black" brush
                         graphics.drawColor();             // Draw the full canvas area
                     }
+                    @Override
+                    public void onPaint(Context context, GL gl, boolean snapshot) {}
                 });
                 canvas.setSize(640, 480);
 

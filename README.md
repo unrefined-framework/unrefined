@@ -1,6 +1,6 @@
 # Unrefined
-Version Name: 0.9.0  
-Version Code: 91  
+Version Name: 0.9.2  
+Version Code: 92  
 Version Codename: Claw Hammer
 
 Cross-platform multimedia application framework written in pure Java.
@@ -11,7 +11,8 @@ You can also use it as a game engine or a utility toolkit.
 It provides:  
 [Console API](/core/src/main/java/unrefined/io/console)  
 [Window & Widget Management API](/core/src/main/java/unrefined/context)  
-[Graphics API that 90% compatible with HTML5 &lt;canvas&gt;](/core/src/main/java/unrefined/media/graphics)  
+[2D Graphics Rendering API](/core/src/main/java/unrefined/media/graphics)  
+[OpenGL ES 2.0/3.0 API](/core/src/main/java/unrefined/media/opengl)  
 [Music & Sound Effects API](/core/src/main/java/unrefined/media/sound)  
 [Memory Management API](/core/src/main/java/unrefined/nio)  
 [Qt-like Signal/Slot API](/core/src/main/java/unrefined/util/signal)  
@@ -54,6 +55,7 @@ Pull Requests & Issues welcome!
 | Library                                                                                      | License                                                                             | Comptime | Runtime |
 |----------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|----------|---------|
 | [JFFI](https://github.com/jnr/jffi)                                                          | Apache-2.0                                                                          | Yes      | Yes     |
+| [JOGL](https://github.com/sgothel/jogl)                                                      | BSD 2-Clause                                                                        | Yes      | Yes     |
 | [JavaSound Resource Loader](https://github.com/Tianscar/javasound-resloader)                 | MIT                                                                                 | Yes      | Yes     |
 | [JavaSound MP3](https://github.com/Tianscar/javasound-mp3)                                   | LGPL-2.1                                                                            | Yes      | Yes     |
 | [Tritonus Share](https://mvnrepository.com/artifact/com.googlecode.soundlibs/tritonus-share) | LGPL-2.1                                                                            | Yes      | Yes     |

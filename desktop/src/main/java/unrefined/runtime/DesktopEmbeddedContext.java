@@ -13,6 +13,7 @@ import unrefined.media.graphics.Point;
 import unrefined.media.graphics.Rectangle;
 import unrefined.media.input.Input;
 
+import javax.swing.JComponent;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.EventQueue;
@@ -42,7 +43,11 @@ public abstract class DesktopEmbeddedContext extends Context implements KeyListe
         super(container, contextListener);
         this.component = Objects.requireNonNull(component);
 
-        component.setIgnoreRepaint(true);
+        if (component instanceof JComponent) {
+            ((JComponent) component).setOpaque(false);
+        }
+
+        //component.setIgnoreRepaint(true);
         component.setBackground(AWTSupport.TRANSPARENT);
         component.enableInputMethods(false);
 

@@ -25,19 +25,24 @@ public abstract class Runtime {
         private Flag() {
             throw new NotInstantiableError(Flag.class);
         }
-        public static final int BASE     = 0;
-        public static final int GRAPHICS = 1;
-        public static final int AUDIO    = 1 << 1;
-        public static final int MEDIA    = GRAPHICS | AUDIO;
-        public static final int ALL      = removeUnusedBits(0xFFFFFFFF);
+        public static final int BASE      = 0;
+        public static final int GRAPHICS  = 1;
+        public static final int AUDIO     = 1 << 1;
+        public static final int OPENGL    = 1 << 2;
+        public static final int OPENAL    = 1 << 3;
+        public static final int COMPUTING = 1 << 4;
+        public static final int ALL       = removeUnusedBits(0xFFFFFFFF);
         public static int removeUnusedBits(int flags) {
-            return flags << 30 >>> 30;
+            return flags << 27 >>> 27;
         }
         public static String toString(int flags) {
             flags = removeUnusedBits(flags);
             StringBuilder builder = new StringBuilder("[BASE");
             if ((flags & GRAPHICS) != 0) builder.append(", GRAPHICS");
             if ((flags & AUDIO) != 0) builder.append(", AUDIO");
+            if ((flags & OPENGL) != 0) builder.append(", OPENGL");
+            if ((flags & OPENAL) != 0) builder.append(", OPENAL");
+            if ((flags & COMPUTING) != 0) builder.append(", COMPUTING");
             builder.append("]");
             return builder.toString();
         }

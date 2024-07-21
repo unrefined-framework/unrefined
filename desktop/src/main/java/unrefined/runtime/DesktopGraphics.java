@@ -34,8 +34,6 @@ import java.awt.Paint;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.font.GlyphVector;
-import java.awt.font.GraphicAttribute;
-import java.awt.font.ImageGraphicAttribute;
 import java.awt.font.LineMetrics;
 import java.awt.font.TextAttribute;
 import java.awt.font.TextHitInfo;
@@ -62,7 +60,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class DesktopGraphics extends Graphics {
 
     private volatile Graphics2D graphics2D;
-    private volatile Graphics2D background;
     private volatile int width, height;
     private volatile Info info;
 
@@ -75,16 +72,12 @@ public class DesktopGraphics extends Graphics {
             this.graphics2D.dispose();
             this.graphics2D = null;
         }
-        if (this.background != null) {
-            this.background.dispose();
-            this.background = null;
-        }
     }
 
     void clearBackground(Color color) {
         graphics2D.setBackground(color);
-        background.setBackground(color);
-        background.clearRect(0, 0, width, height);
+        graphics2D.setColor(color);
+        graphics2D.fillRect(0, 0, width, height);
     }
 
     void setGraphics2D(Graphics2D graphics2D) {
@@ -92,25 +85,17 @@ public class DesktopGraphics extends Graphics {
         this.graphics2D = graphics2D;
         graphics2D.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
         graphics2D.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
-        this.background = (Graphics2D) graphics2D.create();
-        this.background.setComposite(AlphaComposite.Src);
     }
 
     public DesktopGraphics(Graphics2D graphics2D, int width, int height) {
         this.graphics2D = Objects.requireNonNull(graphics2D);
         graphics2D.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
         graphics2D.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
-        this.background = (Graphics2D) graphics2D.create();
-        this.background.setComposite(AlphaComposite.Src);
         this.width = width;
         this.height = height;
         info = new Info();
         reset();
         CleanerSupport.register(this, this::dispose);
-    }
-
-    public DesktopGraphics(Graphics2D graphics2D) {
-        this(graphics2D, 0, 0);
     }
 
     public DesktopGraphics(BufferedImage image) {
@@ -135,11 +120,6 @@ public class DesktopGraphics extends Graphics {
     public Graphics2D getGraphics2D() {
         if (isDisposed()) throw new AlreadyDisposedException();
         return graphics2D;
-    }
-
-    public Graphics2D getBackgroundGraphics2D() {
-        if (isDisposed()) throw new AlreadyDisposedException();
-        return background;
     }
 
     public void setWidth(int width) {
@@ -219,14 +199,12 @@ public class DesktopGraphics extends Graphics {
     @Override
     public void clearColor() {
         if (isDisposed()) throw new AlreadyDisposedException();
-        background.setColor(graphics2D.getBackground());
-        background.fillRect(0, 0, width, height);
+        graphics2D.clearRect(0, 0, width, height);
     }
     @Override
     public void clearRectangle(int x, int y, int width, int height) {
         if (isDisposed()) throw new AlreadyDisposedException();
-        background.setColor(graphics2D.getBackground());
-        background.fillRect(x, y, width, height);
+        graphics2D.clearRect(x, y, width, height);
     }
 
     @Override
@@ -1237,8 +1215,6 @@ public class DesktopGraphics extends Graphics {
             if (attachment != null) attachment.subgraphics.remove(this);
             graphics2D.dispose();
             graphics2D = null;
-            background.dispose();
-            background = null;
             info = null;
         }
     }

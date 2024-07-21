@@ -10,6 +10,7 @@ import unrefined.media.graphics.Brush;
 import unrefined.media.graphics.Color;
 import unrefined.media.graphics.Graphics;
 import unrefined.media.graphics.Text;
+import unrefined.media.opengl.GL;
 import unrefined.util.FPSCounter;
 import unrefined.util.SharedTimer;
 
@@ -48,6 +49,8 @@ public class FPSCount {
                     graphics.restore();
                 }
             }
+            @Override
+            public void onPaint(Context context, GL gl, boolean snapshot) {}
         }) {
             private SharedTimer timer;
             @Override

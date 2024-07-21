@@ -2,6 +2,7 @@ package unrefined.context;
 
 import unrefined.media.graphics.Bitmap;
 import unrefined.media.graphics.Graphics;
+import unrefined.media.opengl.GL;
 
 public interface ContextListener {
 
@@ -13,7 +14,16 @@ public interface ContextListener {
     void onFocusLost(Context context);
     void onResize(Context context, int width, int height);
     void onMove(Context context, int xOnParent, int yOnParent);
+
+    default void onPaint(Context context, Object canvas, boolean snapshot) {
+        if (canvas instanceof Graphics) onPaint(context, (Graphics) canvas, snapshot);
+        else if (canvas instanceof GL) onPaint(context, (GL) canvas, snapshot);
+        else throw new IllegalArgumentException("Illegal canvas object: " + canvas);
+    }
+
     void onPaint(Context context, Graphics graphics, boolean snapshot);
+    void onPaint(Context context, GL gl, boolean snapshot);
+
     void onSnapshot(Context context, Bitmap snapshot);
 
     boolean onKeyDown(Context context, String key, String code, int location, int modifiers, boolean repeat);

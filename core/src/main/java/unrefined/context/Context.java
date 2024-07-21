@@ -9,6 +9,10 @@ import java.util.Objects;
 
 public abstract class Context {
 
+    public static Context of(Container container, String type, ContextListener contextListener) {
+        return container.createContext(type, contextListener);
+    }
+
     public static Context of(Container container, ContextListener contextListener) {
         return container.createContext(contextListener);
     }
@@ -75,18 +79,8 @@ public abstract class Context {
     public abstract void setBackgroundColor(int color);
     public abstract int getBackgroundColor();
 
-    public abstract void paint();
-    public abstract void snapshot();
-    public void paint(boolean snapshot) {
-        if (snapshot) snapshot();
-        else paint();
-    }
     public abstract void requestPaint();
     public abstract void requestSnapshot();
-    public void requestPaint(boolean snapshot) {
-        if (snapshot) requestSnapshot();
-        else requestPaint();
-    }
     public abstract void requestFocus();
 
     public abstract void setCursor(Cursor cursor);

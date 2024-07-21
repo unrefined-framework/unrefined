@@ -8,13 +8,12 @@ import unrefined.media.graphics.Brush;
 import unrefined.media.graphics.Color;
 import unrefined.media.graphics.Graphics;
 import unrefined.media.graphics.Point;
+import unrefined.media.opengl.GL;
 import unrefined.media.sound.Sound;
 import unrefined.util.SharedTimer;
 import unrefined.util.UnexpectedError;
 
 import java.io.IOException;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class Board extends ContextAdapter {
 
@@ -99,6 +98,9 @@ public class Board extends ContextAdapter {
         graphics.drawRectangle(0, Constant.BOTTOM_EDGE, graphics.getWidth(), graphics.getHeight() - Constant.BOTTOM_EDGE);
 
     }
+
+    @Override
+    public void onPaint(Context context, GL gl, boolean snapshot) {}
 
     private void drawObjects(Graphics graphics) {
 

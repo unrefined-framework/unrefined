@@ -1,5 +1,8 @@
 package unrefined.runtime;
 
+import com.jogamp.opengl.GLCapabilities;
+import com.jogamp.opengl.GLException;
+import com.jogamp.opengl.GLProfile;
 import unrefined.app.Log;
 import unrefined.app.Preferences;
 import unrefined.core.AnimatedCursor;
@@ -8,6 +11,7 @@ import unrefined.context.Context;
 import unrefined.context.ContextListener;
 import unrefined.context.Environment;
 import unrefined.desktop.AWTSupport;
+import unrefined.desktop.BufferedFrame;
 import unrefined.desktop.CursorAnimator;
 import unrefined.desktop.DefaultIcon;
 import unrefined.desktop.KeyEventParser;
@@ -29,13 +33,12 @@ import unrefined.media.graphics.Rectangle;
 import unrefined.media.input.Input;
 import unrefined.util.TextManager;
 import unrefined.util.event.EventBus;
-import unrefined.util.function.Slot;
 import unrefined.util.signal.Dispatcher;
 
+import javax.swing.JPanel;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
-import java.awt.DisplayMode;
 import java.awt.EventQueue;
 import java.awt.Frame;
 import java.awt.GraphicsDevice;
@@ -59,7 +62,6 @@ import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
 import java.awt.event.WindowListener;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.text.AttributedCharacterIterator;
@@ -67,35 +69,15 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DesktopContainer extends unrefined.context.Container implements
         ComponentListener,
         KeyListener, MouseListener, MouseMotionListener, MouseWheelListener,
         WindowListener, WindowFocusListener {
 
-    static final boolean BUFFERED = !GraphicsEnvironment.isHeadless() &&
-            Boolean.getBoolean("unrefined.desktop.graphics.buffered");
-
-    private volatile BufferedImage buffer = null;
-    private final Object bufferLock = new Object();
-
-    private volatile DisplayMode cachedDisplayMode = null;
-
-    public void lockBufferAndPost(Runnable runnable) {
-        if (runnable == null) return;
-        synchronized (bufferLock) {
-            runnable.run();
-        }
-    }
-
-    public void lockBufferAndPost(Slot<BufferedImage> consumer) {
-        if (consumer == null) return;
-        synchronized (bufferLock) {
-            consumer.accept(buffer);
-        }
-    }
-
     private final Container container;
+    private final Container contentPane;
     private final InputMethodIndicator inputMethod;
 
     public DesktopContainer(ContainerListener containerListener) {
@@ -114,20 +96,32 @@ public class DesktopContainer extends unrefined.context.Container implements
         properties.setProperty("unrefined.app.version.code", Environment.properties.getProperty("unrefined.app.version.code"));
         properties.setProperty("unrefined.app.package", Environment.properties.getProperty("unrefined.app.package"));
 
-        Frame frame;
-        java.awt.Container container;
+        BufferedFrame frame;
+        Container container;
+        Container contentPane = null;
         InputMethodIndicator inputMethod;
         try {
             container = null;
-            frame = new Frame() {
+            frame = new BufferedFrame() {
+                private final AtomicBoolean created = new AtomicBoolean(false);
                 @Override
                 public void addNotify() {
                     super.addNotify();
-                    ContainerListener listener = listener();
-                    if (listener != null) listener.onCreate(DesktopContainer.this);
+                    if (created.compareAndSet(false, true)) {
+                        ContainerListener listener = listener();
+                        if (listener != null) listener.onCreate(DesktopContainer.this);
+                    }
                 }
             };
-            if (BUFFERED) updateBuffer(frame.getGraphicsConfiguration().getDevice().getDisplayMode());
+            frame.add(contentPane = new JPanel(false) {
+                {
+                    setOpaque(false);
+                    //setIgnoreRepaint(true);
+                    setBackground(AWTSupport.TRANSPARENT);
+                    enableInputMethods(false);
+                }
+            });
+            contentPane.setLayout(frame.getLayout());
             frame.setIconImage(DefaultIcon.ICON);
             //frame.setLocationByPlatform(true);
             frame.addWindowListener(this);
@@ -139,7 +133,7 @@ public class DesktopContainer extends unrefined.context.Container implements
         }
         catch (HeadlessException e) {
             frame = null;
-            container = new java.awt.Container();
+            container = new Container();
             inputMethod = null;
         }
         this.inputMethod = inputMethod;
@@ -157,10 +151,8 @@ public class DesktopContainer extends unrefined.context.Container implements
         this.container.addMouseListener(this);
         this.container.addMouseMotionListener(this);
         this.container.addMouseWheelListener(this);
-    }
 
-    public DesktopContainer() {
-        this(null);
+        this.contentPane = contentPane == null ? container : contentPane;
     }
 
     @Override
@@ -176,6 +168,7 @@ public class DesktopContainer extends unrefined.context.Container implements
             }
             finally {
                 container.setLayout(null);
+                contentPane.setLocation(0, 0);
             }
         }
         try {
@@ -258,7 +251,7 @@ public class DesktopContainer extends unrefined.context.Container implements
     @Override
     public void addContext(Context context) {
         super.addContext(context);
-        container.add(((DesktopEmbeddedContext) context).getComponent());
+        contentPane.add(((DesktopEmbeddedContext) context).getComponent(), 0);
         EventQueue.invokeLater(() -> {
             ContainerListener listener = listener();
             if (listener != null) listener.onContextAdd(DesktopContainer.this, context);
@@ -268,7 +261,7 @@ public class DesktopContainer extends unrefined.context.Container implements
     @Override
     public void removeContext(Context context) {
         super.removeContext(context);
-        container.remove(((DesktopEmbeddedContext) context).getComponent());
+        contentPane.remove(((DesktopEmbeddedContext) context).getComponent());
         EventQueue.invokeLater(() -> {
             ContainerListener listener = listener();
             if (listener != null) listener.onContextRemove(DesktopContainer.this, context);
@@ -506,9 +499,7 @@ public class DesktopContainer extends unrefined.context.Container implements
 
     @Override
     public void requestPaint() {
-        for (Context context : getContexts()) {
-            context.requestPaint();
-        }
+        getFrame().repaint();
     }
 
     @Override
@@ -752,8 +743,57 @@ public class DesktopContainer extends unrefined.context.Container implements
     }
 
     @Override
-    public Context createContext(ContextListener contextListener) {
-        return new DesktopContext(this, contextListener);
+    public Context createContext(String type, ContextListener contextListener) {
+        if (type == null || type.equalsIgnoreCase("g2d")) return new DesktopContext(this, contextListener);
+        else {
+            GLProfile profile;
+            if (type.equalsIgnoreCase("gl20")) {
+                try {
+                    profile = GLProfile.get(GLProfile.GL2);
+                }
+                catch (GLException e) {
+                    return null;
+                }
+            }
+            else if (type.equalsIgnoreCase("gl30")) {
+                try {
+                    profile = GLProfile.get(GLProfile.GL3bc);
+                }
+                catch (GLException e) {
+                    return null;
+                }
+            }
+            else return null;
+            GLCapabilities capabilities = new GLCapabilities(profile);
+            capabilities.setAlphaBits(8);
+            capabilities.setBackgroundOpaque(false);
+            return new DesktopGLContext(this, capabilities, contextListener);
+        }
+    }
+
+    @Override
+    public boolean isContextSupported(String type) {
+        if (type == null) return true;
+        else if (type.equalsIgnoreCase("g2d")) return true;
+        else if (type.equalsIgnoreCase("gl20")) {
+            try {
+                GLProfile.get(GLProfile.GL2);
+                return true;
+            }
+            catch (GLException e) {
+                return false;
+            }
+        }
+        else if (type.equalsIgnoreCase("gl30")) {
+            try {
+                GLProfile.get(GLProfile.GL3);
+                return true;
+            }
+            catch (GLException e) {
+                return false;
+            }
+        }
+        else return false;
     }
 
     @Override
@@ -791,27 +831,9 @@ public class DesktopContainer extends unrefined.context.Container implements
         else return false;
     }
 
-    private void updateBuffer(DisplayMode displayMode) {
-        if (!Objects.equals(cachedDisplayMode, displayMode)) {
-            cachedDisplayMode = displayMode;
-            int width = displayMode.getWidth();
-            int height = displayMode.getHeight();
-            synchronized (bufferLock) {
-                if (width > 0 && height > 0) {
-                    if (buffer == null) buffer = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-                    else if (width != buffer.getWidth() || height != buffer.getHeight()) {
-                        buffer.flush();
-                        buffer = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-                        System.gc();
-                    }
-                }
-            }
-        }
-    }
-
     @Override
     public void componentResized(ComponentEvent e) {
-        if (BUFFERED) updateBuffer(e.getComponent().getGraphicsConfiguration().getDevice().getDisplayMode());
+        if (contentPane != container) contentPane.setSize(container.getWidth(), container.getHeight());
         EventQueue.invokeLater(() -> {
             ContainerListener listener = listener();
             if (listener != null) listener.onResize(DesktopContainer.this, e.getComponent().getWidth(), e.getComponent().getHeight());

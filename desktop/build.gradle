@@ -13,6 +13,9 @@ dependencies {
     implementation 'com.tianscar.javasound:javasound-aac:0.9.8'
 
     implementation 'com.github.stephengold:j-ogg-vorbis:1.0.4'
+
+    implementation fileTree('libs')
+    api fileTree('libs')
 }
 
 /*

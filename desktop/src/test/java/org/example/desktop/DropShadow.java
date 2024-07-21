@@ -10,6 +10,7 @@ import unrefined.media.graphics.Color;
 import unrefined.media.graphics.Drawing;
 import unrefined.media.graphics.Graphics;
 import unrefined.media.graphics.Insets;
+import unrefined.media.opengl.GL;
 import unrefined.runtime.DesktopContainer;
 import unrefined.util.signal.Dispatcher;
 
@@ -38,10 +39,6 @@ public class DropShadow {
 
                 canvas = container.createContext(new ContextAdapter() { // The lifecycle listener, it's fully platform-independent
                     @Override
-                    public void onCreate(Context context) {
-                        context.setBackgroundColor(Color.WHITE);
-                    }
-                    @Override
                     public void onPaint(Context context, Graphics graphics, boolean snapshot) {
                         graphics.setShadowColor(Color.RED);
                         graphics.setShadowBlur(10);
@@ -66,6 +63,8 @@ public class DropShadow {
                         graphics.drawText("Text", 290, 300);
 
                     }
+                    @Override
+                    public void onPaint(Context context, GL gl, boolean snapshot) {}
                 });
                 canvas.setSize(640, 480);
 

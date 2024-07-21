@@ -6,6 +6,7 @@ import unrefined.io.asset.Asset;
 import unrefined.media.graphics.Brush;
 import unrefined.media.graphics.Color;
 import unrefined.media.graphics.Graphics;
+import unrefined.media.opengl.GL;
 import unrefined.media.sound.Sound;
 import unrefined.util.SharedTimer;
 import unrefined.util.UnexpectedError;
@@ -72,6 +73,9 @@ public class Board extends ContextAdapter {
     public void onPaint(Context context, Graphics graphics, boolean snapshot) {
         doDrawing(graphics);
     }
+
+    @Override
+    public void onPaint(Context context, GL gl, boolean snapshot) {}
 
     private static final Brush FOOD_COLOR = Brush.ofColor(Color.RED);
     private static final Brush SNAKE_COLOR = Brush.ofColor(Color.BLACK);

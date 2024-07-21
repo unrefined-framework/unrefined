@@ -14,6 +14,7 @@ import unrefined.media.graphics.Drawing;
 import unrefined.media.graphics.Graphics;
 import unrefined.media.graphics.Insets;
 import unrefined.media.graphics.Path;
+import unrefined.media.opengl.GL;
 import unrefined.runtime.DesktopContainer;
 import unrefined.util.UnexpectedError;
 import unrefined.util.signal.Dispatcher;
@@ -82,6 +83,8 @@ public class GraffitiBoard {
                         graphics.setStrokeWidth(2f);              // Set stroke width to 2 px
                         graphics.drawPath(path);                  // Draw the path
                     }
+                    @Override
+                    public void onPaint(Context context, GL gl, boolean snapshot) {}
                     @Override
                     public boolean onPointerDown(Context context, float xOffset, float yOffset, int modifiers, int id, int button) {
                         path.moveTo(xOffset, yOffset);
